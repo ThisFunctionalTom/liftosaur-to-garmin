@@ -1,0 +1,51 @@
+# Week 1
+## Day 1
+main / used: none / 1x5 58%, 1x5 67%, 1x5+ 76%, 5x5 58% / progress: custom(increment: 5kg) {~
+  if (dayInWeek > 1 && week == 3) {
+    rm1 += state.increment
+  }
+~}
+
+Squat[1-3] / ...main
+Bench Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
+Hanging Leg Raise[1-3] / 5x10 0kg
+Chin Up[1-3] / 5x10 0kg
+Push Up[1-3] / 5x15 0kg
+
+## Day 2
+Deadlift[1-3] / ...main
+Overhead Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
+Triceps Dip[1-3] / 5x10 0kg
+Inverted Row[1-3] / 5x10 0kg
+Bulgarian Split Squat[1-3] / 5x10 0kg
+
+## Day 3
+Bench Press[1-3] / ...main
+Squat[1-3] / ...main
+Hanging Leg Raise[1-3] / 5x10 0kg
+Pull Up[1-3] / 5x10 0kg
+Push Up[1-3] / 5x15 0kg
+
+
+# Week 2
+## Day 1
+main / 1x3 63%, 1x3 72%, 1x3+ 81%, 5x5 63%
+
+## Day 2
+
+
+## Day 3
+
+
+
+# Week 3
+## Day 1
+main / 1x5 67%, 1x3 76%, 1x1+ 85%, 5x5 67%
+
+## Day 2
+
+
+## Day 3
+
+
+

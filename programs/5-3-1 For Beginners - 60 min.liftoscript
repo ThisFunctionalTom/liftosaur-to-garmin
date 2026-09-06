@@ -1,0 +1,48 @@
+# Week 1
+## Day 1 - Squat + Bench
+main / used: none / 1x5 58% 180s, 1x5 67% 180s, 1x5+ 76% 240s, 3x5 58% 120s / progress: custom(increment: 5kg) {~
+  if (dayInWeek > 1 && week == 3) { rm1 += state.increment }
+~}
+Squat[1-3] / ...main
+Bench Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
+Lat Pulldown[1-3] / 2x10 / 95.5lb 75s / warmup: none / progress: dp(2.5kg, 10, 15)
+Push Up[1-3] / 2x10 / 0kg 75s / warmup: none
+Hanging Leg Raise[1-3] / 2x10 / 0kg 75s / warmup: none
+
+## Day 2 - Deadlift + OHP
+Deadlift[1-3] / ...main
+Overhead Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
+Bent Over Row[1-3] / 2x10 / 27.5kg 75s / progress: dp(2.5kg, 10, 15)
+Push Up[1-3] / 2x10 / 0kg 75s
+Hanging Leg Raise[1-3] / 2x10 / 0kg 75s
+
+## Day 3 - Bench + Squat
+Bench Press[1-3] / ...main
+Squat[1-3] / ...main
+Lat Pulldown[1-3] / 2x10 / 95.5lb 75s
+Push Up[1-3] / 2x10 / 0kg 75s
+Hanging Leg Raise[1-3] / 2x10 / 0kg 75s
+
+
+# Week 2
+## Day 1 - Squat + Bench
+main / used: none / 1x3 63% 180s, 1x3 72% 180s, 1x3+ 81% 240s, 3x5 63% 120s
+
+## Day 2 - Deadlift + OHP
+
+
+## Day 3 - Bench + Squat
+
+
+
+# Week 3
+## Day 1 - Squat + Bench
+main / used: none / 1x5 67% 180s, 1x3 76% 180s, 1x1+ 85% 240s, 3x5 67% 120s
+
+## Day 2 - Deadlift + OHP
+
+
+## Day 3 - Bench + Squat
+
+
+

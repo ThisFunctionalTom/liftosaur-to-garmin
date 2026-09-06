@@ -1,0 +1,70 @@
+# Week 1
+## Day 1
+main / used: none / 1x5 58%, 1x5 67%, 1x5+ 76%, 5x10 50% / progress: custom(increment: 2.5kg) {~
+  if (week % 3 == 0) {
+    rm1 += state.increment
+  }
+~}
+
+Overhead Press[1-4] / ...main
+Chin Up, Assisted[1-4] / 5x10 / 50kg / warmup: none
+Skullcrusher[1-4] / 5x10 / 8kg / warmup: none
+
+## Day 2
+Deadlift[1-4] / ...main / progress: custom(increment: 5kg) { ...main }
+Bicep Curl[1-4] / 5x10 / 6kg / warmup: none
+Hanging Leg Raise[1-4] / 5x10 / 0kg / warmup: none
+
+## Day 3
+Bench Press[1-4] / ...main
+Triceps Extension[1-4] / 5x10 / 8kg / warmup: none
+Hammer Curl[1-4] / 5x10 / 8kg / warmup: none
+
+## Day 4
+Squat[1-4] / ...main / progress: custom(increment: 5kg) { ...main }
+Lat Pulldown[1-4] / 5x10 / 80lb / warmup: none
+Ab Wheel[1-4] / 5x10 / 0kg / warmup: none
+
+
+# Week 2
+## Day 1
+main / 1x3 63%, 1x3 72%, 1x3+ 81%, 5x10 50%
+
+## Day 2
+
+
+## Day 3
+
+
+## Day 4
+
+
+
+# Week 3
+## Day 1
+main / 1x5 67%, 1x3 76%, 1x1+ 85%, 5x10 50%
+
+## Day 2
+
+
+## Day 3
+
+
+## Day 4
+
+
+
+# Week 4 - Deload
+## Day 1
+main / 1x5 36%, 1x5 45%, 1x5 54%, 5x10 40%
+
+## Day 2
+
+
+## Day 3
+
+
+## Day 4
+
+
+
