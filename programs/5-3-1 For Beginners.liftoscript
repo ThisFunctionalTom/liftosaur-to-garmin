@@ -1,30 +1,50 @@
+/// Flexible sessions: prioritize both main lifts, including their warmups.
+/// Assistance is optional: do it in the listed order while time permits.
+/// You may do fewer assistance sets or skip an assistance exercise entirely.
+/// Leave skipped sets uncompleted; do not record them as successful sets.
+/// Session length depends on rest times and equipment availability, not a fixed time target.
 # Week 1
 ## Day 1
 main / used: none / 1x5 58%, 1x5 67%, 1x5+ 76%, 5x5 58% / progress: custom(increment: 5kg) {~
-  if (dayInWeek > 1 && week == 3) {
+  if (dayInWeek > 1 && week == 3 && completedNumberOfSets >= 3 && completedReps[1] >= reps[1] && completedReps[2] >= reps[2] && completedReps[3] >= reps[3]) {
     rm1 += state.increment
   }
 ~}
 
+// Priority: main lift. Complete the three main work sets, then the five lighter sets.
 Squat[1-3] / ...main
+// Priority: main lift. Complete this before starting optional assistance.
 Bench Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
-Hanging Leg Raise[1-3] / 5x10 0kg
-Chin Up[1-3] / 5x10 0kg
-Push Up[1-3] / 5x15 0kg
+// Optional assistance 1: pulling. Do up to 5 sets if time permits; skip if needed.
+Chin Up, Leverage Machine[1-3] / 5x10 36kg
+// Optional assistance 2: pushing. Do up to 5 sets if time permits; skip if needed.
+Incline Push Up[1-3] / 5x15 0kg
+// Optional assistance 3: core. Do up to 5 sets if time permits; skip if needed.
+Hanging Knee Raise[1-3] / 5x10 0kg
 
 ## Day 2
+// Priority: main lift. Complete the three main work sets, then the five lighter sets.
 Deadlift[1-3] / ...main
+// Priority: main lift. Complete this before starting optional assistance.
 Overhead Press[1-3] / ...main / progress: custom(increment: 2.5kg) { ...main }
-Triceps Dip[1-3] / 5x10 0kg
+// Optional assistance 1: pulling. Do up to 5 sets if time permits; skip if needed.
 Inverted Row[1-3] / 5x10 0kg
+// Optional assistance 2: pushing. Do up to 5 sets if time permits; skip if needed.
+Triceps Dip, Leverage Machine[1-3] / 5x10 36kg
+// Optional assistance 3: single-leg work. Do up to 5 sets if time permits; skip if needed.
 Bulgarian Split Squat[1-3] / 5x10 0kg
 
 ## Day 3
+// Priority: main lift. Complete the three main work sets, then the five lighter sets.
 Bench Press[1-3] / ...main
+// Priority: main lift. Complete this before starting optional assistance.
 Squat[1-3] / ...main
-Hanging Leg Raise[1-3] / 5x10 0kg
-Pull Up[1-3] / 5x10 0kg
-Push Up[1-3] / 5x15 0kg
+// Optional assistance 1: pulling. Do up to 5 sets if time permits; skip if needed.
+Pull Up, Leverage Machine[1-3] / 5x10 36kg
+// Optional assistance 2: pushing. Do up to 5 sets if time permits; skip if needed.
+Incline Push Up[1-3] / 5x15 0kg
+// Optional assistance 3: core. Do up to 5 sets if time permits; skip if needed.
+Hanging Knee Raise[1-3] / 5x10 0kg
 
 
 # Week 2
@@ -46,6 +66,4 @@ main / 1x5 67%, 1x3 76%, 1x1+ 85%, 5x5 67%
 
 
 ## Day 3
-
-
 
