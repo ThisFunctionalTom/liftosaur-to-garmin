@@ -8,7 +8,7 @@ test('convert example and download a valid strength activity at phone width', as
   await page.goto('/');
   await page.getByRole('button', { name: 'Try an example' }).click();
   await page.getByRole('button', { name: 'Convert workout' }).click();
-  await expect(page.getByRole('status')).toContainText('4 completed sets');
+  await expect(page.locator('#status')).toContainText('4 completed sets');
   const pendingDownload = page.waitForEvent('download');
   await page.getByRole('link', { name: 'Download FIT' }).click();
   const download = await pendingDownload;
@@ -22,6 +22,6 @@ test('convert example and download a valid strength activity at phone width', as
   await page.getByLabel('Liftosaur API workout text').fill('invalid workout');
   await expect(page.getByRole('link', { name: 'Download FIT' })).toBeHidden();
   await page.getByRole('button', { name: 'Convert workout' }).click();
-  await expect(page.getByRole('status')).toContainText('Could not convert');
+  await expect(page.locator('#status')).toContainText('Could not convert');
   expect(errors).toEqual([]);
 });

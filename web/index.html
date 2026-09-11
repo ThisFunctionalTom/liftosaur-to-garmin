@@ -15,13 +15,49 @@
       button, a { display: inline-block; margin: 1rem .6rem 0 0; padding: .8rem 1rem; border-radius: .5rem; font: inherit; }
       button { border: 0; background: #165c48; color: white; cursor: pointer; }
       a { color: #165c48; }
+      section, details { margin-top: 2rem; }
+      input[type="password"] { box-sizing: border-box; width: 100%; padding: .8rem; font: inherit; border: 1px solid #9eaaa5; border-radius: .5rem; }
+      .choice { display: flex; gap: .7rem; align-items: center; margin: 1rem 0; font-weight: normal; }
+      input[type="checkbox"] { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+      button:disabled { opacity: .55; cursor: default; }
+      .secondary { background: #dde8e2; color: #172b29; }
+      ul { list-style: none; padding: 0; }
+      li { padding: .5rem .8rem; margin: .5rem 0; background: white; border: 1px solid #dce3df; border-radius: .5rem; }
+      li label { overflow-wrap: anywhere; }
+      summary { cursor: pointer; font-size: 1.2rem; font-weight: 600; }
+      .hint { color: #465a53; font-size: .9rem; }
       [hidden] { display: none; }
     </style>
   </head>
   <body>
     <main>
       <h1>Liftosaur to Garmin</h1>
-      <p>Convert a workout to a Garmin FIT activity. Everything runs on this device.</p>
+      <p>Choose your Liftosaur workouts and download Garmin FIT activities. Conversion runs on this device.</p>
+      <section aria-labelledby="recent-heading">
+        <h2 id="recent-heading">Recent workouts</h2>
+        <form id="history-form">
+          <label for="api-key">Liftosaur API key</label>
+          <input id="api-key" type="password" required autocomplete="off" spellcheck="false" autocapitalize="none" aria-describedby="key-help">
+          <p id="key-help" class="hint">Create a key in Liftosaur Settings → API Keys. API access requires Liftosaur Premium. Your key goes directly to Liftosaur.</p>
+          <label class="choice"><input id="remember-key" type="checkbox">Remember key on this device</label>
+          <p id="storage-status" class="hint" aria-live="polite"></p>
+          <button id="load-workouts" type="submit">Load workouts</button>
+          <button id="forget-key" class="secondary" type="button">Forget key</button>
+          <button id="cancel-load" class="secondary" type="button" hidden>Cancel</button>
+        </form>
+        <p id="history-status" role="status" aria-live="polite"></p>
+        <div id="workout-selection" hidden>
+          <label class="choice"><input id="select-all" type="checkbox">Select all loaded workouts</label>
+          <ul id="workout-list" aria-label="Workouts"></ul>
+          <button id="load-more" class="secondary" type="button" hidden>Load more</button>
+          <button id="convert-selected" type="button" disabled>Convert selected</button>
+          <p id="batch-status" role="status" aria-live="polite"></p>
+          <a id="batch-download" hidden>Download</a>
+        </div>
+      </section>
+      <details open>
+        <summary>Paste a workout instead</summary>
+        <p class="hint">Paste the text of an API workout record, or try the example.</p>
       <form id="converter">
         <label for="workout">Liftosaur API workout text</label>
         <textarea id="workout" required spellcheck="false" placeholder="Paste a workout record here"></textarea>
@@ -30,6 +66,7 @@
       </form>
       <p id="status" role="status" aria-live="polite"></p>
       <a id="download" hidden>Download FIT</a>
+      </details>
     </main>
     <script type="module" src="/main.js"></script>
   </body>

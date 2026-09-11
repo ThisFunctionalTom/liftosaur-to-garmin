@@ -6,11 +6,12 @@
     "compile": "dotnet fable Web.fsproj --outDir generated",
     "dev": "npm run compile && vite --host 127.0.0.1",
     "build": "npm run compile && vite build",
-    "test": "npm run compile && dotnet fsi ../tests/generate-reference.fsx && node --test tests/conversion.test.js",
+    "test": "npm run compile && dotnet fsi ../tests/generate-reference.fsx && node --test tests/api.test.js tests/conversion.test.js",
     "test:browser": "npm run build && playwright test"
   },
   "dependencies": {
-    "@garmin/fitsdk": "21.214.0"
+    "@garmin/fitsdk": "21.214.0",
+    "fflate": "0.8.3"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",

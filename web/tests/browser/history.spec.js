@@ -1,0 +1,152 @@
+import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { unzipSync } from 'fflate';
+import { Decoder, Stream } from '@garmin/fitsdk';
+
+const fixture = readFileSync(new URL('../../../tests/fixtures/standard.txt', import.meta.url), 'utf8');
+const api = 'https://www.liftosaur.com/api/v1/history*';
+const fakeKey = 'lftsk_browser_test_only';
+const storedKey = 'liftosaur-converter.api-key';
+
+async function load(page) {
+  await page.goto('/');
+  await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+  await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
+}
+
+function verifyFit(bytes) {
+  const decoder = new Decoder(Stream.fromByteArray(bytes));
+  expect(decoder.checkIntegrity()).toBe(true);
+  const decoded = decoder.read();
+  expect(decoded.errors).toEqual([]);
+  expect(decoded.messages.sessionMesgs[0].subSport).toBe('strengthTraining');
+}
+
+test('paginated history, selection, FIT and ZIP downloads', async ({ page }) => {
+  const requests = [];
+  await page.route(api, async route => {
+    const request = route.request();
+    expect(request.method()).toBe('GET');
+    expect(request.headers().authorization).toBe(`Bearer ${fakeKey}`);
+    expect(request.url()).not.toContain(fakeKey);
+    const url = new URL(request.url());
+    requests.push(url.searchParams.get('cursor'));
+    const data = url.searchParams.has('cursor')
+      ? { records: [{ id: 1, text: fixture }, { id: 2, text: fixture }], hasMore: false }
+      : { records: [{ id: 1, text: fixture }], hasMore: true, nextCursor: 42 };
+    await route.fulfill({ json: { data } });
+  });
+  await load(page);
+  await expect(page.locator('#history-status')).toContainText('1 workouts loaded');
+  expect(await page.evaluate(key => localStorage.getItem(key), storedKey)).toBeNull();
+  await page.locator('#workout-list input').first().check();
+  await page.getByRole('button', { name: 'Convert selected (1)', exact: true }).click();
+  let pendingDownload = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Download selected FIT' }).click();
+  let download = await pendingDownload;
+  expect(download.suggestedFilename()).toBe('2026-03-01T10-00-00_Push-Day_1.fit');
+  verifyFit(readFileSync(await download.path()));
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('#workout-list li')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Load more', exact: true })).toBeHidden();
+  expect(requests).toEqual([null, '42']);
+  await page.getByLabel('Select all loaded workouts').check();
+  await page.getByRole('button', { name: 'Convert selected (2)', exact: true }).click();
+  pendingDownload = page.waitForEvent('download');
+  await page.getByRole('link', { name: 'Download ZIP (2 workouts)' }).click();
+  download = await pendingDownload;
+  expect(download.suggestedFilename()).toBe('liftosaur-workouts.zip');
+  const files = unzipSync(readFileSync(await download.path()));
+  expect(Object.keys(files)).toEqual([
+    '2026-03-01T10-00-00_Push-Day_1.fit', '2026-03-01T10-00-00_Push-Day_2.fit',
+  ]);
+  Object.values(files).forEach(verifyFit);
+  await page.locator('#workout-list input').first().uncheck();
+  await expect(page.locator('#batch-download')).toBeHidden();
+});
+
+test('key persistence is opt-in and Forget key clears account data', async ({ page }) => {
+  await page.route(api, route => route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: false } }));
+  await load(page);
+  await expect(page.locator('#workout-list li')).toHaveCount(1);
+  await page.reload();
+  await expect(page.getByLabel('Liftosaur API key', { exact: true })).toHaveValue('');
+  await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+  await page.getByLabel('Remember key on this device').check();
+  await page.reload();
+  await expect(page.getByLabel('Liftosaur API key', { exact: true })).toHaveValue(fakeKey);
+  await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
+  await expect(page.locator('#workout-list li')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Forget key' }).click();
+  await expect(page.getByLabel('Liftosaur API key', { exact: true })).toHaveValue('');
+  await expect(page.locator('#workout-list li')).toHaveCount(0);
+  expect(await page.evaluate(key => localStorage.getItem(key), storedKey)).toBeNull();
+});
+
+test('API errors are safe and retry works; unsupported records cannot be selected', async ({ page }) => {
+  let attempt = 0;
+  await page.route(api, route => {
+    attempt++;
+    if (attempt === 1) return route.fulfill({ status: 401, body: `Do not display ${fakeKey}` });
+    return route.fulfill({ json: { data: { records: [{ id: 1, text: '{}' }], hasMore: false } } });
+  });
+  await load(page);
+  await expect(page.locator('#history-status')).toContainText('API key was not accepted');
+  await expect(page.locator('body')).not.toContainText(fakeKey);
+  await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
+  await expect(page.locator('#workout-list input')).toBeDisabled();
+  await expect(page.locator('#convert-selected')).toBeDisabled();
+});
+
+test('empty history and failed pagination retain a usable selection', async ({ page }) => {
+  let attempt = 0;
+  await page.route(api, route => {
+    attempt++;
+    if (attempt === 1) return route.fulfill({ json: { records: [], hasMore: false } });
+    if (attempt === 2) return route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: true, nextCursor: 42 } });
+    return route.fulfill({ status: 429 });
+  });
+  await load(page);
+  await expect(page.locator('#history-status')).toContainText('No workouts found');
+  await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
+  await page.locator('#workout-list input').check();
+  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await expect(page.locator('#history-status')).toContainText('too many requests');
+  await expect(page.locator('#workout-list input')).toBeChecked();
+  await expect(page.locator('#convert-selected')).toBeEnabled();
+});
+
+test('forgetting a key cancels an in-flight request', async ({ page }) => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  await page.route(api, async route => {
+    await gate;
+    await route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: false } }).catch(() => {});
+  });
+  await load(page);
+  await expect(page.locator('#history-status')).toContainText('Loading workouts');
+  await page.getByRole('button', { name: 'Forget key' }).click();
+  release();
+  await expect(page.locator('#workout-list li')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Load workouts', exact: true })).toBeEnabled();
+});
+
+test('live authenticated browser request (explicit opt-in)', async ({ page }) => {
+  test.skip(process.env.LIFTOSAUR_LIVE_CHECK !== '1', 'Set LIFTOSAUR_LIVE_CHECK=1 to perform a real read-only API check.');
+  expect(Boolean(process.env.LIFTOSAUR_API_KEY)).toBe(true);
+  await page.goto('/');
+  // Return only status/shape information. Never save or print keys or workout text.
+  const result = await page.evaluate(async key => {
+    try {
+      const response = await fetch('https://www.liftosaur.com/api/v1/history?limit=1', {
+        headers: { Authorization: `Bearer ${key}` }, credentials: 'omit', cache: 'no-store',
+        redirect: 'error', signal: AbortSignal.timeout(20000),
+      });
+      if (!response.ok) return { ok: false, status: response.status };
+      const payload = await response.json();
+      const data = payload.data ?? payload;
+      return { ok: true, valid: Array.isArray(data.records) && data.records.every(r => Number.isSafeInteger(r.id) && typeof r.text === 'string') };
+    } catch { return { ok: false, networkError: true }; }
+  }, process.env.LIFTOSAUR_API_KEY);
+  expect(result).toEqual({ ok: true, valid: true });
+});
