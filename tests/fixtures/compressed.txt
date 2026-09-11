@@ -1,0 +1,4 @@
+2026-03-01T12:00:00+02:00 / program: "Example" / dayName: "Short workout" / duration: 121s / exercises: {
+Bench Press, Barbell / 2x5 100lb / warmup: 1x5 20kg / target: 2x5 100lb 120s
+Overhead Press / 1x10 20kg
+}

@@ -1,0 +1,15 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Mappings" / duration: 1800s / exercises: {
+Bench Press / 1x5 20kg
+Squat / 1x5 20kg
+Squat, Barbell / 1x5 20kg
+Deadlift / 1x5 20kg
+Deadlift, Barbell / 1x5 20kg
+Overhead Press, Barbell / 1x5 20kg
+Bent Over Row / 1x5 20kg
+Bent Over Row, Barbell / 1x5 20kg
+Push Up / 1x5 0kg
+Push-up / 1x5 0kg
+Lat Pulldown / 1x5 20kg
+Hanging Leg Raise / 1x5 0kg
+Unknown Exercise / 1x5 12.5kg
+}

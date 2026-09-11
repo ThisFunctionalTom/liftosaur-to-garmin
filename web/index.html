@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liftosaur to Garmin</title>
+    <style>
+      :root { font-family: system-ui, sans-serif; color: #172b29; background: #f3f6f4; }
+      body { margin: 0; }
+      main { max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; }
+      h1 { font-size: 2rem; }
+      p { line-height: 1.5; }
+      label { display: block; font-weight: 600; margin-bottom: .6rem; }
+      textarea { box-sizing: border-box; width: 100%; min-height: 18rem; padding: 1rem; border: 1px solid #9eaaa5; border-radius: .5rem; font: 1rem monospace; }
+      button, a { display: inline-block; margin: 1rem .6rem 0 0; padding: .8rem 1rem; border-radius: .5rem; font: inherit; }
+      button { border: 0; background: #165c48; color: white; cursor: pointer; }
+      a { color: #165c48; }
+      [hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Liftosaur to Garmin</h1>
+      <p>Convert a workout to a Garmin FIT activity. Everything runs on this device.</p>
+      <form id="converter">
+        <label for="workout">Liftosaur API workout text</label>
+        <textarea id="workout" required spellcheck="false" placeholder="Paste a workout record here"></textarea>
+        <button type="submit">Convert workout</button>
+        <button type="button" id="sample">Try an example</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+      <a id="download" hidden>Download FIT</a>
+    </main>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

@@ -1,1 +1,10 @@
 fit/
+node_modules/
+web/generated/
+web/dist/
+**/bin/
+**/obj/
+.fable/
+tests/output/
+web/test-results/
+web/playwright-report/
