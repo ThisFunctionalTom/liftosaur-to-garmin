@@ -7,10 +7,9 @@ test('convert example and download a valid strength activity at phone width', as
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await page.getByRole('button', { name: 'Try an example' }).click();
+  const pendingDownload = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Convert workout' }).click();
   await expect(page.locator('#status')).toContainText('4 completed sets');
-  const pendingDownload = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download FIT' }).click();
   const download = await pendingDownload;
   expect(download.suggestedFilename()).toBe('Push-Day.fit');
   const decoder = new Decoder(Stream.fromByteArray(readFileSync(await download.path())));

@@ -13,6 +13,7 @@ function clearDownload() {
   downloadUrl = undefined;
   download.hidden = true;
   download.removeAttribute('href');
+  document.querySelector('#manual-import').hidden = true;
 }
 
 input.addEventListener('input', () => { clearDownload(); status.textContent = ''; });
@@ -33,7 +34,9 @@ document.querySelector('#converter').addEventListener('submit', event => {
     download.href = downloadUrl;
     download.download = `${result.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'workout'}.fit`;
     download.hidden = false;
-    status.textContent = `${result.name}: ${result.sets} completed sets. Your FIT file is ready.`;
+    download.click();
+    document.querySelector('#manual-import').hidden = false;
+    status.textContent = `${result.name}: ${result.sets} completed sets. Download started.`;
   } catch (error) {
     status.textContent = `Could not convert this workout: ${error.message}`;
   }
@@ -45,7 +48,6 @@ const remember = document.querySelector('#remember-key');
 const storageStatus = document.querySelector('#storage-status');
 const historyStatus = document.querySelector('#history-status');
 const loadButton = document.querySelector('#load-workouts');
-const moreButton = document.querySelector('#load-more');
 const cancelButton = document.querySelector('#cancel-load');
 const selection = document.querySelector('#workout-selection');
 const list = document.querySelector('#workout-list');
@@ -56,7 +58,6 @@ const batchDownload = document.querySelector('#batch-download');
 const storageKey = 'liftosaur-converter.api-key';
 let records = [];
 let selected = new Set();
-let nextCursor = null;
 let pending;
 let batchUrl;
 
@@ -88,6 +89,7 @@ function clearBatch() {
   batchDownload.hidden = true;
   batchDownload.removeAttribute('href');
   batchStatus.textContent = '';
+  document.querySelector('#batch-import').hidden = true;
 }
 
 function updateSelection() {
@@ -101,7 +103,6 @@ function updateSelection() {
 
 function setLoading() {
   loadButton.disabled = !!pending;
-  moreButton.disabled = !!pending;
   cancelButton.hidden = !pending;
   updateSelection();
 }
@@ -116,10 +117,8 @@ function resetHistory() {
   cancelPending();
   records = [];
   selected.clear();
-  nextCursor = null;
   list.replaceChildren();
   selection.hidden = true;
-  moreButton.hidden = true;
   historyStatus.textContent = '';
   clearBatch();
   updateSelection();
@@ -162,13 +161,12 @@ function renderRecords() {
     list.append(item);
   }
   selection.hidden = !records.length;
-  moreButton.hidden = nextCursor === null;
   updateSelection();
 }
 
-async function loadHistory(more = false) {
+async function loadHistory() {
   if (pending || !keyInput.value.trim()) return;
-  if (!more) resetHistory();
+  resetHistory();
   savePreference();
   const controller = new AbortController();
   pending = controller;
@@ -177,22 +175,20 @@ async function loadHistory(more = false) {
   let timedOut = false;
   const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 30000);
   try {
-    const page = await fetchHistory(keyInput.value, more ? nextCursor : null, controller.signal);
+    const page = await fetchHistory(keyInput.value, null, controller.signal, 5);
     if (pending !== controller) return;
     const known = new Set(records.map(record => record.id));
-    let added = 0;
-    for (const record of page.records) {
+    for (const record of page.records.slice(0, 5)) {
       if (known.has(record.id)) continue;
       known.add(record.id);
-      added++;
       try { records.push({ ...record, summary: describeRecord(record) }); }
       catch { records.push({ ...record, unavailable: true }); }
     }
-    nextCursor = added ? page.nextCursor : null;
     renderRecords();
     historyStatus.textContent = records.length
       ? `${records.length} workouts loaded. Select the ones to convert.`
       : 'No workouts found in your Liftosaur history.';
+    if (records.length) selection.scrollIntoView({ block: 'start' });
   } catch (error) {
     if (pending !== controller) return;
     historyStatus.textContent = timedOut ? 'Liftosaur took too long to respond. Try again.' : error.message;
@@ -206,7 +202,6 @@ document.querySelector('#history-form').addEventListener('submit', event => {
   event.preventDefault();
   loadHistory();
 });
-moreButton.addEventListener('click', () => loadHistory(true));
 selectAll.addEventListener('change', () => {
   selected = new Set(selectAll.checked ? records.filter(record => !record.unavailable).map(record => record.id) : []);
   clearBatch();
@@ -221,7 +216,11 @@ convertButton.addEventListener('click', () => {
     batchDownload.download = result.filename;
     batchDownload.textContent = selected.size === 1 ? 'Download selected FIT' : `Download ZIP (${selected.size} workouts)`;
     batchDownload.hidden = false;
-    batchStatus.textContent = `${selected.size} workouts converted. Your download is ready.`;
+    batchDownload.click();
+    document.querySelector('#batch-import').hidden = false;
+    batchStatus.textContent = selected.size === 1
+      ? 'Workout converted. Download started.'
+      : `${selected.size} workouts converted. ZIP download started. Extract the FIT files before importing into Garmin.`;
   } catch {
     batchStatus.textContent = 'Could not convert the selection. Try selecting the workouts individually.';
   }

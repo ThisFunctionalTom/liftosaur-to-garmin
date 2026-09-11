@@ -52,7 +52,10 @@ npm run dev --prefix web
 Open the local URL printed by Vite, enter your Liftosaur API key, and select
 **Load workouts**. Select workouts from the list, then **Convert selected**. One
 selected workout downloads as FIT; multiple workouts download as a ZIP containing
-one FIT per workout. **Load more** retrieves another page of up to 20 records.
+one FIT per workout. Only the last five workouts are displayed. **Convert selected**
+starts the download immediately; the download link remains available for retrying.
+**Open Garmin import** opens Garmin Connect Web's import page. Sign in and choose
+the FIT file from Downloads; extract a batch ZIP before selecting its FIT files.
 
 Keys are sent directly to Liftosaur in the Authorization header. They stay in memory
 unless **Remember key on this device** is selected; that option stores the key in

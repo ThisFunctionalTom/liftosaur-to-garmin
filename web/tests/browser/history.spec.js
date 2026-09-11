@@ -22,7 +22,7 @@ function verifyFit(bytes) {
   expect(decoded.messages.sessionMesgs[0].subSport).toBe('strengthTraining');
 }
 
-test('paginated history, selection, FIT and ZIP downloads', async ({ page }) => {
+test('last five workouts fit on screen and Convert starts FIT and ZIP downloads', async ({ page }) => {
   const requests = [];
   await page.route(api, async route => {
     const request = route.request();
@@ -30,36 +30,34 @@ test('paginated history, selection, FIT and ZIP downloads', async ({ page }) => 
     expect(request.headers().authorization).toBe(`Bearer ${fakeKey}`);
     expect(request.url()).not.toContain(fakeKey);
     const url = new URL(request.url());
+    expect(url.searchParams.get('limit')).toBe('5');
     requests.push(url.searchParams.get('cursor'));
-    const data = url.searchParams.has('cursor')
-      ? { records: [{ id: 1, text: fixture }, { id: 2, text: fixture }], hasMore: false }
-      : { records: [{ id: 1, text: fixture }], hasMore: true, nextCursor: 42 };
+    // Even an oversized response must not create a list longer than five rows.
+    const data = { records: Array.from({ length: 7 }, (_, index) => ({ id: index + 1, text: fixture })), hasMore: true, nextCursor: 42 };
     await route.fulfill({ json: { data } });
   });
   await load(page);
-  await expect(page.locator('#history-status')).toContainText('1 workouts loaded');
+  await expect(page.locator('#history-status')).toContainText('5 workouts loaded');
+  await expect(page.locator('#workout-list li')).toHaveCount(5);
+  await expect(page.locator('#workout-list li').first()).toBeInViewport();
+  await expect(page.locator('#workout-list li').last()).toBeInViewport();
+  await expect(page.locator('#convert-selected')).toBeInViewport();
   expect(await page.evaluate(key => localStorage.getItem(key), storedKey)).toBeNull();
   await page.locator('#workout-list input').first().check();
-  await page.getByRole('button', { name: 'Convert selected (1)', exact: true }).click();
   let pendingDownload = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download selected FIT' }).click();
+  await page.getByRole('button', { name: 'Convert selected (1)', exact: true }).click();
   let download = await pendingDownload;
   expect(download.suggestedFilename()).toBe('2026-03-01T10-00-00_Push-Day_1.fit');
   verifyFit(readFileSync(await download.path()));
-  await page.getByRole('button', { name: 'Load more', exact: true }).click();
-  await expect(page.locator('#workout-list li')).toHaveCount(2);
-  await expect(page.getByRole('button', { name: 'Load more', exact: true })).toBeHidden();
-  expect(requests).toEqual([null, '42']);
+  await expect(page.locator('#batch-import a')).toHaveAttribute('href', 'https://connect.garmin.com/app/import-data');
+  expect(requests).toEqual([null]);
   await page.getByLabel('Select all loaded workouts').check();
-  await page.getByRole('button', { name: 'Convert selected (2)', exact: true }).click();
   pendingDownload = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download ZIP (2 workouts)' }).click();
+  await page.getByRole('button', { name: 'Convert selected (5)', exact: true }).click();
   download = await pendingDownload;
   expect(download.suggestedFilename()).toBe('liftosaur-workouts.zip');
   const files = unzipSync(readFileSync(await download.path()));
-  expect(Object.keys(files)).toEqual([
-    '2026-03-01T10-00-00_Push-Day_1.fit', '2026-03-01T10-00-00_Push-Day_2.fit',
-  ]);
+  expect(Object.keys(files)).toEqual(Array.from({ length: 5 }, (_, index) => `2026-03-01T10-00-00_Push-Day_${index + 1}.fit`));
   Object.values(files).forEach(verifyFit);
   await page.locator('#workout-list input').first().uncheck();
   await expect(page.locator('#batch-download')).toBeHidden();
@@ -98,7 +96,7 @@ test('API errors are safe and retry works; unsupported records cannot be selecte
   await expect(page.locator('#convert-selected')).toBeDisabled();
 });
 
-test('empty history and failed pagination retain a usable selection', async ({ page }) => {
+test('empty history and failed refresh clear obsolete selections', async ({ page }) => {
   let attempt = 0;
   await page.route(api, route => {
     attempt++;
@@ -110,10 +108,10 @@ test('empty history and failed pagination retain a usable selection', async ({ p
   await expect(page.locator('#history-status')).toContainText('No workouts found');
   await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
   await page.locator('#workout-list input').check();
-  await page.getByRole('button', { name: 'Load more', exact: true }).click();
+  await page.getByRole('button', { name: 'Load workouts', exact: true }).click();
   await expect(page.locator('#history-status')).toContainText('too many requests');
-  await expect(page.locator('#workout-list input')).toBeChecked();
-  await expect(page.locator('#convert-selected')).toBeEnabled();
+  await expect(page.locator('#workout-list input')).toHaveCount(0);
+  await expect(page.locator('#convert-selected')).toBeDisabled();
 });
 
 test('forgetting a key cancels an in-flight request', async ({ page }) => {

@@ -1,6 +1,6 @@
 const historyUrl = 'https://www.liftosaur.com/api/v1/history';
 
-export async function fetchHistory(apiKey, cursor = null, signal, limit = 20) {
+export async function fetchHistory(apiKey, cursor = null, signal, limit = 5) {
   const url = new URL(historyUrl);
   url.searchParams.set('limit', String(limit));
   if (cursor !== null) url.searchParams.set('cursor', String(cursor));

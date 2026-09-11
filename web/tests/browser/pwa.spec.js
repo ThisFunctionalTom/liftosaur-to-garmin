@@ -47,10 +47,9 @@ test('manifest and icons work under a project path; cached app converts offline'
   await expect(page.locator('#connection-status')).toContainText('You’re offline');
   await expect(page.getByLabel('Liftosaur API key', { exact: true })).toHaveValue('');
   await page.getByRole('button', { name: 'Try an example' }).click();
+  const pending = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Convert workout', exact: true }).click();
   await expect(page.locator('#status')).toContainText('4 completed sets');
-  const pending = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download FIT', exact: true }).click();
   const decoder = new Decoder(Stream.fromByteArray(readFileSync(await (await pending).path())));
   expect(decoder.checkIntegrity()).toBe(true);
   await context.setOffline(false);
