@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "Liftosaur to Garmin",
+  "short_name": "Liftosaur FIT",
+  "description": "Convert Liftosaur workouts to Garmin FIT activities on your device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f4",
+  "theme_color": "#165c48",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

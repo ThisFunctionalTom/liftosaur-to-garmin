@@ -7,9 +7,13 @@ export default defineConfig({
     channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
     viewport: { width: 390, height: 844 },
   },
-  webServer: {
+  webServer: [{
     command: 'npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
-  },
+  }, {
+    command: 'node tests/pwa-server.js',
+    url: 'http://127.0.0.1:4174/liftosaur/',
+    reuseExistingServer: false,
+  }],
 });

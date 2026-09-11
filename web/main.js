@@ -1,4 +1,5 @@
 import { convertWorkout } from './fit.js';
+import './pwa.js';
 import { fetchHistory } from './api.js';
 import { createDownload, describeRecord } from './downloads.js';
 

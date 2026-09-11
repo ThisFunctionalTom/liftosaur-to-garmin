@@ -16,9 +16,9 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
 3. Add API-key entry, recent-workout selection, and FIT downloads (ZIP for batches).
    Verify authenticated browser requests to Liftosaur. Keep keys out of source and
    deployment artifacts; remembering a key on the device should be optional. **Done.**
-4. Add a PWA manifest and service worker, then test installation and downloads on
-   Android. Consider local-file import as a later enhancement; the current parser
-   consumes API workout text, not arbitrary Liftosaur backup formats.
+4. Add a PWA manifest and service worker. **Implemented and browser-tested.**
+   Physical Android installation/download testing follows HTTPS deployment in step 5.
+   Local-file import remains a possible later enhancement.
 5. Create a GitHub repository, connect it using Jujutsu, and deploy the static app
    to GitHub Pages. No GitHub repository or hosting is required for steps 1–4.
 
@@ -62,7 +62,7 @@ The [Liftosaur API](https://www.liftosaur.com/doc/api) requires Premium.
 
 You can also select **Try an example**, or paste the `text` field of an API history
 record and convert without an API key. This is not an importer for full Liftosaur
-JSON backups. PWA installation remains a later step.
+JSON backups.
 
 For F# edits, rerun `npm run compile --prefix web` (or restart the dev command).
 JavaScript and HTML edits are picked up by Vite automatically.
@@ -70,6 +70,46 @@ JavaScript and HTML edits are picked up by Vite automatically.
 `npm run build --prefix web` produces the standalone static site in `web/dist`.
 Asset URLs are relative so it can later be deployed beneath a GitHub Pages project
 path. Generated JavaScript, build output, and dependencies are ignored by Jujutsu.
+
+## Install and use offline
+
+The production build includes a manifest, Android launcher icons, and a service
+worker. On Android, open the deployed HTTPS site in Chrome, then tap **Install app**
+when offered, or use Chrome's menu **Add to home screen / Install app**. Launch it
+from its home-screen icon. The browser controls when its install prompt is available.
+
+After the first successful online load, the app can reopen offline and convert
+pasted workout text. Workouts already loaded in the current tab can also be converted
+offline, but history is not retained across reloads. Fetching history needs a connection.
+Only the app's static assets are cached; API requests, keys, and workout responses
+are never added to the service worker cache. Optional key storage is separate.
+
+When a new version is ready, **Update and reload** appears. Finish downloading any
+prepared files before selecting it: reloading clears unsaved input and loaded history.
+The app does not reload automatically while you are working.
+
+To test the production PWA on this computer:
+
+```powershell
+npm run build --prefix web
+npm run preview --prefix web
+```
+
+Open the printed localhost URL. Service workers are enabled in production builds,
+not the Vite development server. A phone opening an ordinary HTTP LAN address is
+not sufficient for PWA testing: installation/service workers require HTTPS (localhost
+is an exception). See [MDN's installability guide](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable).
+
+After HTTPS deployment, verify on the physical Android phone:
+
+1. Install from Chrome and launch from the home screen in its standalone window.
+2. Load history, then download one FIT and a multi-workout ZIP; open them from Downloads.
+3. Close the app, switch to airplane mode, reopen it, and convert/download the example.
+4. Reconnect, and verify a future update is offered without interrupting your work.
+
+The launcher source is `web/public/icon.svg`. To regenerate the PNG variants with
+installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
+`node web/scripts/generate-icons.mjs`. The centered artwork fits Android's maskable safe area.
 
 ## Checks
 
@@ -85,6 +125,9 @@ The browser converter tests validate FIT integrity and compare decoded messages
 against freshly generated .NET FIT files, ignoring only generated serial numbers.
 API tests cover malformed responses, pagination, and error handling. Browser tests
 cover selection, FIT and ZIP downloads, optional key storage, and cancellation.
+PWA tests serve the production build under `/liftosaur/`, verify icon dimensions and
+manifest paths, reopen/convert/download offline, and exercise the waiting-worker
+update lifecycle and cache cleanup. These do not substitute for physical Android tests.
 
 For the browser download check using installed Edge on Windows:
 

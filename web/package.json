@@ -6,6 +6,7 @@
     "compile": "dotnet fable Web.fsproj --outDir generated",
     "dev": "npm run compile && vite --host 127.0.0.1",
     "build": "npm run compile && vite build",
+    "preview": "vite preview --host 127.0.0.1",
     "test": "npm run compile && dotnet fsi ../tests/generate-reference.fsx && node --test tests/api.test.js tests/conversion.test.js",
     "test:browser": "npm run build && playwright test"
   },
