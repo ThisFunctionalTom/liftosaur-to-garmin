@@ -20,9 +20,9 @@ test('manifest and icons work under a project path; cached app converts offline'
   expect(new URL(manifest.data.start_url, manifest.url).href).toBe(app);
   expect(new URL(manifest.data.scope, manifest.url).href).toBe(app);
   expect(manifest.data.display).toBe('standalone');
-  expect(manifest.data.name).toBe('liftosaur-to-garmin');
-  expect(manifest.data.short_name).toBe('liftosaur-to-garmin');
-  await expect(page).toHaveTitle('liftosaur-to-garmin');
+  expect(manifest.data.name).toBe('Liftosaur to Garmin');
+  expect(manifest.data.short_name).toBe('Liftosaur to Garmin');
+  await expect(page).toHaveTitle('Liftosaur to Garmin');
   for (const icon of manifest.data.icons) {
     const dimensions = await page.evaluate(async url => {
       const image = new Image();

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "liftosaur-to-garmin",
-  "short_name": "liftosaur-to-garmin",
+  "name": "Liftosaur to Garmin",
+  "short_name": "Liftosaur to Garmin",
   "description": "Convert Liftosaur workouts to Garmin FIT activities on your device.",
   "start_url": "./",
   "scope": "./",
