@@ -15,11 +15,10 @@
       h1 { font-size: 2rem; }
       p { line-height: 1.5; }
       label { display: block; font-weight: 600; margin-bottom: .6rem; }
-      textarea { box-sizing: border-box; width: 100%; min-height: 18rem; padding: 1rem; border: 1px solid #9eaaa5; border-radius: .5rem; font: 1rem monospace; }
       button, a { display: inline-block; margin: 1rem .6rem 0 0; padding: .8rem 1rem; border-radius: .5rem; font: inherit; }
       button { border: 0; background: #165c48; color: white; cursor: pointer; }
       a { color: #165c48; }
-      section, details { margin-top: 2rem; }
+      section { margin-top: 2rem; }
       input[type="password"] { box-sizing: border-box; width: 100%; padding: .8rem; font: inherit; border: 1px solid #9eaaa5; border-radius: .5rem; }
       .choice { display: flex; gap: .7rem; align-items: center; margin: 1rem 0; font-weight: normal; }
       input[type="checkbox"] { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
@@ -31,7 +30,6 @@
       #workout-list .choice { margin: .35rem 0; }
       #workout-selection { scroll-margin-top: 1rem; }
       .selection-actions { position: sticky; bottom: 0; background: #f3f6f4; padding-bottom: max(.5rem, env(safe-area-inset-bottom)); }
-      summary { cursor: pointer; font-size: 1.2rem; font-weight: 600; }
       .hint { color: #465a53; font-size: .9rem; }
       [hidden] { display: none; }
     </style>
@@ -64,28 +62,13 @@
             <button id="convert-selected" type="button" disabled>Convert selected</button>
           </div>
           <p id="batch-status" role="status" aria-live="polite"></p>
-          <a id="batch-download" hidden>Download</a>
           <div id="batch-import" hidden>
             <a href="https://connect.garmin.com/app/import-data" target="_blank" rel="noopener noreferrer">Open Garmin import</a>
             <p class="hint">Sign in, then select your downloaded FIT files. If the import controls are missing on your phone, try your browser's Desktop site option.</p>
           </div>
         </div>
       </section>
-      <details open>
-        <summary>Paste a workout instead</summary>
-        <p class="hint">Paste the text of an API workout record, or try the example.</p>
-      <form id="converter">
-        <label for="workout">Liftosaur API workout text</label>
-        <textarea id="workout" required spellcheck="false" placeholder="Paste a workout record here"></textarea>
-        <button type="submit">Convert workout</button>
-        <button type="button" id="sample">Try an example</button>
-      </form>
-      <p id="status" role="status" aria-live="polite"></p>
-      <a id="download" hidden>Download FIT</a>
-      <div id="manual-import" hidden>
-        <a href="https://connect.garmin.com/app/import-data" target="_blank" rel="noopener noreferrer">Open Garmin import</a>
-      </div>
-      </details>
+
     </main>
     <script type="module" src="/main.js"></script>
   </body>

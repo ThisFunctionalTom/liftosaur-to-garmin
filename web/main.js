@@ -1,47 +1,6 @@
-import { convertWorkout } from './fit.js';
 import './pwa.js';
 import { fetchHistory } from './api.js';
 import { createDownload, describeRecord } from './downloads.js';
-
-const input = document.querySelector('#workout');
-const status = document.querySelector('#status');
-const download = document.querySelector('#download');
-let downloadUrl;
-
-function clearDownload() {
-  if (downloadUrl) URL.revokeObjectURL(downloadUrl);
-  downloadUrl = undefined;
-  download.hidden = true;
-  download.removeAttribute('href');
-  document.querySelector('#manual-import').hidden = true;
-}
-
-input.addEventListener('input', () => { clearDownload(); status.textContent = ''; });
-document.querySelector('#sample').addEventListener('click', () => {
-  clearDownload();
-  status.textContent = '';
-  input.value = `2026-03-01T10:00:00Z / program: "Example" / dayName: "Push Day" / duration: 600s / exercises: {
-Bench Press, Barbell / 2x5 100lb / warmup: 1x5 20kg / target: 2x5 100lb 120s
-Overhead Press / 1x10 20kg
-}`;
-});
-document.querySelector('#converter').addEventListener('submit', event => {
-  event.preventDefault();
-  clearDownload();
-  try {
-    const result = convertWorkout(input.value);
-    downloadUrl = URL.createObjectURL(new Blob([result.bytes], { type: 'application/octet-stream' }));
-    download.href = downloadUrl;
-    download.download = `${result.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'workout'}.fit`;
-    download.hidden = false;
-    download.click();
-    document.querySelector('#manual-import').hidden = false;
-    status.textContent = `${result.name}: ${result.sets} completed sets. Download started.`;
-  } catch (error) {
-    status.textContent = `Could not convert this workout: ${error.message}`;
-  }
-});
-window.addEventListener('pagehide', clearDownload);
 
 const keyInput = document.querySelector('#api-key');
 const remember = document.querySelector('#remember-key');
@@ -54,7 +13,6 @@ const list = document.querySelector('#workout-list');
 const selectAll = document.querySelector('#select-all');
 const convertButton = document.querySelector('#convert-selected');
 const batchStatus = document.querySelector('#batch-status');
-const batchDownload = document.querySelector('#batch-download');
 const storageKey = 'liftosaur-converter.api-key';
 let records = [];
 let selected = new Set();
@@ -86,8 +44,6 @@ remember.addEventListener('change', savePreference);
 function clearBatch() {
   if (batchUrl) URL.revokeObjectURL(batchUrl);
   batchUrl = undefined;
-  batchDownload.hidden = true;
-  batchDownload.removeAttribute('href');
   batchStatus.textContent = '';
   document.querySelector('#batch-import').hidden = true;
 }
@@ -212,11 +168,13 @@ convertButton.addEventListener('click', () => {
   try {
     const result = createDownload(records.filter(record => selected.has(record.id)));
     batchUrl = URL.createObjectURL(new Blob([result.bytes], { type: result.type }));
+    const batchDownload = document.createElement('a');
     batchDownload.href = batchUrl;
     batchDownload.download = result.filename;
-    batchDownload.textContent = selected.size === 1 ? 'Download selected FIT' : `Download ZIP (${selected.size} workouts)`;
-    batchDownload.hidden = false;
+    batchDownload.hidden = true;
+    document.body.append(batchDownload);
     batchDownload.click();
+    batchDownload.remove();
     document.querySelector('#batch-import').hidden = false;
     batchStatus.textContent = selected.size === 1
       ? 'Workout converted. Download started.'

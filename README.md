@@ -53,7 +53,7 @@ Open the local URL printed by Vite, enter your Liftosaur API key, and select
 **Load workouts**. Select workouts from the list, then **Convert selected**. One
 selected workout downloads as FIT; multiple workouts download as a ZIP containing
 one FIT per workout. Only the last five workouts are displayed. **Convert selected**
-starts the download immediately; the download link remains available for retrying.
+starts the download immediately. To download again, press **Convert selected** again.
 **Open Garmin import** opens Garmin Connect Web's import page. Sign in and choose
 the FIT file from Downloads; extract a batch ZIP before selecting its FIT files.
 
@@ -63,9 +63,7 @@ this browser's localStorage. **Forget key** removes the saved key and clears the
 loaded workout list and generated batch download. Workout history is not persisted.
 The [Liftosaur API](https://www.liftosaur.com/doc/api) requires Premium.
 
-You can also select **Try an example**, or paste the `text` field of an API history
-record and convert without an API key. This is not an importer for full Liftosaur
-JSON backups.
+The app converts workouts fetched from Liftosaur; it has no paste or backup-import area.
 
 For F# edits, rerun `npm run compile --prefix web` (or restart the dev command).
 JavaScript and HTML edits are picked up by Vite automatically.
@@ -81,14 +79,14 @@ worker. On Android, open the deployed HTTPS site in Chrome, then tap **Install a
 when offered, or use Chrome's menu **Add to home screen / Install app**. Launch it
 from its home-screen icon. The browser controls when its install prompt is available.
 
-After the first successful online load, the app can reopen offline and convert
-pasted workout text. Workouts already loaded in the current tab can also be converted
-offline, but history is not retained across reloads. Fetching history needs a connection.
+After the first successful online load, the app can reopen offline. Workouts already
+loaded in the current tab can be converted offline, but history is not retained
+across reloads. Fetching history needs a connection.
 Only the app's static assets are cached; API requests, keys, and workout responses
 are never added to the service worker cache. Optional key storage is separate.
 
-When a new version is ready, **Update and reload** appears. Finish downloading any
-prepared files before selecting it: reloading clears unsaved input and loaded history.
+When a new version is ready, **Update and reload** appears. Convert any selected
+workouts before selecting it: reloading clears loaded history and an unsaved key.
 The app does not reload automatically while you are working.
 
 To test the production PWA on this computer:
@@ -107,7 +105,8 @@ After HTTPS deployment, verify on the physical Android phone:
 
 1. Install from Chrome and launch from the home screen in its standalone window.
 2. Load history, then download one FIT and a multi-workout ZIP; open them from Downloads.
-3. Close the app, switch to airplane mode, reopen it, and convert/download the example.
+3. Load workouts, switch to airplane mode, and convert/download a selected workout.
+   Reopen offline to verify the shell loads; reconnect to load history again.
 4. Reconnect, and verify a future update is offered without interrupting your work.
 
 The launcher source is `web/public/icon.svg`. To regenerate the PNG variants with

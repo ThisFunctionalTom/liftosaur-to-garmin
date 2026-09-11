@@ -6,7 +6,7 @@ let installPrompt;
 
 function updateConnection() {
   connectionStatus.hidden = navigator.onLine;
-  connectionStatus.textContent = 'You’re offline. You can convert pasted or already loaded workouts. Loading history needs a connection.';
+  connectionStatus.textContent = 'You’re offline. You can convert already loaded workouts. Loading history needs a connection.';
 }
 window.addEventListener('online', updateConnection);
 window.addEventListener('offline', updateConnection);
@@ -41,7 +41,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     function showUpdate() {
       if (!registration.waiting) return;
       updateButton.hidden = false;
-      appStatus.textContent = 'An update is ready. Download any prepared files before reloading.';
+      appStatus.textContent = 'An update is ready. Convert any selected workouts before reloading.';
     }
     updateButton.addEventListener('click', () => {
       if (!registration.waiting) return;
@@ -54,7 +54,7 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       worker?.addEventListener('statechange', () => {
         if (worker.state === 'installed') {
           if (navigator.serviceWorker.controller) showUpdate();
-          else appStatus.textContent = 'Ready to reopen and convert pasted workouts offline.';
+          else appStatus.textContent = 'Ready to reopen offline. Loading workouts needs a connection.';
         }
       });
     });

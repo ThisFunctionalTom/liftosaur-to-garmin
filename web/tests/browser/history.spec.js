@@ -38,6 +38,7 @@ test('last five workouts fit on screen and Convert starts FIT and ZIP downloads'
   });
   await load(page);
   await expect(page.locator('#history-status')).toContainText('5 workouts loaded');
+  await expect(page.locator('textarea')).toHaveCount(0);
   await expect(page.locator('#workout-list li')).toHaveCount(5);
   await expect(page.locator('#workout-list li').first()).toBeInViewport();
   await expect(page.locator('#workout-list li').last()).toBeInViewport();
@@ -49,6 +50,7 @@ test('last five workouts fit on screen and Convert starts FIT and ZIP downloads'
   let download = await pendingDownload;
   expect(download.suggestedFilename()).toBe('2026-03-01T10-00-00_Push-Day_1.fit');
   verifyFit(readFileSync(await download.path()));
+  await expect(page.locator('a[download]')).toHaveCount(0);
   await expect(page.locator('#batch-import a')).toHaveAttribute('href', 'https://connect.garmin.com/app/import-data');
   expect(requests).toEqual([null]);
   await page.getByLabel('Select all loaded workouts').check();
@@ -60,7 +62,7 @@ test('last five workouts fit on screen and Convert starts FIT and ZIP downloads'
   expect(Object.keys(files)).toEqual(Array.from({ length: 5 }, (_, index) => `2026-03-01T10-00-00_Push-Day_${index + 1}.fit`));
   Object.values(files).forEach(verifyFit);
   await page.locator('#workout-list input').first().uncheck();
-  await expect(page.locator('#batch-download')).toBeHidden();
+  await expect(page.locator('#batch-import')).toBeHidden();
 });
 
 test('key persistence is opt-in and Forget key clears account data', async ({ page }) => {
