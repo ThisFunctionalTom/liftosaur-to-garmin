@@ -17,11 +17,12 @@ let requireUniqueNames (comparer: IEqualityComparer<string>) (names: string list
             failwith $"Duplicate program name: '{name}'. Rename the duplicates before syncing."
 
 let safeProgramName (name: string) =
-    let invalidChars = Path.GetInvalidFileNameChars()
+    // Use Windows' restrictions on every OS so synced filenames remain portable.
+    let invalidChars = "<>:\"/\\|?*".ToCharArray()
     let sanitized =
         name
         |> Seq.map (fun c ->
-            if Array.contains c invalidChars then '-' else c)
+            if c < ' ' || Array.contains c invalidChars then '-' else c)
         |> Seq.toArray
         |> fun chars -> String(chars).TrimEnd('.', ' ')
     let sanitized = if String.IsNullOrWhiteSpace(sanitized) then "Program" else sanitized
