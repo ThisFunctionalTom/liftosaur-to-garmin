@@ -20,7 +20,7 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
    Physical Android installation/download testing follows HTTPS deployment in step 5.
    Local-file import remains a possible later enhancement.
 5. Create a GitHub repository, connect it using Jujutsu, and deploy the static app
-   to GitHub Pages. **Workflow prepared; repository creation and publication pending.**
+   to an HTTPS host. **Private GitHub repository created; hosting pending.**
 
 ## Shared code
 
@@ -113,20 +113,21 @@ installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
 
 ## GitHub Pages deployment
 
-The intended repository is `ThisFunctionalTom/liftosaur-to-garmin`. The expected
-site URL after publication is `https://thisfunctionaltom.github.io/liftosaur-to-garmin/`.
-This URL is not live until the repository and Pages deployment have been created.
+The repository is private: `ThisFunctionalTom/liftosaur-to-garmin`.
+GitHub rejected Pages setup because the current account plan does not support Pages
+from private repositories. The repository will remain private; hosting is pending.
 
 `.github/workflows/pages.yml` runs the F# tests, FIT comparisons, browser download
-checks, and offline/update tests. Pushes to `main` then publish only `web/dist` to
-Pages. Pull requests run the checks without deploying. No Liftosaur API key or
-other account secret is needed in GitHub Actions.
+checks, and offline/update tests on pushes to `main` and pull requests. Pages deployment
+is disabled unless the repository variable `PAGES_ENABLED` is set to `true`.
+When enabled, successful main-branch builds publish only `web/dist`. No Liftosaur API
+key is needed in GitHub Actions.
 
-For initial setup, create an empty GitHub repository (do not initialize it with a
-README), and select **Settings → Pages → Build and deployment → GitHub Actions**.
-Use a public repository for GitHub Free. Publishing this existing repository also
-publishes its tracked scripts, program files, and history; the website artifact
-itself contains only the built browser app.
+To use GitHub Pages later, a private personal repository needs GitHub Pro. After
+upgrading, select **Settings → Pages → Build and deployment → GitHub Actions**,
+set `PAGES_ENABLED=true`, and manually run the workflow. The expected Pages URL is
+`https://thisfunctionaltom.github.io/liftosaur-to-garmin/`. An alternative is hosting
+the built `web/dist` on Cloudflare Pages without making the source repository public.
 
 After committing the deployment files with Jujutsu, connect and push the committed
 revision (these commands assume it is the working copy's parent):
