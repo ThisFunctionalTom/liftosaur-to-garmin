@@ -20,7 +20,7 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
    Physical Android installation/download testing follows HTTPS deployment in step 5.
    Local-file import remains a possible later enhancement.
 5. Create a GitHub repository, connect it using Jujutsu, and deploy the static app
-   to GitHub Pages. No GitHub repository or hosting is required for steps 1–4.
+   to GitHub Pages. **Workflow prepared; repository creation and publication pending.**
 
 ## Shared code
 
@@ -110,6 +110,36 @@ After HTTPS deployment, verify on the physical Android phone:
 The launcher source is `web/public/icon.svg`. To regenerate the PNG variants with
 installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
 `node web/scripts/generate-icons.mjs`. The centered artwork fits Android's maskable safe area.
+
+## GitHub Pages deployment
+
+The intended repository is `ThisFunctionalTom/liftosaur-to-garmin`. The expected
+site URL after publication is `https://thisfunctionaltom.github.io/liftosaur-to-garmin/`.
+This URL is not live until the repository and Pages deployment have been created.
+
+`.github/workflows/pages.yml` runs the F# tests, FIT comparisons, browser download
+checks, and offline/update tests. Pushes to `main` then publish only `web/dist` to
+Pages. Pull requests run the checks without deploying. No Liftosaur API key or
+other account secret is needed in GitHub Actions.
+
+For initial setup, create an empty GitHub repository (do not initialize it with a
+README), and select **Settings → Pages → Build and deployment → GitHub Actions**.
+Use a public repository for GitHub Free. Publishing this existing repository also
+publishes its tracked scripts, program files, and history; the website artifact
+itself contains only the built browser app.
+
+After committing the deployment files with Jujutsu, connect and push the committed
+revision (these commands assume it is the working copy's parent):
+
+```powershell
+jj git remote add origin https://github.com/ThisFunctionalTom/liftosaur-to-garmin.git
+jj bookmark create main -r @-
+jj git push --remote origin --bookmark main --allow-new
+```
+
+For later releases, commit changes, move the bookmark with `jj bookmark set main -r @-`,
+and push it. The workflow also supports manual runs from GitHub's Actions tab.
+Wait for **Build and deploy PWA** to succeed before opening the site on Android.
 
 ## Checks
 
