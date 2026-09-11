@@ -20,7 +20,7 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
    Physical Android installation/download testing follows HTTPS deployment in step 5.
    Local-file import remains a possible later enhancement.
 5. Create a GitHub repository, connect it using Jujutsu, and deploy the static app
-   to an HTTPS host. **Private GitHub repository created; hosting pending.**
+   to GitHub Pages. **Publication approved after a secrets audit; deployment in progress.**
 
 ## Shared code
 
@@ -113,9 +113,9 @@ installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
 
 ## GitHub Pages deployment
 
-The repository is private: `ThisFunctionalTom/liftosaur-to-garmin`.
-GitHub rejected Pages setup because the current account plan does not support Pages
-from private repositories. The repository will remain private; hosting is pending.
+The public repository is `ThisFunctionalTom/liftosaur-to-garmin`.
+The site URL is `https://thisfunctionaltom.github.io/liftosaur-to-garmin/` once
+the Pages workflow has completed successfully.
 
 `.github/workflows/pages.yml` runs the F# tests, FIT comparisons, browser download
 checks, and offline/update tests on pushes to `main` and pull requests. Pages deployment
@@ -123,11 +123,10 @@ is disabled unless the repository variable `PAGES_ENABLED` is set to `true`.
 When enabled, successful main-branch builds publish only `web/dist`. No Liftosaur API
 key is needed in GitHub Actions.
 
-To use GitHub Pages later, a private personal repository needs GitHub Pro. After
-upgrading, select **Settings → Pages → Build and deployment → GitHub Actions**,
-set `PAGES_ENABLED=true`, and manually run the workflow. The expected Pages URL is
-`https://thisfunctionaltom.github.io/liftosaur-to-garmin/`. An alternative is hosting
-the built `web/dist` on Cloudflare Pages without making the source repository public.
+Pages uses **Settings → Pages → Build and deployment → GitHub Actions** and the
+repository variable `PAGES_ENABLED=true`. The public repository allows Pages on
+GitHub Free. No API keys belong in source, build configuration, or workflow secrets;
+enter your key in the browser when using the app.
 
 After committing the deployment files with Jujutsu, connect and push the committed
 revision (these commands assume it is the working copy's parent):
@@ -135,7 +134,7 @@ revision (these commands assume it is the working copy's parent):
 ```powershell
 jj git remote add origin https://github.com/ThisFunctionalTom/liftosaur-to-garmin.git
 jj bookmark create main -r @-
-jj git push --remote origin --bookmark main --allow-new
+jj git push --remote origin --bookmark main
 ```
 
 For later releases, commit changes, move the bookmark with `jj bookmark set main -r @-`,

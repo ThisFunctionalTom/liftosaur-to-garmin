@@ -9,3 +9,6 @@ tests/output/
 web/test-results/
 web/playwright-report/
 .tmp/
+.env
+.env.*
+!.env.example
