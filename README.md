@@ -20,7 +20,7 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
    Physical Android installation/download testing follows HTTPS deployment in step 5.
    Local-file import remains a possible later enhancement.
 5. Create a GitHub repository, connect it using Jujutsu, and deploy the static app
-   to GitHub Pages. **Publication approved after a secrets audit; deployment in progress.**
+   to GitHub Pages. **Done: public repository and HTTPS deployment.**
 
 ## Shared code
 
@@ -113,9 +113,10 @@ installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
 
 ## GitHub Pages deployment
 
-The public repository is `ThisFunctionalTom/liftosaur-to-garmin`.
-The site URL is `https://thisfunctionaltom.github.io/liftosaur-to-garmin/` once
-the Pages workflow has completed successfully.
+The [public repository](https://github.com/ThisFunctionalTom/liftosaur-to-garmin)
+deploys to [liftosaur-to-garmin](https://thisfunctionaltom.github.io/liftosaur-to-garmin/).
+The full publication history, tracked files, and built website passed a Gitleaks
+scan before publication, plus checks for embedded Liftosaur API keys.
 
 `.github/workflows/pages.yml` runs the F# tests, FIT comparisons, browser download
 checks, and offline/update tests on pushes to `main` and pull requests. Pages deployment
