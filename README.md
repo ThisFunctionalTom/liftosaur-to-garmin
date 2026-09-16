@@ -61,6 +61,12 @@ For a single-step shortcut, select **Send last workout to Garmin** after enterin
 your API key. It fetches your latest workout, downloads its converted FIT file,
 and opens Garmin's import page. Select the downloaded file there to upload it.
 If your browser blocks the tab, use **Open Garmin import** after the download.
+On Android, **Open in Android browser** requests an external app handoff using
+Android's link settings, with the normal Garmin URL as a fallback. Tap it directly
+after downloading; automatic redirects cannot reliably launch external apps.
+Android may show an app chooser or use an associated app, so a particular browser
+cannot be guaranteed. Normal Custom Tabs share their host browser's cookies; if
+Garmin repeatedly asks you to sign in, check which browser/profile is opening it.
 
 Keys are sent directly to Liftosaur in the Authorization header. They stay in memory
 unless **Remember key on this device** is selected; that option stores the key in

@@ -21,6 +21,18 @@ let pending;
 let pendingTab;
 let batchUrl;
 
+const androidImport = document.querySelector('#android-import');
+if (/Android/i.test(navigator.userAgent)) {
+  androidImport.hidden = false;
+  document.querySelector('#android-import-help').hidden = false;
+}
+androidImport.addEventListener('click', () => {
+  const url = document.querySelector('#batch-import a').href;
+  // A direct user gesture is required for Android's external-app handoff.
+  // Leave the package unset so Android resolves the user's preferred handler.
+  window.location.href = `intent://${url.slice('https://'.length)}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+});
+
 try {
   const saved = localStorage.getItem(storageKey);
   if (saved) { keyInput.value = saved; remember.checked = true; }
