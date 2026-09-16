@@ -57,6 +57,11 @@ starts the download immediately. To download again, press **Convert selected** a
 **Open Garmin import** opens Garmin Connect Web's import page. Sign in and choose
 the FIT file from Downloads; extract a batch ZIP before selecting its FIT files.
 
+For a single-step shortcut, select **Send last workout to Garmin** after entering
+your API key. It fetches your latest workout, downloads its converted FIT file,
+and opens Garmin's import page. Select the downloaded file there to upload it.
+If your browser blocks the tab, use **Open Garmin import** after the download.
+
 Keys are sent directly to Liftosaur in the Authorization header. They stay in memory
 unless **Remember key on this device** is selected; that option stores the key in
 this browser's localStorage. **Forget key** removes the saved key and clears the

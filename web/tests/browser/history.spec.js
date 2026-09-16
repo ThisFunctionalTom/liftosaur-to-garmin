@@ -65,6 +65,83 @@ test('last five workouts fit on screen and Convert starts FIT and ZIP downloads'
   await expect(page.locator('#batch-import')).toBeHidden();
 });
 
+test('last workout shortcut downloads a valid FIT and opens Garmin import', async ({ page, context }) => {
+  await context.route('https://connect.garmin.com/**', route => route.fulfill({ body: 'Garmin import' }));
+  await page.route(api, route => {
+    expect(new URL(route.request().url()).searchParams.get('limit')).toBe('1');
+    expect(route.request().headers().authorization).toBe(`Bearer ${fakeKey}`);
+    return route.fulfill({ json: { records: [{ id: 9, text: fixture }, { id: 8, text: fixture }], hasMore: false } });
+  });
+  await page.goto('/');
+  await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+  const pendingDownload = page.waitForEvent('download');
+  const pendingPopup = page.waitForEvent('popup');
+  await page.getByRole('button', { name: 'Send last workout to Garmin', exact: true }).click();
+  const download = await pendingDownload;
+  expect(download.suggestedFilename()).toBe('2026-03-01T10-00-00_Push-Day_9.fit');
+  verifyFit(readFileSync(await download.path()));
+  const popup = await pendingPopup;
+  await expect(popup).toHaveURL('https://connect.garmin.com/app/import-data');
+  expect(await popup.evaluate(() => window.opener)).toBeNull();
+  await expect(page.locator('#workout-list li')).toHaveCount(1);
+  await expect(page.locator('#history-status')).toContainText('Last workout converted');
+});
+
+test('last workout shortcut provides a manual import link when popups are blocked', async ({ page }) => {
+  await page.addInitScript(() => { window.open = () => null; });
+  await page.route(api, route => route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: false } }));
+  await page.goto('/');
+  await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+  const pendingDownload = page.waitForEvent('download');
+  await page.locator('#send-latest').click();
+  verifyFit(readFileSync(await (await pendingDownload).path()));
+  await expect(page.locator('#batch-import a')).toBeVisible();
+  await expect(page.locator('#batch-status')).toContainText('Use Open Garmin import');
+});
+
+for (const scenario of [
+  { name: 'empty history', response: { json: { records: [], hasMore: false } }, message: 'No workouts found' },
+  { name: 'unsupported workout', response: { json: { records: [{ id: 1, text: '{}' }], hasMore: false } }, message: 'Could not convert your last workout' },
+  { name: 'API error', response: { status: 401 }, message: 'API key was not accepted' },
+]) {
+  test(`last workout shortcut closes its waiting tab on ${scenario.name}`, async ({ page }) => {
+    await page.route(api, route => route.fulfill(scenario.response));
+    await page.goto('/');
+    await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+    const downloads = [];
+    page.on('download', download => downloads.push(download));
+    const pendingPopup = page.waitForEvent('popup');
+    await page.locator('#send-latest').click();
+    const popup = await pendingPopup;
+    await expect(page.locator('#history-status')).toContainText(scenario.message);
+    await expect.poll(() => popup.isClosed()).toBe(true);
+    await expect(page.locator('#send-latest')).toBeEnabled();
+    expect(downloads).toEqual([]);
+  });
+}
+
+test('cancelling the last workout shortcut closes its waiting tab', async ({ page }) => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  await page.route(api, async route => {
+    await gate;
+    await route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: false } }).catch(() => {});
+  });
+  await page.goto('/');
+  await page.getByLabel('Liftosaur API key', { exact: true }).fill(fakeKey);
+  const pendingPopup = page.waitForEvent('popup');
+  await page.locator('#send-latest').click();
+  const popup = await pendingPopup;
+  await expect(page.locator('#send-latest')).toBeDisabled();
+  await expect(page.locator('#load-workouts')).toBeDisabled();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  release();
+  await expect.poll(() => popup.isClosed()).toBe(true);
+  await expect(page.locator('#history-status')).toHaveText('Loading cancelled.');
+  await expect(page.locator('#send-latest')).toBeEnabled();
+  await expect(page.locator('#workout-list li')).toHaveCount(0);
+});
+
 test('key persistence is opt-in and Forget key clears account data', async ({ page }) => {
   await page.route(api, route => route.fulfill({ json: { records: [{ id: 1, text: fixture }], hasMore: false } }));
   await load(page);

@@ -7,6 +7,7 @@ const remember = document.querySelector('#remember-key');
 const storageStatus = document.querySelector('#storage-status');
 const historyStatus = document.querySelector('#history-status');
 const loadButton = document.querySelector('#load-workouts');
+const latestButton = document.querySelector('#send-latest');
 const cancelButton = document.querySelector('#cancel-load');
 const selection = document.querySelector('#workout-selection');
 const list = document.querySelector('#workout-list');
@@ -17,6 +18,7 @@ const storageKey = 'liftosaur-converter.api-key';
 let records = [];
 let selected = new Set();
 let pending;
+let pendingTab;
 let batchUrl;
 
 try {
@@ -59,12 +61,15 @@ function updateSelection() {
 
 function setLoading() {
   loadButton.disabled = !!pending;
+  latestButton.disabled = !!pending;
   cancelButton.hidden = !pending;
   updateSelection();
 }
 
 function cancelPending() {
   pending?.abort();
+  pendingTab?.close();
+  pendingTab = undefined;
   pending = undefined;
   setLoading();
 }
@@ -120,9 +125,17 @@ function renderRecords() {
   updateSelection();
 }
 
-async function loadHistory() {
+async function loadHistory(latest = false) {
   if (pending || !keyInput.value.trim()) return;
   resetHistory();
+  // Reserve a tab during the click so the asynchronous fetch does not lose user activation.
+  const garminTab = latest ? window.open('about:blank', '_blank') : null;
+  if (garminTab) {
+    garminTab.opener = null;
+    garminTab.document.title = 'Preparing Garmin upload';
+    garminTab.document.body.textContent = 'Preparing your last workout. Garmin import will open when the FIT download starts.';
+    pendingTab = garminTab;
+  }
   savePreference();
   const controller = new AbortController();
   pending = controller;
@@ -131,10 +144,10 @@ async function loadHistory() {
   let timedOut = false;
   const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 30000);
   try {
-    const page = await fetchHistory(keyInput.value, null, controller.signal, 5);
+    const page = await fetchHistory(keyInput.value, null, controller.signal, latest ? 1 : 5);
     if (pending !== controller) return;
     const known = new Set(records.map(record => record.id));
-    for (const record of page.records.slice(0, 5)) {
+    for (const record of page.records.slice(0, latest ? 1 : 5)) {
       if (known.has(record.id)) continue;
       known.add(record.id);
       try { records.push({ ...record, summary: describeRecord(record) }); }
@@ -145,40 +158,62 @@ async function loadHistory() {
       ? `${records.length} workouts loaded. Select the ones to convert.`
       : 'No workouts found in your Liftosaur history.';
     if (records.length) selection.scrollIntoView({ block: 'start' });
+    if (latest && records.length) {
+      if (records[0].unavailable) throw new Error('Could not convert your last workout. Its format is unsupported.');
+      selected.add(records[0].id);
+      renderRecords();
+      try { downloadSelection(); }
+      catch { throw new Error('Could not convert your last workout. Try again.'); }
+      historyStatus.textContent = 'Last workout converted. Select the downloaded FIT file in Garmin.';
+      if (garminTab && !garminTab.closed) {
+        garminTab.location.replace(document.querySelector('#batch-import a').href);
+        pendingTab = undefined;
+      } else {
+        batchStatus.textContent += ' Use Open Garmin import to upload it; the browser did not open the tab.';
+      }
+    }
   } catch (error) {
     if (pending !== controller) return;
     historyStatus.textContent = timedOut ? 'Liftosaur took too long to respond. Try again.' : error.message;
   } finally {
     clearTimeout(timeout);
-    if (pending === controller) { pending = undefined; setLoading(); }
+    if (pending === controller) {
+      pendingTab?.close();
+      pendingTab = undefined;
+      pending = undefined;
+      setLoading();
+    }
   }
 }
 
 document.querySelector('#history-form').addEventListener('submit', event => {
   event.preventDefault();
-  loadHistory();
+  loadHistory(event.submitter === latestButton);
 });
 selectAll.addEventListener('change', () => {
   selected = new Set(selectAll.checked ? records.filter(record => !record.unavailable).map(record => record.id) : []);
   clearBatch();
   renderRecords();
 });
-convertButton.addEventListener('click', () => {
+function downloadSelection() {
   clearBatch();
+  const result = createDownload(records.filter(record => selected.has(record.id)));
+  batchUrl = URL.createObjectURL(new Blob([result.bytes], { type: result.type }));
+  const batchDownload = document.createElement('a');
+  batchDownload.href = batchUrl;
+  batchDownload.download = result.filename;
+  batchDownload.hidden = true;
+  document.body.append(batchDownload);
+  batchDownload.click();
+  batchDownload.remove();
+  document.querySelector('#batch-import').hidden = false;
+  batchStatus.textContent = selected.size === 1
+    ? 'Workout converted. Download started.'
+    : `${selected.size} workouts converted. ZIP download started. Extract the FIT files before importing into Garmin.`;
+}
+convertButton.addEventListener('click', () => {
   try {
-    const result = createDownload(records.filter(record => selected.has(record.id)));
-    batchUrl = URL.createObjectURL(new Blob([result.bytes], { type: result.type }));
-    const batchDownload = document.createElement('a');
-    batchDownload.href = batchUrl;
-    batchDownload.download = result.filename;
-    batchDownload.hidden = true;
-    document.body.append(batchDownload);
-    batchDownload.click();
-    batchDownload.remove();
-    document.querySelector('#batch-import').hidden = false;
-    batchStatus.textContent = selected.size === 1
-      ? 'Workout converted. Download started.'
-      : `${selected.size} workouts converted. ZIP download started. Extract the FIT files before importing into Garmin.`;
+    downloadSelection();
   } catch {
     batchStatus.textContent = 'Could not convert the selection. Try selecting the workouts individually.';
   }
