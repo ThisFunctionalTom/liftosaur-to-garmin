@@ -31,12 +31,13 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
 - `liftosaur2garmin.fsx`: CLI.
 - `web/Converter.fs`: Fable boundary using the shared parsing and timeline modules.
 - `web/fit.js`: Garmin JavaScript SDK adapter.
+- `shared/exercise-mappings.json`: shared exercise mapping catalog for both SDK adapters.
 - `web/api.js`: read-only browser API client with cursor pagination.
 - `web/downloads.js`: workout descriptions, FIT filenames, and ZIP downloads.
 
 The shared files have no HTTP, filesystem, or Garmin SDK dependencies and compile
-with Fable. Garmin-specific mappings live in each SDK adapter; fixture comparisons
-cover every mapping to detect differences.
+with Fable. Both Garmin SDK adapters read the same exercise mapping catalog;
+tests compare their numeric exercise metadata and encoded fixture output.
 See [exercise mappings](docs/exercise-mappings.md) for supported names, generic
 matches, and Garmin FIT limitations.
 

@@ -1,0 +1,3544 @@
+{
+  "schemaVersion": 1,
+  "fitProfileVersion": "21.214.0",
+  "catalogDate": "2026-09-24",
+  "mappings": [
+    {
+      "names": [
+        "Ab Wheel"
+      ],
+      "category": "core",
+      "subtype": "kneelingAbWheel",
+      "quality": "generic",
+      "note": "Uses kneeling ab-wheel subtype; standing versus kneeling is unspecified."
+    },
+    {
+      "names": [
+        "Arch Hang"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT hanging arch-hold exercise."
+    },
+    {
+      "names": [
+        "Arnold Press"
+      ],
+      "category": "shoulderPress",
+      "subtype": "arnoldPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Arnold Press, Kettlebell"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Around The World"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Assisted Squat"
+      ],
+      "category": "squat",
+      "subtype": "squat",
+      "quality": "generic",
+      "note": "Assistance is not represented."
+    },
+    {
+      "names": [
+        "Back Extension"
+      ],
+      "quality": "category",
+      "category": "hyperextension",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Back Extension, Bodyweight"
+      ],
+      "category": "hyperextension",
+      "subtype": "spineExtension",
+      "quality": "generic",
+      "note": "Uses generic spine extension; bench angle is not represented."
+    },
+    {
+      "names": [
+        "Back Extension, Machine"
+      ],
+      "category": "hyperextension",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Ball Slams"
+      ],
+      "category": "plyo",
+      "subtype": "medicineBallSlam",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Battle Ropes"
+      ],
+      "quality": "category",
+      "category": "battleRope",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Behind The Neck Press"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Behind The Neck Press, Band"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Behind The Neck Press, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bench Dip"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "benchDip",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press"
+      ],
+      "category": "benchPress",
+      "subtype": "barbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press Close Grip"
+      ],
+      "category": "benchPress",
+      "subtype": "closeGripBarbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press Close Grip, EZ Bar"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bench Press Close Grip, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bench Press Wide Grip"
+      ],
+      "category": "benchPress",
+      "subtype": "wideGripBarbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press Wide Grip, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bench Press, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "chestPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press, Barbell"
+      ],
+      "category": "benchPress",
+      "subtype": "barbellBenchPress",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Bench Press, Cable"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bench Press, Dumbbell"
+      ],
+      "category": "benchPress",
+      "subtype": "dumbbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press, Kettlebell"
+      ],
+      "category": "benchPress",
+      "subtype": "kettlebellChestPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bench Press, Smith Machine"
+      ],
+      "category": "benchPress",
+      "subtype": "smithMachineBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bent Over One Arm Row"
+      ],
+      "category": "row",
+      "subtype": "oneArmBentOverRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bent Over Row"
+      ],
+      "category": "row",
+      "subtype": "bentOverRowWithBarbell",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bent Over Row, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "row",
+      "quality": "generic",
+      "note": "Banded row code does not distinguish torso position."
+    },
+    {
+      "names": [
+        "Bent Over Row, Barbell"
+      ],
+      "category": "row",
+      "subtype": "bentOverRowWithBarbell",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Bent Over Row, Cable"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bent Over Row, Dumbbell"
+      ],
+      "category": "row",
+      "subtype": "bentOverRowWithDumbell",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bent Over Row, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bent Over Row, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bicep Curl"
+      ],
+      "category": "curl",
+      "subtype": "dumbbellBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bicep Curl, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "curl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bicep Curl, Barbell"
+      ],
+      "category": "curl",
+      "subtype": "barbellBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bicep Curl, Cable"
+      ],
+      "category": "curl",
+      "subtype": "cableBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bicep Curl, EZ Bar"
+      ],
+      "category": "curl",
+      "subtype": "standingEzBarBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bicep Curl, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bicep Curl, Machine"
+      ],
+      "category": "curl",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Bicycle Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "bicycleCrunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Box Squat"
+      ],
+      "category": "squat",
+      "subtype": "barbellBoxSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Box Squat, Dumbbell"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Bulgarian Split Squat"
+      ],
+      "category": "lunge",
+      "subtype": "dumbbellBulgarianSplitSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Bulgarian Split Squat, Bodyweight"
+      ],
+      "category": "lunge",
+      "subtype": null,
+      "quality": "category",
+      "note": "FIT has no bodyweight rear-foot-elevated split squat; do not invent overhead loading."
+    },
+    {
+      "names": [
+        "Cable Crossover"
+      ],
+      "category": "flye",
+      "subtype": "cableCrossover",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Cable Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "cableCrunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Cable Kickback"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "cableKickback",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Cable Pull Through"
+      ],
+      "category": "chop",
+      "subtype": "cablePullThrough",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Cable Twist"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Cable Twist, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "abTwist",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Cable Twist, Barbell"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Cable Twist, Bodyweight"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Cable Twist, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Calf Press on Leg Press"
+      ],
+      "category": "calfRaise",
+      "subtype": null,
+      "quality": "category",
+      "note": "Standing calf raise is not the leg-press calf movement."
+    },
+    {
+      "names": [
+        "Calf Press on Seated Leg Press"
+      ],
+      "category": "calfRaise",
+      "subtype": null,
+      "quality": "category",
+      "note": "Seated calf raise has different knee positioning from a leg press."
+    },
+    {
+      "names": [
+        "Chest Dip"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "bodyWeightDip",
+      "quality": "generic",
+      "note": "FIT dip subtype does not distinguish chest emphasis."
+    },
+    {
+      "names": [
+        "Chest Dip, Assisted"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "bodyWeightDip",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Chest Fly"
+      ],
+      "category": "flye",
+      "subtype": "dumbbellFlye",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Chest Fly, Barbell"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Chest Fly, Cable"
+      ],
+      "category": "flye",
+      "subtype": "cableCrossover",
+      "quality": "generic",
+      "note": "FIT cable fly is named Cable Crossover."
+    },
+    {
+      "names": [
+        "Chest Fly, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Chest Press, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "chestPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Chest Press, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Chest Press, Machine"
+      ],
+      "category": "benchPress",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Chin Up"
+      ],
+      "category": "pullUp",
+      "subtype": "chinUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Chin Up, Assisted"
+      ],
+      "category": "pullUp",
+      "subtype": "chinUp",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Chin Up, Leverage Machine"
+      ],
+      "category": "pullUp",
+      "subtype": "chinUp",
+      "quality": "generic",
+      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+    },
+    {
+      "names": [
+        "Clean"
+      ],
+      "category": "olympicLift",
+      "subtype": "clean",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Clean and Jerk"
+      ],
+      "category": "olympicLift",
+      "subtype": "cleanAndJerk",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Concentration Curl"
+      ],
+      "category": "curl",
+      "subtype": "oneArmConcentrationCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Concentration Curl, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "curl",
+      "quality": "generic",
+      "note": "Concentration posture is not represented."
+    },
+    {
+      "names": [
+        "Concentration Curl, Barbell"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Concentration Curl, Cable"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Copenhagen Plank"
+      ],
+      "quality": "category",
+      "category": "plank",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Cross Body Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "elbowToKneeCrunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Crow Pose"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT crow-pose exercise."
+    },
+    {
+      "names": [
+        "Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "crunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Crunch, Cable"
+      ],
+      "category": "crunch",
+      "subtype": "cableCrunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Crunch, Leverage Machine"
+      ],
+      "category": "crunch",
+      "subtype": "crunch",
+      "quality": "generic",
+      "note": "Generic crunch code does not describe the machine."
+    },
+    {
+      "names": [
+        "Crunch, Machine"
+      ],
+      "category": "crunch",
+      "subtype": "crunch",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Dead Hang"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT dead-hang exercise; hanging hurdle and pull-up codes describe different movements."
+    },
+    {
+      "names": [
+        "Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "barbellDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Deadlift High Pull"
+      ],
+      "category": "olympicLift",
+      "subtype": "barbellHighPull",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Deadlift, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "deadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Deadlift, Barbell"
+      ],
+      "category": "deadlift",
+      "subtype": "barbellDeadlift",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Deadlift, Cable"
+      ],
+      "quality": "category",
+      "category": "deadlift",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Deadlift, Dumbbell"
+      ],
+      "category": "deadlift",
+      "subtype": "dumbbellDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Deadlift, Kettlebell"
+      ],
+      "category": "deadlift",
+      "subtype": "kettlebellDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Deadlift, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "deadlift",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Deadlift, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "deadlift",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Decline Bench Press, Dumbbell"
+      ],
+      "category": "benchPress",
+      "subtype": "declineDumbbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Decline Bench Press, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Decline Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "crunch",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Deficit Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "barbellDeadlift",
+      "quality": "generic",
+      "note": "Deficit height is not represented."
+    },
+    {
+      "names": [
+        "Deficit Deadlift, Trap Bar"
+      ],
+      "category": "deadlift",
+      "subtype": "trapBarDeadlift",
+      "quality": "generic",
+      "note": "Deficit height is not represented."
+    },
+    {
+      "names": [
+        "Diamond Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "diamondPushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Dragon Flag"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Elliptical Machine"
+      ],
+      "category": "elliptical",
+      "subtype": "elliptical",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Face Pull"
+      ],
+      "category": "row",
+      "subtype": "bandedFacePulls",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Flat Knee Raise"
+      ],
+      "category": "core",
+      "subtype": "openKneeTucks",
+      "quality": "generic",
+      "note": "Uses the generic knee-tuck movement."
+    },
+    {
+      "names": [
+        "Flat Leg Raise"
+      ],
+      "category": "legRaise",
+      "subtype": "lyingStraightLegRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Lever Row"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Front Raise"
+      ],
+      "category": "shoulderPress",
+      "subtype": "dumbbellFrontRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Raise, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "frontRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Raise, Barbell"
+      ],
+      "category": "lateralRaise",
+      "subtype": "frontRaise",
+      "quality": "generic",
+      "note": "Generic front raise does not encode barbell equipment."
+    },
+    {
+      "names": [
+        "Front Raise, Bodyweight"
+      ],
+      "category": "lateralRaise",
+      "subtype": "frontRaise",
+      "quality": "generic",
+      "note": "Generic front raise does not encode equipment."
+    },
+    {
+      "names": [
+        "Front Raise, Cable"
+      ],
+      "category": "lateralRaise",
+      "subtype": "cableFrontRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Squat"
+      ],
+      "category": "squat",
+      "subtype": "barbellFrontSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Squat, Cable"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Front Squat, Dumbbell"
+      ],
+      "category": "squat",
+      "subtype": "dumbbellFrontSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Front Squat, Kettlebell"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Front Squat, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Glute Bridge"
+      ],
+      "category": "hipRaise",
+      "subtype": "weightedHipRaise",
+      "quality": "generic",
+      "note": "Generic weighted hip raise; dumbbell equipment is not encoded."
+    },
+    {
+      "names": [
+        "Glute Bridge March"
+      ],
+      "category": "hipRaise",
+      "subtype": "marchingHipRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Glute Bridge, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "gluteBridge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Glute Bridge, Barbell"
+      ],
+      "category": "hipRaise",
+      "subtype": "barbellHipThrustOnFloor",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Glute Kickback"
+      ],
+      "category": "hipStability",
+      "subtype": "weightedStandingRearLegRaise",
+      "quality": "generic",
+      "note": "Uses weighted rear-leg raise; cable and support position are not represented."
+    },
+    {
+      "names": [
+        "Glute Kickback, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "donkeyKick",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Glute Kickback, Machine"
+      ],
+      "category": "hipStability",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Goblet Squat"
+      ],
+      "category": "squat",
+      "subtype": "gobletSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Goblet Squat, Kettlebell"
+      ],
+      "category": "squat",
+      "subtype": "gobletSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Good Morning"
+      ],
+      "category": "legCurl",
+      "subtype": "goodMorning",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Good Morning, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "legCurl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Good Morning, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "legCurl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hack Squat"
+      ],
+      "category": "squat",
+      "subtype": "barbellHackSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hack Squat, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hammer Curl"
+      ],
+      "category": "curl",
+      "subtype": "dumbbellHammerCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hammer Curl, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "curl",
+      "quality": "generic",
+      "note": "Hammer grip is not represented."
+    },
+    {
+      "names": [
+        "Hammer Curl, Cable"
+      ],
+      "category": "curl",
+      "subtype": "cableHammerCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Handstand"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT static handstand exercise; handstand push-ups require repetitions of a different movement."
+    },
+    {
+      "names": [
+        "Handstand Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "handstandPushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hang Clean, Kettlebell"
+      ],
+      "quality": "category",
+      "category": "olympicLift",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hanging Knee Raise"
+      ],
+      "category": "legRaise",
+      "subtype": "hangingKneeRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hanging Leg Raise"
+      ],
+      "category": "legRaise",
+      "subtype": "hangingLegRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hanging Leg Raise, Cable"
+      ],
+      "category": "legRaise",
+      "subtype": "weightedHangingLegRaise",
+      "quality": "generic",
+      "note": "Generic weighted hanging raise does not specify cable."
+    },
+    {
+      "names": [
+        "High Row"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "High Row, Cable"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hip Abductor"
+      ],
+      "quality": "category",
+      "category": "hipStability",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hip Abductor, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "legAbduction",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hip Abductor, Bodyweight"
+      ],
+      "category": "hipStability",
+      "subtype": "standingHipAbduction",
+      "quality": "generic",
+      "note": "Standing variant is used; body position is not specified."
+    },
+    {
+      "names": [
+        "Hip Abductor, Cable"
+      ],
+      "category": "hipStability",
+      "subtype": "standingCableHipAbduction",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hip Abductor, Machine"
+      ],
+      "category": "hipStability",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Hip Adductor"
+      ],
+      "quality": "category",
+      "category": "hipStability",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Hip Adductor, Machine"
+      ],
+      "category": "hipStability",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Hip Thrust"
+      ],
+      "category": "hipRaise",
+      "subtype": "barbellHipThrustWithBench",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Hip Thrust, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "gluteBridge",
+      "quality": "generic",
+      "note": "Banded glute bridge is the closest movement; bench support is not represented."
+    },
+    {
+      "names": [
+        "Hip Thrust, Bodyweight"
+      ],
+      "category": "hipRaise",
+      "subtype": "hipRaise",
+      "quality": "generic",
+      "note": "Generic hip raise does not specify bench support."
+    },
+    {
+      "names": [
+        "Hip Thrust, Leverage Machine"
+      ],
+      "category": "hipRaise",
+      "subtype": "weightedHipRaise",
+      "quality": "generic",
+      "note": "Bench support and machine equipment are not represented."
+    },
+    {
+      "names": [
+        "Incline Bench Press"
+      ],
+      "category": "benchPress",
+      "subtype": "inclineBarbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Bench Press Wide Grip"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Incline Bench Press, Cable"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Incline Bench Press, Dumbbell"
+      ],
+      "category": "benchPress",
+      "subtype": "inclineDumbbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Bench Press, Smith Machine"
+      ],
+      "category": "benchPress",
+      "subtype": "inclineSmithMachineBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Chest Fly"
+      ],
+      "category": "flye",
+      "subtype": "inclineDumbbellFlye",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Chest Fly, Cable"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Incline Chest Press"
+      ],
+      "category": "benchPress",
+      "subtype": "inclineDumbbellBenchPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Chest Press, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "chestPress",
+      "quality": "generic",
+      "note": "Incline angle is not represented."
+    },
+    {
+      "names": [
+        "Incline Chest Press, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Incline Curl"
+      ],
+      "category": "curl",
+      "subtype": "inclineDumbbellBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "inclinePushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Row"
+      ],
+      "category": "row",
+      "subtype": "chestSupportedDumbbellRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Incline Row, Barbell"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Inverted Row"
+      ],
+      "category": "row",
+      "subtype": "invertedRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Iso-lateral Chest Press, Machine"
+      ],
+      "category": "benchPress",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Jackknife Sit Up"
+      ],
+      "category": "sitUp",
+      "subtype": "vUp",
+      "quality": "generic",
+      "note": "Uses the V-up movement; exact jackknife variant is unspecified."
+    },
+    {
+      "names": [
+        "Jump Squat"
+      ],
+      "category": "plyo",
+      "subtype": "jumpSquat",
+      "quality": "generic",
+      "note": "Barbell loading is not represented by the generic jump squat code."
+    },
+    {
+      "names": [
+        "Jump Squat, Bodyweight"
+      ],
+      "category": "plyo",
+      "subtype": "jumpSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Kettlebell Swing"
+      ],
+      "category": "hipRaise",
+      "subtype": "kettlebellSwing",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Kettlebell Swing, Dumbbell"
+      ],
+      "quality": "category",
+      "category": "hipSwing",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Knee Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "kneelingPushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Kneeling Pulldown"
+      ],
+      "quality": "category",
+      "category": "pullUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Knees to Elbows"
+      ],
+      "category": "crunch",
+      "subtype": "kneesToElbow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lat Pulldown"
+      ],
+      "category": "pullUp",
+      "subtype": "latPulldown",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lat Pulldown, Leverage Machine"
+      ],
+      "category": "pullUp",
+      "subtype": "latPulldown",
+      "quality": "generic",
+      "note": "Generic lat pulldown does not describe the lever machine."
+    },
+    {
+      "names": [
+        "Lat Pulldown, Machine"
+      ],
+      "category": "pullUp",
+      "subtype": "latPulldown",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Lateral Raise"
+      ],
+      "category": "lateralRaise",
+      "subtype": "dumbbellLateralRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lateral Raise, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "lateralRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lateral Raise, Cable"
+      ],
+      "category": "lateralRaise",
+      "subtype": "oneArmCableLateralRaise",
+      "quality": "generic",
+      "note": "Uses the one-arm cable variant."
+    },
+    {
+      "names": [
+        "Lateral Raise, Kettlebell"
+      ],
+      "quality": "category",
+      "category": "lateralRaise",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Lateral Raise, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "lateralRaise",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Lateral Raise, Machine"
+      ],
+      "category": "lateralRaise",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Leg Extension"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT machine knee-extension exercise; crunch leg extensions and banded extensions are not equivalent."
+    },
+    {
+      "names": [
+        "Leg Extension, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "legExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Leg Extension, Machine"
+      ],
+      "category": null,
+      "subtype": null,
+      "quality": "unsupported",
+      "note": "No FIT machine knee-extension exercise; crunch leg extensions and banded extensions are not equivalent."
+    },
+    {
+      "names": [
+        "Leg Press"
+      ],
+      "category": "squat",
+      "subtype": "legPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Leg Press, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Legs Up Bench Press"
+      ],
+      "quality": "category",
+      "category": "benchPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Lunge"
+      ],
+      "category": "lunge",
+      "subtype": "barbellLunge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lunge, Bodyweight"
+      ],
+      "category": "lunge",
+      "subtype": "lunge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lunge, Cable"
+      ],
+      "category": "lunge",
+      "subtype": "weightedLunge",
+      "quality": "generic",
+      "note": "Generic weighted lunge does not specify cable."
+    },
+    {
+      "names": [
+        "Lunge, Dumbbell"
+      ],
+      "category": "lunge",
+      "subtype": "dumbbellLunge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lying Bicep Curl"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Lying Bicep Curl, Cable"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Lying Leg Curl"
+      ],
+      "category": "legCurl",
+      "subtype": "legCurl",
+      "quality": "generic",
+      "note": "Generic leg curl does not specify lying position."
+    },
+    {
+      "names": [
+        "Lying Leg Curl, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "hamstringCurls",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Lying Leg Curl, Machine"
+      ],
+      "category": "legCurl",
+      "subtype": "legCurl",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Muscle Up"
+      ],
+      "category": "lateralRaise",
+      "subtype": "muscleUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Negative Dip"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "bodyWeightDip",
+      "quality": "generic",
+      "note": "Eccentric-only execution is not represented."
+    },
+    {
+      "names": [
+        "Negative Pull Up"
+      ],
+      "category": "pullUp",
+      "subtype": "pullUp",
+      "quality": "generic",
+      "note": "Eccentric-only execution is not represented."
+    },
+    {
+      "names": [
+        "Nordic Curl"
+      ],
+      "category": "legCurl",
+      "subtype": "legCurl",
+      "quality": "generic",
+      "note": "Generic leg curl does not specify bodyweight Nordic technique."
+    },
+    {
+      "names": [
+        "Oblique Crunch"
+      ],
+      "quality": "category",
+      "category": "crunch",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Overhead Press"
+      ],
+      "category": "shoulderPress",
+      "subtype": "overheadBarbellPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Overhead Press, Barbell"
+      ],
+      "category": "shoulderPress",
+      "subtype": "overheadBarbellPress",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Overhead Press, Dumbbell"
+      ],
+      "category": "shoulderPress",
+      "subtype": "overheadDumbbellPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Overhead Press, EZ Bar"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Overhead Press, Smith Machine"
+      ],
+      "category": "shoulderPress",
+      "subtype": "smithMachineOverheadPress",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Overhead Squat"
+      ],
+      "category": "squat",
+      "subtype": "overheadBarbellSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Overhead Squat, Dumbbell"
+      ],
+      "category": "squat",
+      "subtype": "overheadDumbbellSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Pallof Press"
+      ],
+      "category": "core",
+      "subtype": null,
+      "quality": "category",
+      "note": "FIT has no banded anti-rotation press subtype."
+    },
+    {
+      "names": [
+        "Pec Deck"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Pendlay Row"
+      ],
+      "category": "row",
+      "subtype": "barbellRow",
+      "quality": "generic",
+      "note": "Dead-stop Pendlay technique is not represented."
+    },
+    {
+      "names": [
+        "Pike Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "pikePushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Pistol Squat"
+      ],
+      "category": "squat",
+      "subtype": "pistolSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Pistol Squat, Kettlebell"
+      ],
+      "category": "squat",
+      "subtype": "weightedPistolSquat",
+      "quality": "generic",
+      "note": "Generic weighted pistol squat does not specify kettlebell."
+    },
+    {
+      "names": [
+        "Pistol Squat, Leverage Machine"
+      ],
+      "category": "squat",
+      "subtype": "pistolSquat",
+      "quality": "generic",
+      "note": "Machine assistance is not represented."
+    },
+    {
+      "names": [
+        "Plank"
+      ],
+      "category": "plank",
+      "subtype": "plank",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Preacher Curl"
+      ],
+      "category": "curl",
+      "subtype": "oneArmPreacherCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Preacher Curl, Barbell"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Preacher Curl, EZ Bar"
+      ],
+      "category": "curl",
+      "subtype": "ezBarPreacherCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Preacher Curl, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Pseudo Planche Push Up"
+      ],
+      "quality": "category",
+      "category": "pushUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Pull Up"
+      ],
+      "category": "pullUp",
+      "subtype": "pullUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Pull Up, Assisted"
+      ],
+      "category": "pullUp",
+      "subtype": "pullUp",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Pull Up, Band"
+      ],
+      "category": "pullUp",
+      "subtype": "bandAssistedPullUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Pull Up, Leverage Machine"
+      ],
+      "category": "pullUp",
+      "subtype": "pullUp",
+      "quality": "generic",
+      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+    },
+    {
+      "names": [
+        "Pullover"
+      ],
+      "quality": "category",
+      "category": "pullUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Pullover, Barbell"
+      ],
+      "quality": "category",
+      "category": "pullUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Push Press"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Push Press, Barbell"
+      ],
+      "category": "shoulderPress",
+      "subtype": "barbellPushPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Push Press, Bodyweight"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Push Press, Dumbbell"
+      ],
+      "category": "shoulderPress",
+      "subtype": "dumbbellPushPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "pushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Push Up, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "pushUps",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Push-up"
+      ],
+      "category": "pushUp",
+      "subtype": "pushUp",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Renegade Row"
+      ],
+      "category": "row",
+      "subtype": "renegadeRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Crunch"
+      ],
+      "category": "crunch",
+      "subtype": "reverseCrunch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Crunch, Cable"
+      ],
+      "quality": "category",
+      "category": "crunch",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Curl"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Curl, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "curl",
+      "quality": "generic",
+      "note": "Reverse grip is not represented."
+    },
+    {
+      "names": [
+        "Reverse Curl, Barbell"
+      ],
+      "category": "curl",
+      "subtype": "reverseGripBarbellBicepsCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Curl, Cable"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Fly"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Fly, Band"
+      ],
+      "category": "flye",
+      "subtype": null,
+      "quality": "category",
+      "note": "FIT banded fly does not distinguish chest fly from rear-delt fly."
+    },
+    {
+      "names": [
+        "Reverse Fly, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "flye",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Hyperextension"
+      ],
+      "quality": "category",
+      "category": "hyperextension",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Hyperextension, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "hyperextension",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Reverse Lunge"
+      ],
+      "category": "lunge",
+      "subtype": "dumbbellReverseLunge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Lunge, Barbell"
+      ],
+      "category": "lunge",
+      "subtype": "barbellReverseLunge",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Lunge, Bodyweight"
+      ],
+      "category": "lunge",
+      "subtype": "lunge",
+      "quality": "generic",
+      "note": "Generic lunge does not specify backward direction."
+    },
+    {
+      "names": [
+        "Reverse Lunge, Kettlebell"
+      ],
+      "category": "lunge",
+      "subtype": "weightedLunge",
+      "quality": "generic",
+      "note": "Backward direction and kettlebell equipment are not represented."
+    },
+    {
+      "names": [
+        "Reverse Wrist Curl"
+      ],
+      "category": "curl",
+      "subtype": "barbellReverseWristCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Wrist Curl, Dumbbell"
+      ],
+      "category": "curl",
+      "subtype": "dumbbellReverseWristCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Reverse Wrist Curl, EZ Bar"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Ring Dip"
+      ],
+      "category": "lateralRaise",
+      "subtype": "ringDip",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Ring Row"
+      ],
+      "category": "row",
+      "subtype": "ringRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Romanian Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "romanianDeadlift",
+      "quality": "generic",
+      "note": "Generic Romanian deadlift code does not specify dumbbells."
+    },
+    {
+      "names": [
+        "Romanian Deadlift, Barbell"
+      ],
+      "category": "deadlift",
+      "subtype": "romanianDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Romanian Deadlift, Bodyweight"
+      ],
+      "category": "deadlift",
+      "subtype": "romanianDeadlift",
+      "quality": "generic",
+      "note": "No-load variant is not represented in the exercise code."
+    },
+    {
+      "names": [
+        "Russian Twist"
+      ],
+      "category": "core",
+      "subtype": "russianTwist",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Russian Twist, Cable"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Russian Twist, Dumbbell"
+      ],
+      "category": "core",
+      "subtype": "russianTwist",
+      "quality": "generic",
+      "note": "Added dumbbell load is not represented in the exercise subtype."
+    },
+    {
+      "names": [
+        "Safety Squat Bar Squat"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Scapular Pull Up"
+      ],
+      "quality": "category",
+      "category": "pullUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Seated Calf Raise"
+      ],
+      "category": "calfRaise",
+      "subtype": "seatedCalfRaise",
+      "quality": "generic",
+      "note": "Generic seated calf raise does not specify barbell."
+    },
+    {
+      "names": [
+        "Seated Calf Raise, Dumbbell"
+      ],
+      "category": "calfRaise",
+      "subtype": "seatedCalfRaise",
+      "quality": "generic",
+      "note": "Generic seated calf raise does not specify dumbbells."
+    },
+    {
+      "names": [
+        "Seated Calf Raise, Leverage Machine"
+      ],
+      "category": "calfRaise",
+      "subtype": "seatedCalfRaise",
+      "quality": "generic",
+      "note": "Generic seated calf raise does not specify machine."
+    },
+    {
+      "names": [
+        "Seated Calf Raise, Machine"
+      ],
+      "category": "calfRaise",
+      "subtype": "seatedCalfRaise",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Seated Front Raise"
+      ],
+      "category": "shoulderPress",
+      "subtype": "dumbbellFrontRaise",
+      "quality": "generic",
+      "note": "Seated posture is not represented."
+    },
+    {
+      "names": [
+        "Seated Front Raise, Barbell"
+      ],
+      "category": "lateralRaise",
+      "subtype": "frontRaise",
+      "quality": "generic",
+      "note": "Seated posture and barbell equipment are not represented."
+    },
+    {
+      "names": [
+        "Seated Leg Curl"
+      ],
+      "category": "legCurl",
+      "subtype": "legCurl",
+      "quality": "generic",
+      "note": "Generic leg curl does not specify seated position."
+    },
+    {
+      "names": [
+        "Seated Leg Press"
+      ],
+      "category": "squat",
+      "subtype": "legPress",
+      "quality": "generic",
+      "note": "Generic leg press does not specify machine angle."
+    },
+    {
+      "names": [
+        "Seated Overhead Press"
+      ],
+      "category": "shoulderPress",
+      "subtype": "seatedBarbellShoulderPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Seated Palms Up Wrist Curl"
+      ],
+      "category": "curl",
+      "subtype": "dumbbellWristCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Seated Row"
+      ],
+      "category": "row",
+      "subtype": "seatedCableRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Seated Row, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "row",
+      "quality": "generic",
+      "note": "Banded row code does not specify seated position."
+    },
+    {
+      "names": [
+        "Seated Row, Leverage Machine"
+      ],
+      "category": "row",
+      "subtype": "row",
+      "quality": "generic",
+      "note": "Generic row does not describe the machine."
+    },
+    {
+      "names": [
+        "Seated Row, Machine"
+      ],
+      "category": "row",
+      "subtype": "row",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Seated Wide Grip Row"
+      ],
+      "category": "row",
+      "subtype": "wideGripSeatedCableRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Shoulder Press"
+      ],
+      "category": "shoulderPress",
+      "subtype": "dumbbellShoulderPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Shoulder Press Parallel Grip"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shoulder Press, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": null,
+      "quality": "category",
+      "note": "No standing banded overhead press code; wheelchair variant is not equivalent."
+    },
+    {
+      "names": [
+        "Shoulder Press, Cable"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shoulder Press, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "shoulderPress",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shoulder Press, Machine"
+      ],
+      "category": "shoulderPress",
+      "subtype": null,
+      "quality": "category",
+      "note": "Legacy/imported machine exercise has no equivalent FIT subtype."
+    },
+    {
+      "names": [
+        "Shoulder Press, Smith Machine"
+      ],
+      "category": "shoulderPress",
+      "subtype": "smithMachineOverheadPress",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Shrimp Squat"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shrug"
+      ],
+      "category": "shrug",
+      "subtype": "dumbbellShrug",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Shrug, Band"
+      ],
+      "quality": "category",
+      "category": "shrug",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shrug, Barbell"
+      ],
+      "category": "shrug",
+      "subtype": "barbellShrug",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Shrug, Cable"
+      ],
+      "quality": "category",
+      "category": "shrug",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shrug, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "shrug",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Shrug, Smith Machine"
+      ],
+      "category": "shrug",
+      "subtype": null,
+      "quality": "category",
+      "note": "FIT Smith shrug specifies behind-the-back; normal shrug position differs."
+    },
+    {
+      "names": [
+        "Side Bend"
+      ],
+      "category": "core",
+      "subtype": "weightedSideBend",
+      "quality": "generic",
+      "note": "Generic weighted side bend does not specify dumbbells."
+    },
+    {
+      "names": [
+        "Side Bend, Band"
+      ],
+      "quality": "category",
+      "category": "core",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Side Bend, Cable"
+      ],
+      "category": "core",
+      "subtype": "cableSideBend",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Side Crunch"
+      ],
+      "category": "crunch",
+      "subtype": null,
+      "quality": "category",
+      "note": "Standing position cannot be inferred from the source name."
+    },
+    {
+      "names": [
+        "Side Crunch, Band"
+      ],
+      "category": "crunch",
+      "subtype": null,
+      "quality": "category",
+      "note": "FIT has no banded lateral crunch subtype."
+    },
+    {
+      "names": [
+        "Side Crunch, Cable"
+      ],
+      "quality": "category",
+      "category": "crunch",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Side Hip Abductor"
+      ],
+      "category": "hipStability",
+      "subtype": "sideLyingLegRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Side Hip Abductor, Barbell"
+      ],
+      "category": "hipStability",
+      "subtype": "weightedSideLyingLegRaise",
+      "quality": "generic",
+      "note": "Barbell equipment is not represented."
+    },
+    {
+      "names": [
+        "Side Hip Abductor, Leverage Machine"
+      ],
+      "quality": "category",
+      "category": "hipStability",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Side Lying Clam"
+      ],
+      "category": "hipRaise",
+      "subtype": "clams",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Side Plank"
+      ],
+      "category": "plank",
+      "subtype": "sidePlank",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Single Leg Bridge"
+      ],
+      "category": "hipRaise",
+      "subtype": "singleLegHipRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Single Leg Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "singleLegRomanianDeadliftWithDumbbell",
+      "quality": "generic",
+      "note": "Uses single-leg dumbbell Romanian deadlift; exact knee bend is not represented."
+    },
+    {
+      "names": [
+        "Single Leg Deadlift, Bodyweight"
+      ],
+      "quality": "category",
+      "category": "deadlift",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Single Leg Glute Bridge Bent Knee"
+      ],
+      "category": "hipRaise",
+      "subtype": "singleLegHipRaise",
+      "quality": "generic",
+      "note": "Free-leg position is not represented."
+    },
+    {
+      "names": [
+        "Single Leg Glute Bridge On Bench"
+      ],
+      "category": "hipRaise",
+      "subtype": "singleLegHipRaise",
+      "quality": "generic",
+      "note": "Bench support position is not represented."
+    },
+    {
+      "names": [
+        "Single Leg Glute Bridge Straight Leg"
+      ],
+      "category": "hipRaise",
+      "subtype": "singleLegHipRaise",
+      "quality": "generic",
+      "note": "Free-leg position is not represented."
+    },
+    {
+      "names": [
+        "Single Leg Hip Thrust"
+      ],
+      "category": "hipRaise",
+      "subtype": "singleLegHipRaise",
+      "quality": "generic",
+      "note": "Generic single-leg hip raise does not specify bench support."
+    },
+    {
+      "names": [
+        "Single Leg Hip Thrust, Barbell"
+      ],
+      "category": "hipRaise",
+      "subtype": "weightedSingleLegHipRaise",
+      "quality": "generic",
+      "note": "Bench support and barbell equipment are not represented."
+    },
+    {
+      "names": [
+        "Single Leg Hip Thrust, Leverage Machine"
+      ],
+      "category": "hipRaise",
+      "subtype": "weightedSingleLegHipRaise",
+      "quality": "generic",
+      "note": "Bench support and machine equipment are not represented."
+    },
+    {
+      "names": [
+        "Sissy Squat"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Sit Up"
+      ],
+      "category": "sitUp",
+      "subtype": "sitUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Sit Up, Kettlebell"
+      ],
+      "category": "sitUp",
+      "subtype": "kettlebellSitUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Skullcrusher"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "lyingEzBarTricepsExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Skullcrusher, Barbell"
+      ],
+      "quality": "category",
+      "category": "tricepsExtension",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Skullcrusher, Cable"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "cableLyingTricepsExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Skullcrusher, Dumbbell"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "dumbbellLyingTricepsExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Snatch"
+      ],
+      "category": "olympicLift",
+      "subtype": "dumbbellSnatch",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Split Squat"
+      ],
+      "category": "squat",
+      "subtype": "dumbbellSplitSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Split Squat, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "lunge",
+      "quality": "generic",
+      "note": "Stationary split stance is not represented."
+    },
+    {
+      "names": [
+        "Split Squat, Barbell"
+      ],
+      "category": "lunge",
+      "subtype": "barbellSplitSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Split Squat, Bodyweight"
+      ],
+      "category": "lunge",
+      "subtype": "lunge",
+      "quality": "generic",
+      "note": "Generic lunge does not specify a stationary split stance."
+    },
+    {
+      "names": [
+        "Split Squat, Kettlebell"
+      ],
+      "category": "lunge",
+      "subtype": "weightedLunge",
+      "quality": "generic",
+      "note": "Stationary split stance and kettlebell equipment are not represented."
+    },
+    {
+      "names": [
+        "Squat"
+      ],
+      "category": "squat",
+      "subtype": "barbellBackSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Squat Row"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT combined banded squat-and-row exercise."
+    },
+    {
+      "names": [
+        "Squat, Barbell"
+      ],
+      "category": "squat",
+      "subtype": "barbellBackSquat",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Squat, Bodyweight"
+      ],
+      "category": "squat",
+      "subtype": "airSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Squat, Dumbbell"
+      ],
+      "category": "squat",
+      "subtype": "dumbbellSquat",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Squat, Leverage Machine"
+      ],
+      "category": "squat",
+      "subtype": "squat",
+      "quality": "generic",
+      "note": "Machine equipment is not represented."
+    },
+    {
+      "names": [
+        "Squat, Machine"
+      ],
+      "category": "squat",
+      "subtype": "squat",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Squat, Smith Machine"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Standing Calf Raise"
+      ],
+      "category": "calfRaise",
+      "subtype": "standingDumbbellCalfRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Standing Calf Raise, Barbell"
+      ],
+      "category": "calfRaise",
+      "subtype": "standingBarbellCalfRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Standing Calf Raise, Bodyweight"
+      ],
+      "category": "calfRaise",
+      "subtype": "standingCalfRaise",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Standing Calf Raise, Cable"
+      ],
+      "category": "calfRaise",
+      "subtype": "weightedStandingCalfRaise",
+      "quality": "generic",
+      "note": "Generic weighted calf raise does not specify cable."
+    },
+    {
+      "names": [
+        "Standing Calf Raise, Leverage Machine"
+      ],
+      "category": "calfRaise",
+      "subtype": "weightedStandingCalfRaise",
+      "quality": "generic",
+      "note": "Generic weighted calf raise does not specify machine."
+    },
+    {
+      "names": [
+        "Standing Row"
+      ],
+      "category": "row",
+      "subtype": "cableRowStanding",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Standing Row Close Grip"
+      ],
+      "category": "row",
+      "subtype": "cableRowStanding",
+      "quality": "generic",
+      "note": "Close grip is not represented."
+    },
+    {
+      "names": [
+        "Standing Row Rear Delt With Rope"
+      ],
+      "category": "row",
+      "subtype": "facePull",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Standing Row Rear Delt, Horizontal, With Rope"
+      ],
+      "category": "row",
+      "subtype": null,
+      "quality": "category",
+      "note": "Horizontal rear-delt row is not necessarily a face pull."
+    },
+    {
+      "names": [
+        "Standing Row V-Bar"
+      ],
+      "category": "row",
+      "subtype": "vGripCableRow",
+      "quality": "generic",
+      "note": "Standing posture is not represented."
+    },
+    {
+      "names": [
+        "Step up"
+      ],
+      "category": "squat",
+      "subtype": "dumbbellStepUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Step up, Band"
+      ],
+      "quality": "category",
+      "category": "squat",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Step up, Barbell"
+      ],
+      "category": "squat",
+      "subtype": "barbellStepUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Step up, Bodyweight"
+      ],
+      "category": "squat",
+      "subtype": "stepUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Stiff Leg Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "barbellStraightLegDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Stiff Leg Deadlift, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "deadlift",
+      "quality": "generic",
+      "note": "Knee angle is not represented."
+    },
+    {
+      "names": [
+        "Stiff Leg Deadlift, Dumbbell"
+      ],
+      "category": "deadlift",
+      "subtype": "dumbbellStraightLegDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Straight Leg Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "barbellStraightLegDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Straight Leg Deadlift, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "deadlift",
+      "quality": "generic",
+      "note": "Knee angle is not represented."
+    },
+    {
+      "names": [
+        "Straight Leg Deadlift, Dumbbell"
+      ],
+      "category": "deadlift",
+      "subtype": "dumbbellStraightLegDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Straight Leg Deadlift, Kettlebell"
+      ],
+      "category": "deadlift",
+      "subtype": "straightLegDeadlift",
+      "quality": "generic",
+      "note": "Generic straight-leg deadlift does not specify kettlebell."
+    },
+    {
+      "names": [
+        "Strict Military Press"
+      ],
+      "category": "shoulderPress",
+      "subtype": "militaryPress",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Sumo Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "sumoDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Sumo Deadlift High Pull"
+      ],
+      "category": "deadlift",
+      "subtype": "sumoDeadliftHighPull",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Superman"
+      ],
+      "category": "hyperextension",
+      "subtype": "supermanFromFloor",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Superman, Dumbbell"
+      ],
+      "category": "hyperextension",
+      "subtype": "weightedSupermanFromFloor",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Support Hold"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT static support-hold exercise; dips describe a different movement."
+    },
+    {
+      "names": [
+        "T Bar Row"
+      ],
+      "category": "row",
+      "subtype": "tBarRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Thruster"
+      ],
+      "category": "squat",
+      "subtype": "thrusters",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Toes To Bar"
+      ],
+      "category": "crunch",
+      "subtype": "toesToBar",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Trap Bar Deadlift"
+      ],
+      "category": "deadlift",
+      "subtype": "trapBarDeadlift",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Dip"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "bodyWeightDip",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Dip, Leverage Machine"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "bodyWeightDip",
+      "quality": "generic",
+      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+    },
+    {
+      "names": [
+        "Triceps Extension"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "overheadDumbbellTricepsExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Extension, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "tricepExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Extension, Barbell"
+      ],
+      "quality": "category",
+      "category": "tricepsExtension",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Triceps Extension, Cable"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "cableOverheadTricepsExtension",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Pushdown"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "tricepsPressdown",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Triceps Pushdown, Cable, Straight Bar"
+      ],
+      "category": "tricepsExtension",
+      "subtype": "tricepsPressdown",
+      "quality": "generic",
+      "note": "Legacy/imported name; uses the recorded base movement without encoding equipment or assistance differences."
+    },
+    {
+      "names": [
+        "Tuck Front Lever Row"
+      ],
+      "quality": "category",
+      "category": "row",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Upright Row"
+      ],
+      "category": "shrug",
+      "subtype": "dumbbellUprightRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Upright Row, Band"
+      ],
+      "category": "bandedExercises",
+      "subtype": "uprightRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Upright Row, Barbell"
+      ],
+      "category": "shrug",
+      "subtype": "barbellUprightRow",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Upright Row, Cable"
+      ],
+      "category": "shrug",
+      "subtype": "uprightRow",
+      "quality": "generic",
+      "note": "Cable equipment is not represented."
+    },
+    {
+      "names": [
+        "V Up"
+      ],
+      "category": "sitUp",
+      "subtype": "vUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "V Up, Band"
+      ],
+      "quality": "category",
+      "category": "sitUp",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "V Up, Dumbbell"
+      ],
+      "category": "sitUp",
+      "subtype": "weightedVUp",
+      "quality": "generic",
+      "note": "Generic weighted V-up does not specify dumbbells."
+    },
+    {
+      "names": [
+        "Vertical Row"
+      ],
+      "category": "row",
+      "subtype": "invertedRow",
+      "quality": "generic",
+      "note": "Bodyweight row inclination is not represented."
+    },
+    {
+      "names": [
+        "Wall Handstand"
+      ],
+      "quality": "unsupported",
+      "category": null,
+      "subtype": null,
+      "note": "No FIT static wall handstand exercise; wall walks and handstand push-ups are different movements."
+    },
+    {
+      "names": [
+        "Wall Push Up"
+      ],
+      "category": "pushUp",
+      "subtype": "wallPushUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Wide Pull Up"
+      ],
+      "category": "pullUp",
+      "subtype": "wideGripPullUp",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Wide Row"
+      ],
+      "category": "row",
+      "subtype": "invertedRow",
+      "quality": "generic",
+      "note": "Wide grip is not represented."
+    },
+    {
+      "names": [
+        "Wrist Curl"
+      ],
+      "category": "curl",
+      "subtype": "barbellWristCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Wrist Curl, Dumbbell"
+      ],
+      "category": "curl",
+      "subtype": "dumbbellWristCurl",
+      "quality": "exact",
+      "note": ""
+    },
+    {
+      "names": [
+        "Wrist Curl, EZ Bar"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Wrist Roller"
+      ],
+      "quality": "category",
+      "category": "curl",
+      "subtype": null,
+      "note": "No equivalent subtype for this movement/equipment in FIT profile 21.214.0."
+    },
+    {
+      "names": [
+        "Zercher Squat"
+      ],
+      "category": "squat",
+      "subtype": "zercherSquat",
+      "quality": "exact",
+      "note": ""
+    }
+  ]
+}

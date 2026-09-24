@@ -12,171 +12,45 @@ open WorkoutConversion
 // Garmin mapping
 // ----------------------------------------------------------------------
 
-// Keeping this separate makes it easy to extend later.
+// Resolve SDK symbols from the same catalog used by the browser converter.
+let private fitConstant (typeName: string) (name: string) =
+    let sdkType = typeof<ExerciseCategory>.Assembly.GetType("Dynastream.Fit." + typeName, true)
+    let field =
+        sdkType.GetFields(System.Reflection.BindingFlags.Public ||| System.Reflection.BindingFlags.Static)
+        |> Array.tryFind (fun field -> field.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+        |> Option.defaultWith (fun () -> failwithf "Unknown FIT %s: %s" typeName name)
+    Convert.ToUInt16(field.GetValue(null))
+
+let exerciseMappings =
+    use document =
+        System.Text.Json.JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(__SOURCE_DIRECTORY__, "shared", "exercise-mappings.json")))
+    document.RootElement.GetProperty("mappings").EnumerateArray()
+    |> Seq.collect (fun entry ->
+        let categoryName = entry.GetProperty("category").GetString()
+        let subtypeName = entry.GetProperty("subtype").GetString()
+        let metadata =
+            if isNull categoryName then None
+            else
+                let category = fitConstant "ExerciseCategory" categoryName
+                let subtype =
+                    if isNull subtypeName then UInt16.MaxValue
+                    else
+                        let typeName =
+                            string (Char.ToUpperInvariant(categoryName[0])) + categoryName.Substring(1) + "ExerciseName"
+                        fitConstant typeName subtypeName
+                Some(category, subtype)
+        entry.GetProperty("names").EnumerateArray()
+        |> Seq.map (fun name -> name.GetString().Trim().ToLowerInvariant(), metadata)
+        |> Seq.toArray)
+    |> Seq.toArray
+    |> fun entries ->
+        if entries |> Array.map fst |> Array.distinct |> Array.length <> entries.Length then
+            failwith "Duplicate exercise mapping"
+        Map.ofArray entries
+
 let exerciseCategory (name: string) =
-    match name.Trim().ToLowerInvariant() with
-
-    | "bench press"
-    | "bench press, barbell" ->
-        Some(
-            ExerciseCategory.BenchPress,
-            BenchPressExerciseName.BarbellBenchPress
-        )
-
-    | "squat"
-    | "squat, barbell" ->
-        Some(
-            ExerciseCategory.Squat,
-            SquatExerciseName.BarbellBackSquat
-        )
-
-    | "deadlift"
-    | "deadlift, barbell" ->
-        Some(
-            ExerciseCategory.Deadlift,
-            DeadliftExerciseName.BarbellDeadlift
-        )
-
-    | "overhead press"
-    | "overhead press, barbell" ->
-        Some(
-            ExerciseCategory.ShoulderPress,
-            ShoulderPressExerciseName.OverheadBarbellPress
-        )
-
-    | "bent over row"
-    | "bent over row, barbell" ->
-        Some(
-            ExerciseCategory.Row,
-            RowExerciseName.BentOverRowWithBarbell
-        )
-
-    | "push up"
-    | "push-up" ->
-        Some(
-            ExerciseCategory.PushUp,
-            PushUpExerciseName.PushUp
-        )
-
-    // Assisted variants use the base movement; unmatched equipment gets category only.
-    | "lat pulldown"
-    | "lat pulldown, machine" ->
-        Some(ExerciseCategory.PullUp, PullUpExerciseName.LatPulldown)
-
-    | "hanging leg raise" ->
-        Some(ExerciseCategory.LegRaise, LegRaiseExerciseName.HangingLegRaise)
-
-    | "hanging knee raise" ->
-        Some(ExerciseCategory.LegRaise, LegRaiseExerciseName.HangingKneeRaise)
-
-    | "pull up, assisted"
-    | "pull up, leverage machine" ->
-        Some(ExerciseCategory.PullUp, PullUpExerciseName.PullUp)
-
-    | "chin up, assisted"
-    | "chin up, leverage machine" ->
-        Some(ExerciseCategory.PullUp, PullUpExerciseName.ChinUp)
-
-    | "triceps dip"
-    | "triceps dip, leverage machine"
-    | "chest dip, assisted" ->
-        Some(ExerciseCategory.TricepsExtension, TricepsExtensionExerciseName.BodyWeightDip)
-
-    | "seated row" ->
-        Some(ExerciseCategory.Row, RowExerciseName.SeatedCableRow)
-
-    | "seated row, machine" ->
-        Some(ExerciseCategory.Row, RowExerciseName.Row)
-
-    | "lunge, dumbbell" ->
-        Some(ExerciseCategory.Lunge, LungeExerciseName.DumbbellLunge)
-
-    | "incline push up" ->
-        Some(ExerciseCategory.PushUp, PushUpExerciseName.InclinePushUp)
-
-    | "bench press, smith machine" ->
-        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.SmithMachineBenchPress)
-
-    | "incline bench press" ->
-        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.InclineBarbellBenchPress)
-
-    | "incline bench press, dumbbell" ->
-        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.InclineDumbbellBenchPress)
-
-    | "overhead press, dumbbell" ->
-        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.OverheadDumbbellPress)
-
-    | "overhead press, smith machine" ->
-        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.SmithMachineOverheadPress)
-
-    | "strict military press" ->
-        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.MilitaryPress)
-
-    | "stiff leg deadlift" ->
-        Some(ExerciseCategory.Deadlift, DeadliftExerciseName.BarbellStraightLegDeadlift)
-
-    | "zercher squat" ->
-        Some(ExerciseCategory.Squat, SquatExerciseName.ZercherSquat)
-
-    | "squat, machine" ->
-        Some(ExerciseCategory.Squat, SquatExerciseName.Squat)
-
-    | "leg press" ->
-        Some(ExerciseCategory.Squat, SquatExerciseName.LegPress)
-
-    | "lying leg curl, machine" ->
-        Some(ExerciseCategory.LegCurl, LegCurlExerciseName.LegCurl)
-
-    | "seated calf raise, machine" ->
-        Some(ExerciseCategory.CalfRaise, CalfRaiseExerciseName.SeatedCalfRaise)
-
-    | "crunch, machine"
-    | "decline crunch" ->
-        Some(ExerciseCategory.Crunch, CrunchExerciseName.Crunch)
-
-    | "bicep curl" ->
-        Some(ExerciseCategory.Curl, CurlExerciseName.DumbbellBicepsCurl)
-
-    | "lateral raise" ->
-        Some(ExerciseCategory.LateralRaise, LateralRaiseExerciseName.DumbbellLateralRaise)
-
-    | "back extension"
-    | "back extension, machine" ->
-        Some(ExerciseCategory.Hyperextension, UInt16.MaxValue)
-
-    | "bicep curl, machine" ->
-        Some(ExerciseCategory.Curl, UInt16.MaxValue)
-
-    | "chest fly" ->
-        Some(ExerciseCategory.Flye, UInt16.MaxValue)
-
-    | "chest press, machine"
-    | "iso-lateral chest press, machine"
-    | "incline chest press" ->
-        Some(ExerciseCategory.BenchPress, UInt16.MaxValue)
-
-    | "shoulder press, machine" ->
-        Some(ExerciseCategory.ShoulderPress, UInt16.MaxValue)
-
-    | "lateral raise, machine" ->
-        Some(ExerciseCategory.LateralRaise, UInt16.MaxValue)
-
-    | "hip thrust" ->
-        Some(ExerciseCategory.HipRaise, UInt16.MaxValue)
-
-    | "hip abductor, machine"
-    | "hip adductor, machine"
-    | "glute kickback, machine" ->
-        Some(ExerciseCategory.HipStability, UInt16.MaxValue)
-
-    | "skullcrusher" ->
-        Some(ExerciseCategory.TricepsExtension, UInt16.MaxValue)
-
-    | "triceps pushdown, cable, straight bar" ->
-        Some(ExerciseCategory.TricepsExtension, TricepsExtensionExerciseName.TricepsPressdown)
-
-    | _ ->
-        None
+    exerciseMappings |> Map.tryFind (name.Trim().ToLowerInvariant()) |> Option.flatten
 
 // ----------------------------------------------------------------------
 // FIT helpers

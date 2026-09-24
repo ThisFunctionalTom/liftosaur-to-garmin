@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { convertWorkout } from '../fit.js';
+import { exerciseMappings, exerciseMapping, exerciseMetadata } from '../exercise-mappings.js';
 
 function decode(bytes) {
   const decoder = new Decoder(Stream.fromByteArray(bytes));
@@ -71,4 +72,62 @@ test('empty and unrelated input are rejected', () => {
   for (const text of ['', '{}', 'not a workout']) {
     assert.throws(() => convertWorkout(text, 12345));
   }
+});
+
+test('every built-in exercise has an explicit, documented mapping decision', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../../tests/liftosaur-exercises.json', import.meta.url), 'utf8'));
+  assert.equal(catalog.names.length, 364);
+  for (const name of catalog.names) assert.ok(exerciseMapping(name), `Missing mapping decision: ${name}`);
+  const seen = new Set();
+  for (const entry of exerciseMappings) {
+    assert.ok(['exact', 'generic', 'category', 'unsupported'].includes(entry.quality));
+    assert.ok(entry.names.length > 0);
+    for (const name of entry.names) {
+      const key = name.trim().toLowerCase();
+      assert.equal(seen.has(key), false, `Duplicate: ${name}`);
+      seen.add(key);
+      assert.equal(exerciseMapping(`  ${name.toUpperCase()}  `), entry);
+    }
+    assert.equal(entry.category === null, entry.quality === 'unsupported');
+    assert.equal(entry.subtype === null, ['category', 'unsupported'].includes(entry.quality));
+    if (entry.quality !== 'exact') assert.ok(entry.note.length > 0, `Explain the limitation: ${entry.names}`);
+  }
+});
+
+test('all shared mappings encode the same exercise fields as the .NET SDK', () => {
+  const reference = JSON.parse(readFileSync(new URL('../../tests/output/exercise-mappings.json', import.meta.url), 'utf8'));
+  assert.equal(reference.length, exerciseMappings.reduce((count, entry) => count + entry.names.length, 0));
+  for (const expected of reference) {
+    const name = expected.name;
+    const text = `2026-03-01T10:00:00Z / duration: 60s / exercises: {\n${name} / 1x5 10kg\n}`;
+    const messages = decode(convertWorkout(text, 12345).bytes);
+    const step = messages.workoutStepMesgs[0];
+    const set = messages.setMesgs.find(set => set.setType === 1);
+    assert.deepEqual({
+      name: step.wktStepName,
+      stepCategory: step.exerciseCategory ?? -1,
+      stepSubtype: step.exerciseName ?? -1,
+      setCategory: set.category[0],
+      setSubtype: set.categorySubtype?.[0] ?? -1,
+    }, expected, name);
+    assert.equal(step.notes, name, 'Original name is preserved even without a Garmin subtype');
+    assert.equal(set.repetitions, 5);
+    assert.equal(set.weight, 10);
+  }
+});
+
+test('equipment variants remain distinct and unsupported names never receive guessed subtypes', () => {
+  assert.notDeepEqual(exerciseMetadata('Bench Press'), exerciseMetadata('Bench Press, Dumbbell'));
+  assert.notDeepEqual(exerciseMetadata('Squat'), exerciseMetadata('Squat, Bodyweight'));
+  assert.notDeepEqual(exerciseMetadata('Bicep Curl'), exerciseMetadata('Bicep Curl, Barbell'));
+  assert.equal(exerciseMapping('Skullcrusher').subtype, 'lyingEzBarTricepsExtension');
+  assert.equal(exerciseMapping('Face Pull').subtype, 'bandedFacePulls');
+  assert.equal(exerciseMapping('Snatch').subtype, 'dumbbellSnatch');
+  assert.equal(exerciseMapping('Leg Extension, Band').subtype, 'legExtension');
+  assert.equal(exerciseMetadata('Leg Extension'), undefined);
+  assert.equal(exerciseMetadata('Dead Hang'), undefined);
+  assert.equal(exerciseMetadata('Bench Press, Invented Equipment'), undefined);
+  assert.equal(exerciseMetadata('Unlisted Custom Exercise'), undefined);
+  assert.equal(exerciseMapping('Pull Up, Leverage Machine').quality, 'generic');
+  assert.equal(exerciseMapping('Chest Press, Machine').quality, 'category');
 });

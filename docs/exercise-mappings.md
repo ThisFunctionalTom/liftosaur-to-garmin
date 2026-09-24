@@ -1,64 +1,62 @@
 # Garmin exercise mappings
 
-Mappings live in `web/fit.js` (PWA) and `garminFit.fsx` (CLI). Keep both in sync.
-Names are matched exactly after trimming and lowercasing; equipment suffixes matter.
+Edit [shared/exercise-mappings.json](../shared/exercise-mappings.json).
+It is the single mapping source for both the PWA and the F# CLI.
+The browser adapter is `web/exercise-mappings.js`; the .NET adapter in
+`garminFit.fsx` reads the same JSON and resolves symbols in its own Garmin SDK.
+There are no separate JavaScript and F# mapping tables to synchronize.
 
-The September 2026 mapping audit used Liftosaur MCP workout history and custom
-exercise definitions: 68 workouts, 53 distinct names, 45 previously unmapped names.
-The fixture uses those names with synthetic dates, weights, and repetitions.
+See the [full catalog coverage report](exercise-catalog-audit.md) for every
+built-in exercise, its mapping, and any limitation. The catalog snapshot was
+retrieved through Liftosaur MCP on 2026-09-24. Additional historical aliases and
+custom imported names are retained separately in the same shared mapping file.
 
-The additions and completed subtype mappings are listed below. Base movement
-matches intentionally lose some detail: assisted pull-ups/chin-ups and dips use
-the unassisted movement code (not a band-assisted code); machine rows/squats,
-machine crunches, and decline crunches use a generic movement subtype.
-The original name remains in the FIT workout step name and notes.
+## Matching and mapping decisions
 
-| Liftosaur names | Garmin category | Garmin subtype |
-| --- | --- | --- |
-| lat pulldown; lat pulldown, machine | Pull Up | Lat Pulldown |
-| hanging leg raise | Leg Raise | Hanging Leg Raise |
-| hanging knee raise | Leg Raise | Hanging Knee Raise |
-| pull up, assisted; pull up, leverage machine | Pull Up | Pull Up |
-| chin up, assisted; chin up, leverage machine | Pull Up | Chin Up |
-| triceps dip; triceps dip, leverage machine; chest dip, assisted | Triceps Extension | Body Weight Dip |
-| seated row | Row | Seated Cable Row |
-| seated row, machine | Row | Row |
-| lunge, dumbbell | Lunge | Dumbbell Lunge |
-| incline push up | Push Up | Incline Push Up |
-| bench press, smith machine | Bench Press | Smith Machine Bench Press |
-| incline bench press | Bench Press | Incline Barbell Bench Press |
-| incline bench press, dumbbell | Bench Press | Incline Dumbbell Bench Press |
-| overhead press, dumbbell | Shoulder Press | Overhead Dumbbell Press |
-| overhead press, smith machine | Shoulder Press | Smith Machine Overhead Press |
-| strict military press | Shoulder Press | Military Press |
-| stiff leg deadlift | Deadlift | Barbell Straight Leg Deadlift |
-| zercher squat | Squat | Zercher Squat |
-| squat, machine | Squat | Squat |
-| leg press | Squat | Leg Press |
-| lying leg curl, machine | Leg Curl | Leg Curl |
-| seated calf raise, machine | Calf Raise | Seated Calf Raise |
-| crunch, machine; decline crunch | Crunch | Crunch |
-| bicep curl | Curl | Dumbbell Biceps Curl |
-| lateral raise | Lateral Raise | Dumbbell Lateral Raise |
-| back extension; back extension, machine | Hyperextension | Category only |
-| bicep curl, machine | Curl | Category only |
-| chest fly | Flye | Category only |
-| chest press, machine; iso-lateral chest press, machine; incline chest press | Bench Press | Category only |
-| shoulder press, machine | Shoulder Press | Category only |
-| lateral raise, machine | Lateral Raise | Category only |
-| hip thrust | Hip Raise | Category only |
-| hip abductor, machine; hip adductor, machine; glute kickback, machine | Hip Stability | Category only |
-| skullcrusher | Triceps Extension | Category only |
-| triceps pushdown, cable, straight bar | Triceps Extension | Triceps Pressdown |
+Names match exactly after trimming and lowercasing. Equipment suffixes are
+significant. A name with an unspecified equipment suffix uses Liftosaur's default,
+checked against its [exercise definitions](https://github.com/astashov/liftosaur/blob/master/src/models/exercise.ts).
+For example, Bicep Curl uses dumbbells, Face Pull uses a band, Skullcrusher uses
+an EZ bar, and Snatch uses a dumbbell.
 
-Category-only entries can still appear as Unknown in Garmin Connect. The installed
-FIT SDK has no matching machine variant, or the source name lacks enough detail
-to choose a specific subtype safely. These are not claimed as exact matches.
+Each entry contains an array of names, Garmin category/subtype symbol names, a
+quality field, and a note:
 
-**Leg Extension, Machine** remains unmapped: the installed SDK has no seated knee
-extension machine exercise. Its `crunch / legExtensions` and banded leg-extension
-entries describe different movements/equipment and are not substituted.
+- `exact`: a corresponding movement/equipment subtype.
+- `generic`: a broader movement subtype, with the lost detail explained.
+- `category`: a relevant category but no suitable subtype; subtype is null.
+- `unsupported`: no suitable mapping; category and subtype are both null.
 
-Run `npm test --prefix web` to compare both encoders' FIT output and check the
-numeric exercise metadata. Reconvert workouts to include changed mappings;
-activities already imported into Garmin are not updated automatically.
+Do not strip equipment suffixes or match unfamiliar names by similarity. A machine
+press should not silently turn into a dumbbell or barbell press. Do not substitute
+a different movement to hide an Unknown label. For example, FIT's crunch
+`legExtensions` is not the machine knee-extension exercise; the banded extension
+code is used only for the explicitly banded variant.
+
+Assisted pull-ups, chin-ups, and dips use the base movement as a documented
+generic match; machine assistance is not encoded. Recorded weights are preserved
+as supplied by Liftosaur, so an assistance weight is not converted into bodyweight
+or added resistance. This mapping change does not alter repetitions or weights.
+
+Garmin may still show category-only and unsupported entries as Unknown.
+Original exercise names remain in workout step names and notes. FIT profile
+support does not guarantee identical exercise labels in every Garmin client.
+
+## Updating and validating
+
+1. Update the shared JSON. Use symbols present in the installed Garmin FIT SDK,
+   not guessed numeric codes. Explain all generic or incomplete matches.
+2. Refresh `tests/liftosaur-exercises.json` from Liftosaur MCP when its catalog
+   changes. This is an independent coverage snapshot, not a generated copy of
+   the mapping table.
+3. Run `npm run audit:mappings --prefix web` to regenerate the coverage report.
+4. Run `npm test --prefix web`. Tests cover every snapshot name, duplicate aliases,
+   explicit unsupported decisions, equipment differences, SDK symbol validity,
+   and decoded FIT step/set metadata compared with the .NET message writers.
+5. Run `npm run build --prefix web` to verify the shared JSON bundles into the PWA.
+
+The .NET CLI requires the shared JSON alongside the repository scripts.
+The PWA bundles it locally and continues to convert loaded workouts offline.
+
+Reconvert workouts to include new mappings. Activities already imported into
+Garmin are not changed automatically.
