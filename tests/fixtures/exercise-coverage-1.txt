@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Back Extension / 1x5 10kg
+Back Extension, Machine / 1x5 10kg
+Bench Press / 1x5 10kg
+Bench Press, Smith Machine / 1x5 10kg
+Bent Over Row / 1x5 10kg
+Bicep Curl / 1x5 10kg
+Bicep Curl, Machine / 1x5 10kg
+}

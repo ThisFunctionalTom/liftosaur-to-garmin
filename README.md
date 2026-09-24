@@ -37,6 +37,8 @@ dotnet fsi liftosaur2garmin.fsx -- 10 ./fit
 The shared files have no HTTP, filesystem, or Garmin SDK dependencies and compile
 with Fable. Garmin-specific mappings live in each SDK adapter; fixture comparisons
 cover every mapping to detect differences.
+See [exercise mappings](docs/exercise-mappings.md) for supported names, generic
+matches, and Garmin FIT limitations.
 
 ## Run the browser converter
 

@@ -1,0 +1,6 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Triceps Dip / 1x5 10kg
+Triceps Dip, Leverage Machine / 1x5 10kg
+Triceps Pushdown, Cable, Straight Bar / 1x5 10kg
+Zercher Squat / 1x5 10kg
+}

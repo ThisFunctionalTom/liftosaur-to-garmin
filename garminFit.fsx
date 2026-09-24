@@ -58,11 +58,122 @@ let exerciseCategory (name: string) =
             PushUpExerciseName.PushUp
         )
 
-    | "lat pulldown" ->
-        Some(ExerciseCategory.PullUp, UInt16.MaxValue)
+    // Assisted variants use the base movement; unmatched equipment gets category only.
+    | "lat pulldown"
+    | "lat pulldown, machine" ->
+        Some(ExerciseCategory.PullUp, PullUpExerciseName.LatPulldown)
 
     | "hanging leg raise" ->
-        Some(ExerciseCategory.LegRaise, UInt16.MaxValue)
+        Some(ExerciseCategory.LegRaise, LegRaiseExerciseName.HangingLegRaise)
+
+    | "hanging knee raise" ->
+        Some(ExerciseCategory.LegRaise, LegRaiseExerciseName.HangingKneeRaise)
+
+    | "pull up, assisted"
+    | "pull up, leverage machine" ->
+        Some(ExerciseCategory.PullUp, PullUpExerciseName.PullUp)
+
+    | "chin up, assisted"
+    | "chin up, leverage machine" ->
+        Some(ExerciseCategory.PullUp, PullUpExerciseName.ChinUp)
+
+    | "triceps dip"
+    | "triceps dip, leverage machine"
+    | "chest dip, assisted" ->
+        Some(ExerciseCategory.TricepsExtension, TricepsExtensionExerciseName.BodyWeightDip)
+
+    | "seated row" ->
+        Some(ExerciseCategory.Row, RowExerciseName.SeatedCableRow)
+
+    | "seated row, machine" ->
+        Some(ExerciseCategory.Row, RowExerciseName.Row)
+
+    | "lunge, dumbbell" ->
+        Some(ExerciseCategory.Lunge, LungeExerciseName.DumbbellLunge)
+
+    | "incline push up" ->
+        Some(ExerciseCategory.PushUp, PushUpExerciseName.InclinePushUp)
+
+    | "bench press, smith machine" ->
+        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.SmithMachineBenchPress)
+
+    | "incline bench press" ->
+        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.InclineBarbellBenchPress)
+
+    | "incline bench press, dumbbell" ->
+        Some(ExerciseCategory.BenchPress, BenchPressExerciseName.InclineDumbbellBenchPress)
+
+    | "overhead press, dumbbell" ->
+        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.OverheadDumbbellPress)
+
+    | "overhead press, smith machine" ->
+        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.SmithMachineOverheadPress)
+
+    | "strict military press" ->
+        Some(ExerciseCategory.ShoulderPress, ShoulderPressExerciseName.MilitaryPress)
+
+    | "stiff leg deadlift" ->
+        Some(ExerciseCategory.Deadlift, DeadliftExerciseName.BarbellStraightLegDeadlift)
+
+    | "zercher squat" ->
+        Some(ExerciseCategory.Squat, SquatExerciseName.ZercherSquat)
+
+    | "squat, machine" ->
+        Some(ExerciseCategory.Squat, SquatExerciseName.Squat)
+
+    | "leg press" ->
+        Some(ExerciseCategory.Squat, SquatExerciseName.LegPress)
+
+    | "lying leg curl, machine" ->
+        Some(ExerciseCategory.LegCurl, LegCurlExerciseName.LegCurl)
+
+    | "seated calf raise, machine" ->
+        Some(ExerciseCategory.CalfRaise, CalfRaiseExerciseName.SeatedCalfRaise)
+
+    | "crunch, machine"
+    | "decline crunch" ->
+        Some(ExerciseCategory.Crunch, CrunchExerciseName.Crunch)
+
+    | "bicep curl" ->
+        Some(ExerciseCategory.Curl, CurlExerciseName.DumbbellBicepsCurl)
+
+    | "lateral raise" ->
+        Some(ExerciseCategory.LateralRaise, LateralRaiseExerciseName.DumbbellLateralRaise)
+
+    | "back extension"
+    | "back extension, machine" ->
+        Some(ExerciseCategory.Hyperextension, UInt16.MaxValue)
+
+    | "bicep curl, machine" ->
+        Some(ExerciseCategory.Curl, UInt16.MaxValue)
+
+    | "chest fly" ->
+        Some(ExerciseCategory.Flye, UInt16.MaxValue)
+
+    | "chest press, machine"
+    | "iso-lateral chest press, machine"
+    | "incline chest press" ->
+        Some(ExerciseCategory.BenchPress, UInt16.MaxValue)
+
+    | "shoulder press, machine" ->
+        Some(ExerciseCategory.ShoulderPress, UInt16.MaxValue)
+
+    | "lateral raise, machine" ->
+        Some(ExerciseCategory.LateralRaise, UInt16.MaxValue)
+
+    | "hip thrust" ->
+        Some(ExerciseCategory.HipRaise, UInt16.MaxValue)
+
+    | "hip abductor, machine"
+    | "hip adductor, machine"
+    | "glute kickback, machine" ->
+        Some(ExerciseCategory.HipStability, UInt16.MaxValue)
+
+    | "skullcrusher" ->
+        Some(ExerciseCategory.TricepsExtension, UInt16.MaxValue)
+
+    | "triceps pushdown, cable, straight bar" ->
+        Some(ExerciseCategory.TricepsExtension, TricepsExtensionExerciseName.TricepsPressdown)
 
     | _ ->
         None

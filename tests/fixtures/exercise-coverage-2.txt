@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Chest Dip, Assisted / 1x5 10kg
+Chest Fly / 1x5 10kg
+Chest Press, Machine / 1x5 10kg
+Chin Up, Assisted / 1x5 10kg
+Chin Up, Leverage Machine / 1x5 10kg
+Crunch, Machine / 1x5 10kg
+Deadlift / 1x5 10kg
+}

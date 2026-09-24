@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Lateral Raise / 1x5 10kg
+Lateral Raise, Machine / 1x5 10kg
+Leg Extension, Machine / 1x5 10kg
+Leg Press / 1x5 10kg
+Lunge, Dumbbell / 1x5 10kg
+Lying Leg Curl, Machine / 1x5 10kg
+Overhead Press / 1x5 10kg
+}

@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Seated Row, Machine / 1x5 10kg
+Shoulder Press, Machine / 1x5 10kg
+Skullcrusher / 1x5 10kg
+Squat / 1x5 10kg
+Squat, Machine / 1x5 10kg
+Stiff Leg Deadlift / 1x5 10kg
+Strict Military Press / 1x5 10kg
+}

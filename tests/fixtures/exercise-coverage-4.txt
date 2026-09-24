@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Incline Bench Press / 1x5 10kg
+Incline Bench Press, Dumbbell / 1x5 10kg
+Incline Chest Press / 1x5 10kg
+Incline Push Up / 1x5 10kg
+Iso-Lateral Chest Press, Machine / 1x5 10kg
+Lat Pulldown / 1x5 10kg
+Lat Pulldown, Machine / 1x5 10kg
+}

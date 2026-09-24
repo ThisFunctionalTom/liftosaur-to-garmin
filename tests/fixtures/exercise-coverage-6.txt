@@ -1,0 +1,9 @@
+2026-03-01T10:00:00Z / program: "Example" / dayName: "Exercise coverage" / duration: 600s / exercises: {
+Overhead Press, Dumbbell / 1x5 10kg
+Overhead Press, Smith Machine / 1x5 10kg
+Pull Up, Assisted / 1x5 10kg
+Pull Up, Leverage Machine / 1x5 10kg
+Push Up / 1x5 10kg
+Seated Calf Raise, Machine / 1x5 10kg
+Seated Row / 1x5 10kg
+}
