@@ -55,7 +55,7 @@
       "category": "squat",
       "subtype": "squat",
       "quality": "generic",
-      "note": "Assistance is not represented."
+      "note": "Exports 0 kg with assistance in step notes."
     },
     {
       "names": [
@@ -631,7 +631,7 @@
       "category": "pullUp",
       "subtype": "chinUp",
       "quality": "generic",
-      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+      "note": "FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes."
     },
     {
       "names": [
@@ -1963,7 +1963,7 @@
       "category": "squat",
       "subtype": "pistolSquat",
       "quality": "generic",
-      "note": "Machine assistance is not represented."
+      "note": "Exports 0 kg with machine assistance in step notes."
     },
     {
       "names": [
@@ -2053,7 +2053,7 @@
       "category": "pullUp",
       "subtype": "pullUp",
       "quality": "generic",
-      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+      "note": "FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes."
     },
     {
       "names": [
@@ -3322,7 +3322,7 @@
       "category": "tricepsExtension",
       "subtype": "bodyWeightDip",
       "quality": "generic",
-      "note": "FIT has no machine-assisted subtype; assistance is not represented."
+      "note": "FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes."
     },
     {
       "names": [

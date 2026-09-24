@@ -4,6 +4,32 @@ open System
 open System.Text.RegularExpressions
 open WorkoutCore
 
+// Only these equipment variants provide assistance rather than resistance.
+let isAssistedExercise (exercise: string) =
+    let name = exercise.Trim().ToLowerInvariant()
+    Regex.IsMatch(name, @"\bassisted\b")
+    || List.contains name
+        [ "chin up, leverage machine"; "pull up, leverage machine"
+          "triceps dip, leverage machine"; "pistol squat, leverage machine"
+          "pull up, band"; "chin up, band" ]
+
+let exportedWeight (set: StrengthSet) =
+    if isAssistedExercise set.Exercise then 0.0 else set.WeightKg
+
+let exerciseNotes (workout: Workout) (exercise: string) =
+    if not (isAssistedExercise exercise) then exercise
+    else
+        let assistance =
+            workout.Sets
+            |> List.filter (fun set ->
+                String.Equals(set.Exercise.Trim(), exercise.Trim(), StringComparison.OrdinalIgnoreCase))
+            |> List.map (fun set ->
+                let weight = set.WeightKg.ToString("0.###", Globalization.CultureInfo.InvariantCulture)
+                let warmup = if set.IsWarmup then " (warmup)" else ""
+                weight + " kg" + warmup)
+            |> String.concat ", "
+        exercise + "; Assistance by set: " + assistance
+
 // Rough lifting duration. This is deliberately simple.
 //
 // 5 reps  -> ~15 sec

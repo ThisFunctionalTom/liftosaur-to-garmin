@@ -21,6 +21,7 @@ type FitWorkout =
       name: string
       description: string
       exercises: string array
+      exerciseNotes: string array
       sets: FitSet array }
 
 let fitSeconds (date: DateTimeOffset) =
@@ -39,7 +40,7 @@ let prepareWorkout text =
         | ActiveSet(_, _) | Rest(_, _) ->
             let seconds, active, exercise, reps, weight =
                 match entry with
-                | ActiveSet(set, seconds) -> seconds, true, set.Exercise, set.Reps, set.WeightKg
+                | ActiveSet(set, seconds) -> seconds, true, set.Exercise, set.Reps, exportedWeight set
                 | Rest(exercise, seconds) -> seconds, false, exercise, 0, 0.0
                 | Transition _ -> failwith "Unexpected transition"
             let finish = current + seconds
@@ -58,4 +59,5 @@ let prepareWorkout text =
       name = workoutName workout
       description = workoutDescription workout
       exercises = workoutExercises workout |> List.toArray
+      exerciseNotes = workoutExercises workout |> List.map (exerciseNotes workout) |> List.toArray
       sets = sets.ToArray() }

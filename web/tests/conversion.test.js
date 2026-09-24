@@ -22,6 +22,12 @@ function decode(bytes) {
 }
 
 const fixtures = new URL('../../tests/fixtures/', import.meta.url);
+const assistedNames = new Set([
+  'assisted squat', 'chest dip, assisted', 'chin up, assisted',
+  'chin up, leverage machine', 'pull up, assisted', 'pull up, band',
+  'pull up, leverage machine', 'triceps dip, leverage machine',
+  'pistol squat, leverage machine',
+]);
 for (const name of readdirSync(fixtures).filter(name => name.endsWith('.txt'))) {
   test(`Fable/JavaScript FIT matches .NET: ${name}`, () => {
     const source = readFileSync(new URL(name, fixtures), 'utf8');
@@ -110,9 +116,33 @@ test('all shared mappings encode the same exercise fields as the .NET SDK', () =
       setCategory: set.category[0],
       setSubtype: set.categorySubtype?.[0] ?? -1,
     }, expected, name);
-    assert.equal(step.notes, name, 'Original name is preserved even without a Garmin subtype');
+    assert.equal(step.notes, assistedNames.has(name) ? `${name}; Assistance by set: 10 kg` : name);
     assert.equal(set.repetitions, 5);
-    assert.equal(set.weight, 10);
+    assert.equal(set.weight, assistedNames.has(name) ? 0 : 10, name);
+  }
+});
+
+test('assistance exports zero load with ordered weights and warmups in notes', () => {
+  const source = readFileSync(new URL('assistance.txt', fixtures), 'utf8');
+  const messages = decode(convertWorkout(source, 12345).bytes);
+  const active = messages.setMesgs.filter(set => set.setType === 1);
+  assert.deepEqual(active.map(set => set.weight), [0, 0, 0, 0, 0, 0, 50]);
+  assert.deepEqual(active.map(set => set.repetitions), [8, 5, 6, 5, 5, 5, 5]);
+  assert.equal(messages.workoutStepMesgs[0].notes,
+    'Chin Up, Leverage Machine; Assistance by set: 60 kg (warmup), 50 kg, 40 kg');
+  assert.equal(messages.workoutStepMesgs[1].notes,
+    'Pull Up, Band; Assistance by set: 9.072 kg');
+  assert.equal(messages.workoutStepMesgs[4].notes, 'Chest Press, Leverage Machine');
+});
+
+test('explicit assisted names are case insensitive; resistance bands keep their load', () => {
+  for (const [name, weight] of [['CUSTOM ASSISTED DIP', 0], ['Chin Up, Band', 0],
+    ['Push Up, Band', 50], ['Squat, Leverage Machine', 50], ['Chin Up', 50]]) {
+    const source = `2026-03-01T10:00:00Z / duration: 60s / exercises: {\n${name} / 1x5 50kg\n}`;
+    const messages = decode(convertWorkout(source, 12345).bytes);
+    assert.equal(messages.setMesgs.find(set => set.setType === 1).weight, weight, name);
+    assert.equal(messages.workoutStepMesgs[0].notes,
+      weight === 0 ? `${name}; Assistance by set: 50 kg` : name);
   }
 });
 

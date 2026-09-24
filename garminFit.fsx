@@ -136,7 +136,9 @@ let createWorkoutMessages workout =
     let steps =
         workoutExercises workout
         |> List.mapi (fun index exercise ->
-            createWorkoutStep index exercise :> Mesg)
+            let step = createWorkoutStep index exercise
+            step.SetNotes(exerciseNotes workout exercise)
+            step :> Mesg)
 
     summary :: steps
 
@@ -168,7 +170,7 @@ let createActiveSet index startDate duration (set: StrengthSet) =
         createSetMessage index startDate duration SetType.Active
 
     message.SetRepetitions(uint16 set.Reps)
-    message.SetWeight(float32 set.WeightKg)
+    message.SetWeight(float32 (exportedWeight set))
     addExerciseMetadata set message
     message, endDate
 

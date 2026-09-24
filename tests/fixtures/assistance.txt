@@ -1,0 +1,7 @@
+2026-03-01T10:00:00Z / duration: 600s / exercises: {
+Chin Up, Leverage Machine / 1x5 50kg, 1x6 40kg / warmup: 1x8 60kg
+Pull Up, Band / 1x5 20lbs
+Triceps Dip, Leverage Machine / 1x5 25kg
+Pistol Squat, Leverage Machine / 1x5 15kg
+Chest Press, Leverage Machine / 1x5 50kg
+}

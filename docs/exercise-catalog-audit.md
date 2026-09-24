@@ -205,12 +205,12 @@ This validates FIT metadata, not Garmin Connect display behavior for every exerc
 | Liftosaur name | Garmin category | Garmin subtype | Limitation |
 | --- | --- | --- | --- |
 | Ab Wheel | core | kneelingAbWheel | Uses kneeling ab-wheel subtype; standing versus kneeling is unspecified. |
-| Assisted Squat | squat | squat | Assistance is not represented. |
+| Assisted Squat | squat | squat | Exports 0 kg with assistance in step notes. |
 | Back Extension, Bodyweight | hyperextension | spineExtension | Uses generic spine extension; bench angle is not represented. |
 | Bent Over Row, Band | bandedExercises | row | Banded row code does not distinguish torso position. |
 | Chest Dip | tricepsExtension | bodyWeightDip | FIT dip subtype does not distinguish chest emphasis. |
 | Chest Fly, Cable | flye | cableCrossover | FIT cable fly is named Cable Crossover. |
-| Chin Up, Leverage Machine | pullUp | chinUp | FIT has no machine-assisted subtype; assistance is not represented. |
+| Chin Up, Leverage Machine | pullUp | chinUp | FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes. |
 | Concentration Curl, Band | bandedExercises | curl | Concentration posture is not represented. |
 | Crunch, Leverage Machine | crunch | crunch | Generic crunch code does not describe the machine. |
 | Deficit Deadlift | deadlift | barbellDeadlift | Deficit height is not represented. |
@@ -238,8 +238,8 @@ This validates FIT metadata, not Garmin Connect display behavior for every exerc
 | Nordic Curl | legCurl | legCurl | Generic leg curl does not specify bodyweight Nordic technique. |
 | Pendlay Row | row | barbellRow | Dead-stop Pendlay technique is not represented. |
 | Pistol Squat, Kettlebell | squat | weightedPistolSquat | Generic weighted pistol squat does not specify kettlebell. |
-| Pistol Squat, Leverage Machine | squat | pistolSquat | Machine assistance is not represented. |
-| Pull Up, Leverage Machine | pullUp | pullUp | FIT has no machine-assisted subtype; assistance is not represented. |
+| Pistol Squat, Leverage Machine | squat | pistolSquat | Exports 0 kg with machine assistance in step notes. |
+| Pull Up, Leverage Machine | pullUp | pullUp | FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes. |
 | Reverse Curl, Band | bandedExercises | curl | Reverse grip is not represented. |
 | Reverse Lunge, Kettlebell | lunge | weightedLunge | Backward direction and kettlebell equipment are not represented. |
 | Reverse Lunge, Bodyweight | lunge | lunge | Generic lunge does not specify backward direction. |
@@ -275,7 +275,7 @@ This validates FIT metadata, not Garmin Connect display behavior for every exerc
 | Stiff Leg Deadlift, Band | bandedExercises | deadlift | Knee angle is not represented. |
 | Straight Leg Deadlift, Band | bandedExercises | deadlift | Knee angle is not represented. |
 | Straight Leg Deadlift, Kettlebell | deadlift | straightLegDeadlift | Generic straight-leg deadlift does not specify kettlebell. |
-| Triceps Dip, Leverage Machine | tricepsExtension | bodyWeightDip | FIT has no machine-assisted subtype; assistance is not represented. |
+| Triceps Dip, Leverage Machine | tricepsExtension | bodyWeightDip | FIT has no machine-assisted subtype; exports 0 kg with assistance in step notes. |
 | Upright Row, Cable | shrug | uprightRow | Cable equipment is not represented. |
 | V Up, Dumbbell | sitUp | weightedVUp | Generic weighted V-up does not specify dumbbells. |
 | Vertical Row | row | invertedRow | Bodyweight row inclination is not represented. |

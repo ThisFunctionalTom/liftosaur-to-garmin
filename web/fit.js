@@ -23,7 +23,7 @@ export function convertWorkout(text, serial = crypto.getRandomValues(new Uint32A
   workout.exercises.forEach((exercise, messageIndex) => {
     const metadata = exerciseMetadata(exercise);
     write('WORKOUT_STEP', {
-      messageIndex, wktStepName: exercise, notes: exercise,
+      messageIndex, wktStepName: exercise, notes: workout.exerciseNotes[messageIndex],
       durationType: 'open', targetType: 'open',
       ...(metadata ? { exerciseCategory: metadata.category } : {}),
       ...(metadata?.subtype !== undefined ? { exerciseName: metadata.subtype } : {}),

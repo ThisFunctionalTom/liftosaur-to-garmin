@@ -34,9 +34,13 @@ a different movement to hide an Unknown label. For example, FIT's crunch
 code is used only for the explicitly banded variant.
 
 Assisted pull-ups, chin-ups, and dips use the base movement as a documented
-generic match; machine assistance is not encoded. Recorded weights are preserved
-as supplied by Liftosaur, so an assistance weight is not converted into bodyweight
-or added resistance. This mapping change does not alter repetitions or weights.
+generic match. Assisted exercises export **0 kg added weight**, with assistance
+in kg listed in workout step notes in set order (including marked warmups).
+Garmin may not display these notes in every activity view. The shared logic in
+`shared/WorkoutConversion.fs` recognizes names containing the word `Assisted`,
+machine-assisted chin-ups, pull-ups, triceps dips and pistol squats, and band-assisted
+pull-ups/chin-ups. Other machine and band exercises retain their resistance weights.
+FIT's standard set weight is unsigned, so negative assistance cannot be stored there.
 
 Garmin may still show category-only and unsupported entries as Unknown.
 Original exercise names remain in workout step names and notes. FIT profile
