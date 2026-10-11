@@ -11,18 +11,15 @@ class LiftosaurApp extends Application.AppBase {
         AppBase.initialize();
         var buildInfo = new LiftosaurBuildInfo();
         System.println("[Liftosaur] build=" + buildInfo.getBuildId());
-        System.println("[Liftosaur] initialize");
         _store = new LiftosaurStore();
         _view = new LiftosaurView(_store);
     }
 
     function getInitialView() {
-        System.println("[Liftosaur] getInitialView");
         return [ _view, new LiftosaurDelegate(_store) ];
     }
 
     function onStart(state) {
-        System.println("[Liftosaur] onStart");
         _store.open();
     }
 
@@ -49,13 +46,11 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     function onSelect() {
         if (_suppressNextSelect) {
             _suppressNextSelect = false;
-            System.println("[Liftosaur] consumed duplicate START select behavior");
             return true;
         }
         if (_keyDownAt != null) {
             var held = System.getTimer() - _keyDownAt;
             if (held >= 700) {
-                System.println("[Liftosaur] START hold detected by select behavior heldMs=" + held.toString());
                 _store.dispatchMessage("LONG_START", null, null);
                 _keyHandled = true;
             }
@@ -83,6 +78,11 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() {
+        // When there is no active workout, let Garmin's default back behavior
+        // close the app. During a workout BACK remains an app navigation input.
+        if (!_store.isActive()) {
+            return false;
+        }
         _store.dispatchMessage("BACK", null, null);
         return true;
     }
@@ -102,7 +102,6 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
         if (keyEvent.getKey() != WatchUi.KEY_ENTER) { return false; }
         var heldMs = _keyDownAt != null ? System.getTimer() - _keyDownAt : 0;
         var held = heldMs >= 700;
-        System.println("[Liftosaur] START released heldMs=" + heldMs.toString() + " alreadyHandled=" + (_keyHandled == true).toString());
         var alreadyHandled = _keyHandled == true;
         _keyDownAt = null;
         _keyHandled = false;

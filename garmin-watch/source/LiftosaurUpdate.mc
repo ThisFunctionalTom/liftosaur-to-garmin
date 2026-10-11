@@ -219,6 +219,74 @@ class LiftosaurUpdate {
         return true;
     }
 
+    function undoTarget(model) {
+        var set = currentSet(model);
+        if (set != null && set.get("completed") != null) {
+            return { "entryIndex" => model.get("entryIndex"), "setIndex" => model.get("setIndex") };
+        }
+
+        // Prefer the last locally logged set: workout order alone may not
+        // match the order in which the user navigated and logged sets.
+        var workout = model.get("workout");
+        var last = model.get("undo");
+        if (workout != null && last != null) {
+            var lastEntryIndex = last.get("entryIndex");
+            var lastSetIndex = last.get("setIndex");
+            var entries = workout.get("entries");
+            if (lastEntryIndex != null && lastSetIndex != null && lastEntryIndex >= 0 && lastEntryIndex < entries.size()) {
+                var lastEntry = entries[lastEntryIndex];
+                var sets = lastEntry.get("sets");
+                if (lastSetIndex >= 0 && lastSetIndex < sets.size() && sets[lastSetIndex].get("completed") != null) {
+                    return { "entryIndex" => lastEntryIndex, "setIndex" => lastSetIndex };
+                }
+            }
+        }
+
+        // A server-loaded workout may not have a local undo record. If every
+        // set is complete, the cursor sits after the final entry.
+        var phase = model.get("phase");
+        if (workout == null || (!isText(phase, "complete") && !isText(phase, "actions") && !isText(phase, "confirm-undo"))) { return null; }
+        var entries = workout.get("entries");
+        for (var i = entries.size() - 1; i >= 0; i -= 1) {
+            var sets = entries[i].get("sets");
+            for (var j = sets.size() - 1; j >= 0; j -= 1) {
+                if (sets[j].get("completed") != null) {
+                    return { "entryIndex" => i, "setIndex" => j };
+                }
+            }
+        }
+        return null;
+    }
+
+    function beginUndoSet(next, model, effects) {
+        var target = undoTarget(model);
+        if (target == null) { return false; }
+        var entryIndex = target.get("entryIndex");
+        var setIndex = target.get("setIndex");
+        var entry = model.get("workout").get("entries")[entryIndex];
+        var set = entry.get("sets")[setIndex];
+        if (set.get("completed") == null) { return false; }
+
+        setCompletedValue(next, entryIndex, setIndex, null, null, true);
+        appendQueue(next, {
+            "kind" => "set", "entryId" => entry.get("entryId"), "setId" => set.get("setId"),
+            "completed" => null, "entryIndex" => entryIndex, "setIndex" => setIndex, "undo" => true
+        });
+        next["entryIndex"] = entryIndex;
+        next["setIndex"] = setIndex;
+        next["phase"] = "working";
+        next["restEnd"] = null;
+        next["lastSet"] = false;
+        next["status"] = "Undoing set";
+        var lastUndo = model.get("undo");
+        if (lastUndo != null && lastUndo.get("entryIndex") == entryIndex && lastUndo.get("setIndex") == setIndex) {
+            next["undo"] = null;
+        }
+        effects.add({ "type" => "stopTicker" });
+        effects.add({ "type" => "flushQueue" });
+        return true;
+    }
+
     function currentSet(model) {
         var workout = model.get("workout");
         if (workout == null) { return null; }
@@ -234,7 +302,7 @@ class LiftosaurUpdate {
         var phase = model.get("phase");
         return isText(phase, "working") || isText(phase, "editing") || isText(phase, "rest") ||
             isText(phase, "complete") || isText(phase, "finishing") || isText(phase, "actions") ||
-            isText(phase, "confirm-finish") || isText(phase, "confirm-discard") || isText(phase, "discarding");
+            isText(phase, "confirm-finish") || isText(phase, "confirm-discard") || isText(phase, "confirm-undo") || isText(phase, "discarding");
     }
 
     function normalizeCursor(model) {
@@ -319,18 +387,30 @@ class LiftosaurUpdate {
             } else if (isText(phase, "complete")) {
                 changed = beginFinish(next, model, now, effects);
             } else if (isText(phase, "actions")) {
+                var undoTargetExists = undoTarget(model) != null;
                 if (model.get("selectedAction") == 1) {
+                    cancelOverlay(next, model, now);
+                    effects.add({ "type" => "exitApp" });
+                    changed = true;
+                } else if (undoTargetExists && model.get("selectedAction") == 2) {
+                    next["phase"] = "confirm-undo";
+                    next["status"] = "Confirm undo set";
+                    changed = true;
+                } else if (model.get("selectedAction") == (undoTargetExists ? 3 : 2)) {
                     next["phase"] = "confirm-discard";
                     next["status"] = "This permanently deletes this workout";
+                    changed = true;
                 } else {
                     next["phase"] = "confirm-finish";
-                    next["status"] = "Press SELECT to finish early";
+                    next["status"] = "Press SELECT to finish workout";
+                    changed = true;
                 }
-                changed = true;
             } else if (isText(phase, "confirm-finish")) {
                 changed = beginFinish(next, model, now, effects);
             } else if (isText(phase, "confirm-discard")) {
                 changed = beginDiscard(next, model, message, effects);
+            } else if (isText(phase, "confirm-undo")) {
+                changed = beginUndoSet(next, model, effects);
             }
         } else if (isText(type, "LONG_START")) {
             if (isText(phase, "working")) {
@@ -343,7 +423,14 @@ class LiftosaurUpdate {
                 changed = saveEditedSet(next, model, now, effects);
             }
         } else if (isText(type, "BACK")) {
-            if (isText(phase, "rest")) {
+            if (isText(phase, "preview") || isText(phase, "loading") || isText(phase, "error")) {
+                effects.add({ "type" => "exitApp" });
+                changed = true;
+            } else if (isText(phase, "working") || isText(phase, "complete")) {
+                next["phase"] = "actions";
+                next["selectedAction"] = 0;
+                changed = true;
+            } else if (isText(phase, "rest")) {
                 next["restEnd"] = null;
                 next["phase"] = model.get("lastSet") == true ? "complete" : "working";
                 next["status"] = "Rest skipped";
@@ -360,6 +447,9 @@ class LiftosaurUpdate {
             } else if (isText(phase, "confirm-finish") || isText(phase, "confirm-discard")) {
                 cancelOverlay(next, model, now);
                 changed = true;
+            } else if (isText(phase, "confirm-undo")) {
+                next["phase"] = "actions";
+                changed = true;
             } else {
                 changed = undoLastSet(next, model, effects);
             }
@@ -371,6 +461,9 @@ class LiftosaurUpdate {
             } else if (isText(phase, "actions") || isText(phase, "confirm-finish") || isText(phase, "confirm-discard")) {
                 cancelOverlay(next, model, now);
                 changed = true;
+            } else if (isText(phase, "confirm-undo")) {
+                next["phase"] = "actions";
+                changed = true;
             } else if (isText(phase, "complete")) {
                 next["phase"] = "confirm-finish";
                 next["status"] = "Press SELECT to finish early";
@@ -379,9 +472,10 @@ class LiftosaurUpdate {
         } else if (isText(type, "ADJUST")) {
             var direction = message.get("direction");
             if (isText(phase, "actions")) {
+                var maxAction = undoTarget(model) != null ? 3 : 2;
                 var selectedAction = model.get("selectedAction") + direction;
-                if (selectedAction < 0) { selectedAction = 1; }
-                if (selectedAction > 1) { selectedAction = 0; }
+                if (selectedAction < 0) { selectedAction = maxAction; }
+                if (selectedAction > maxAction) { selectedAction = 0; }
                 next["selectedAction"] = selectedAction;
                 changed = true;
             } else if (isText(phase, "working")) {
@@ -435,7 +529,7 @@ class LiftosaurUpdate {
                         next["phase"] = "finishing";
                     } else if (isText(savedPhase, "rest") || isText(savedPhase, "editing") ||
                         isText(savedPhase, "actions") || isText(savedPhase, "confirm-finish") ||
-                        isText(savedPhase, "confirm-discard")) {
+                        isText(savedPhase, "confirm-discard") || isText(savedPhase, "confirm-undo")) {
                         if (!isText(savedPhase, "editing") || currentSet(next) != null) { next["phase"] = savedPhase; }
                     } else if (isText(savedPhase, "discarding")) {
                         next["phase"] = "confirm-discard";
@@ -510,11 +604,16 @@ class LiftosaurUpdate {
                 var queue = copyArray(model.get("queue"));
                 var syncedAction = queue.size() > 0 ? queue[0] : null;
                 var isCorrection = syncedAction != null && syncedAction.get("correction") == true;
+                var isUndo = syncedAction != null && syncedAction.get("undo") == true;
                 var savedPhase = phase;
                 var viewedSet = currentSet(model);
                 var preserveViewedSet = isText(savedPhase, "working") && viewedSet != null && viewedSet.get("completed") != null;
                 next["workout"] = updatedWorkout;
                 if (isCorrection && syncedAction != null) {
+                    next["entryIndex"] = syncedAction.get("entryIndex");
+                    next["setIndex"] = syncedAction.get("setIndex");
+                    next["phase"] = "working";
+                } else if (isUndo && syncedAction != null) {
                     next["entryIndex"] = syncedAction.get("entryIndex");
                     next["setIndex"] = syncedAction.get("setIndex");
                     next["phase"] = "working";
@@ -524,7 +623,7 @@ class LiftosaurUpdate {
                 }
                 if (queue.size() > 0) { queue.remove(queue[0]); }
                 next["queue"] = queue;
-                if (queue.size() == 0) { next["status"] = isCorrection ? "Reps corrected" : ""; }
+                if (queue.size() == 0) { next["status"] = isCorrection ? "Reps corrected" : (isUndo ? "Set undone" : ""); }
                 if (model.get("discardPending") == true) {
                     next["discardPending"] = false;
                     effects.add({ "type" => "sendDiscard" });
@@ -551,7 +650,7 @@ class LiftosaurUpdate {
             if (discardCode == 200) {
                 next = { "phase" => "loading", "queue" => [], "status" => "Workout discarded" };
                 effects.add({ "type" => "stopTicker" });
-                effects.add({ "type" => "loadNext" });
+                effects.add({ "type" => "exitApp" });
             } else {
                 next["discardPending"] = false;
                 next["phase"] = "confirm-discard";

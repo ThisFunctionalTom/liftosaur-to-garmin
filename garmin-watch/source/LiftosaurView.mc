@@ -13,7 +13,6 @@ class LiftosaurView extends WatchUi.View {
     }
 
     function refresh() {
-        System.println("[Liftosaur] view.refresh -> requestUpdate");
         WatchUi.requestUpdate();
     }
 
@@ -25,13 +24,10 @@ class LiftosaurView extends WatchUi.View {
         var state = _store.state;
         var phase = state.get("phase");
         var phaseText = phase == null ? "" : phase.toString();
-        System.println("[Liftosaur] onUpdate phase=" + phaseText + " previewEquals=" + phaseText.equals("preview").toString());
         try {
-            System.println("[Liftosaur] before drawState");
             drawState(dc, state, phaseText);
-            System.println("[Liftosaur] after drawState");
         } catch (ex) {
-            System.println("[Liftosaur] drawing failed");
+            System.println("[Liftosaur] ERROR drawing screen");
             ex.printStackTrace();
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
             dc.clear();
@@ -44,7 +40,6 @@ class LiftosaurView extends WatchUi.View {
         dc.clear();
 
         if (phase.equals("preview")) {
-            System.println("[Liftosaur] drawState chose preview branch");
             drawPreview(dc, state);
         } else if (isText(phase, "working")) {
             drawWorking(dc, state);
@@ -56,6 +51,8 @@ class LiftosaurView extends WatchUi.View {
             drawActions(dc, state);
         } else if (isText(phase, "confirm-discard")) {
             drawDiscardConfirmation(dc, state);
+        } else if (isText(phase, "confirm-undo")) {
+            drawUndoConfirmation(dc, state);
         } else if (isText(phase, "discarding")) {
             line(dc, 78, "DISCARDING", Graphics.FONT_MEDIUM);
             line(dc, 118, statusText(state), Graphics.FONT_SMALL);
@@ -71,6 +68,10 @@ class LiftosaurView extends WatchUi.View {
     }
 
     function drawPreview(dc, state) {
+        if (isText(state.get("status"), "Starting workout")) {
+            drawStarting(dc);
+            return;
+        }
         var workout = state.get("workout");
         var name = workout.get("dayName").toString();
         var font = Graphics.FONT_SMALL;
@@ -82,6 +83,28 @@ class LiftosaurView extends WatchUi.View {
             line(dc, y + (i * lineHeight), lines[i], font);
         }
         line(dc, dc.getHeight() - 48, "PRESS START", Graphics.FONT_SMALL);
+    }
+
+    function drawStarting(dc) {
+        var centerX = dc.getWidth() / 2;
+        var top = 70;
+        var waist = top + 18;
+        var bottom = top + 38;
+
+        // Draw a small hourglass with the graphics API so it works on the
+        // fenix 5 without relying on a font-specific Unicode symbol.
+        dc.drawLine(centerX - 12, top, centerX + 12, top);
+        dc.drawLine(centerX - 12, top, centerX - 3, waist);
+        dc.drawLine(centerX + 12, top, centerX + 3, waist);
+        dc.drawLine(centerX - 3, waist, centerX + 3, waist);
+        dc.drawLine(centerX - 3, waist, centerX - 12, bottom);
+        dc.drawLine(centerX + 3, waist, centerX + 12, bottom);
+        dc.drawLine(centerX - 12, bottom, centerX + 12, bottom);
+        dc.drawLine(centerX - 4, top + 9, centerX + 4, top + 9);
+        dc.drawLine(centerX - 2, waist + 9, centerX + 2, waist + 9);
+
+        line(dc, top + 60, "STARTING WORKOUT", Graphics.FONT_SMALL);
+        line(dc, top + 88, "PLEASE WAIT", Graphics.FONT_XTINY);
     }
 
     function wrapText(dc, text, font, maxWidth) {
@@ -200,7 +223,7 @@ class LiftosaurView extends WatchUi.View {
 
     function drawComplete(dc, state) {
         if (isText(state.get("phase"), "confirm-finish")) {
-            line(dc, 70, "FINISH EARLY?", Graphics.FONT_MEDIUM);
+            line(dc, 70, "FINISH WORKOUT?", Graphics.FONT_MEDIUM);
             line(dc, 113, "Completed sets will save", Graphics.FONT_XTINY);
             line(dc, 155, "SELECT  CONFIRM", Graphics.FONT_SMALL);
             line(dc, 200, "BACK  CANCEL", Graphics.FONT_XTINY);
@@ -221,12 +244,38 @@ class LiftosaurView extends WatchUi.View {
         line(dc, 194, "BACK  CANCEL", Graphics.FONT_XTINY);
     }
 
+    function drawUndoConfirmation(dc, state) {
+        var target = _store.undoTarget();
+        if (target == null) {
+            line(dc, 82, "NO SET TO UNDO", Graphics.FONT_MEDIUM);
+            line(dc, 178, "BACK  CANCEL", Graphics.FONT_XTINY);
+            return;
+        }
+        var entry = target.get("entry");
+        var set = target.get("set");
+        line(dc, 48, target.get("selected") == true ? "UNDO THIS SET?" : "UNDO LAST SET?", Graphics.FONT_SMALL);
+        line(dc, 82, entry.get("name").toString(), Graphics.FONT_XTINY);
+        var setLabel = set.get("isWarmup") == true ? "W" : "SET ";
+        line(dc, 111, setLabel + currentSetNumber(entry, set).toString(), Graphics.FONT_SMALL);
+        line(dc, 143, "Logged reps will be cleared", Graphics.FONT_XTINY);
+        line(dc, 177, "START  UNDO", Graphics.FONT_SMALL);
+        line(dc, 204, "BACK  CANCEL", Graphics.FONT_XTINY);
+    }
+
     function drawActions(dc, state) {
-        line(dc, 68, "WORKOUT OPTIONS", Graphics.FONT_SMALL);
+        var target = _store.undoTarget();
+        var hasUndo = target != null;
         var selected = state.get("selectedAction");
-        line(dc, 117, selected == 0 ? "> FINISH EARLY" : "FINISH EARLY", Graphics.FONT_MEDIUM);
+        line(dc, 38, "WORKOUT OPTIONS", Graphics.FONT_XTINY);
+        line(dc, 78, selected == 0 ? "> FINISH WORKOUT" : "FINISH WORKOUT", Graphics.FONT_XTINY);
+        line(dc, 108, selected == 1 ? "> LEAVE / KEEP" : "LEAVE / KEEP", Graphics.FONT_XTINY);
+        if (hasUndo) {
+            var undoLabel = target.get("selected") == true ? "UNDO THIS SET" : "UNDO LAST SET";
+            line(dc, 138, selected == 2 ? "> " + undoLabel : undoLabel, Graphics.FONT_XTINY);
+        }
+        var discardIndex = hasUndo ? 3 : 2;
         dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-        line(dc, 162, selected == 1 ? "> DISCARD WORKOUT" : "DISCARD WORKOUT", Graphics.FONT_SMALL);
+        line(dc, 168, selected == discardIndex ? "> DISCARD WORKOUT" : "DISCARD WORKOUT", Graphics.FONT_XTINY);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
 

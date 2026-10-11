@@ -50,6 +50,32 @@ class LiftosaurUpdateTests {
         };
     }
 
+    static function undoModel(phase, selectedAction) {
+        return {
+            "phase" => phase,
+            "status" => "",
+            "queue" => [],
+            "entryIndex" => 0,
+            "setIndex" => 1,
+            "selectedAction" => selectedAction,
+            "undo" => { "entryId" => "squat", "setId" => "set1", "entryIndex" => 0, "setIndex" => 0 },
+            "restEnd" => 120,
+            "lastSet" => false,
+            "workout" => {
+                "entries" => [
+                    {
+                        "entryId" => "squat",
+                        "name" => "Squat",
+                        "sets" => [
+                            { "setId" => "set1", "reps" => 5, "weight" => "45kg", "completed" => { "reps" => 5, "weight" => "45kg" } },
+                            { "setId" => "set2", "reps" => 5, "weight" => "45kg", "completed" => null }
+                        ]
+                    }
+                ]
+            }
+        };
+    }
+
     (:test)
     static function selectOnAmrapOpensEditor(logger as Test.Logger) as Lang.Boolean {
         var updater = new LiftosaurUpdate();
@@ -181,6 +207,20 @@ class LiftosaurUpdateTests {
     }
 
     (:test)
+    static function successfulDiscardExitsApp(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = setResultModel();
+        model["phase"] = "discarding";
+        var result = updater.update(model, { "type" => "DISCARD_RESULT", "code" => 200 }, 100);
+        Test.assertEqual("loading", result.get("model").get("phase"));
+        Test.assertEqual("Workout discarded", result.get("model").get("status"));
+        Test.assertEqual("stopTicker", effectOf(result, 0));
+        Test.assertEqual("exitApp", effectOf(result, 1));
+        Test.assertEqual(2, result.get("effects").size());
+        return true;
+    }
+
+    (:test)
     static function plannedSetLogUpdatesModelAndQueue(logger as Test.Logger) as Lang.Boolean {
         var updater = new LiftosaurUpdate();
         var model = amrapModel("working");
@@ -200,22 +240,109 @@ class LiftosaurUpdateTests {
     }
 
     (:test)
-    static function secondBackUndoesSetInReducer(logger as Test.Logger) as Lang.Boolean {
+    static function backFromWorkingOpensWorkoutOptions(logger as Test.Logger) as Lang.Boolean {
         var updater = new LiftosaurUpdate();
         var model = amrapModel("working");
-        var set = model.get("workout").get("entries")[0].get("sets")[0];
-        set["completed"] = { "reps" => 8, "weight" => "50kg" };
-        model["undo"] = { "entryId" => "entry1", "setId" => "amrap1", "entryIndex" => 0, "setIndex" => 0 };
-        model["queue"] = [ { "kind" => "set", "entryId" => "entry1", "setId" => "amrap1", "completed" => { "reps" => 8, "weight" => "50kg" } } ];
         var result = updater.update(model, { "type" => "BACK" }, 100);
-        var next = result.get("model");
+        Test.assertEqual("actions", result.get("model").get("phase"));
+        Test.assertEqual(0, result.get("model").get("selectedAction"));
+        Test.assertEqual(0, result.get("effects").size());
+        return true;
+    }
+
+    (:test)
+    static function backExitsFromPreviewLoadingAndError(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var phases = ["preview", "loading", "error"];
+        for (var i = 0; i < phases.size(); i += 1) {
+            var result = updater.update(amrapModel(phases[i]), { "type" => "BACK" }, 100);
+            Test.assertEqual(phases[i], result.get("model").get("phase"));
+            Test.assertEqual(1, result.get("effects").size());
+            Test.assertEqual("exitApp", effectOf(result, 0));
+        }
+        return true;
+    }
+
+    (:test)
+    static function leaveActionRestoresWorkoutAndRequestsAppExit(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = amrapModel("actions");
+        model["selectedAction"] = 1;
+        model["restEnd"] = 150;
+        var result = updater.update(model, { "type" => "SELECT" }, 100);
+        Test.assertEqual("rest", result.get("model").get("phase"));
+        Test.assertEqual(150, result.get("model").get("restEnd"));
+        Test.assertEqual("exitApp", effectOf(result, 0));
+        return true;
+    }
+
+    (:test)
+    static function discardActionOpensConfirmation(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = amrapModel("actions");
+        model["selectedAction"] = 2;
+        var result = updater.update(model, { "type" => "SELECT" }, 100);
+        Test.assertEqual("confirm-discard", result.get("model").get("phase"));
+        Test.assertEqual(0, result.get("effects").size());
+        return true;
+    }
+
+    (:test)
+    static function undoLastCompletedSetIsAvailableFromMenuOnNextSet(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = undoModel("actions", 2);
+        var confirm = updater.update(model, { "type" => "SELECT" }, 100);
+        Test.assertEqual("confirm-undo", confirm.get("model").get("phase"));
+        Test.assertEqual(0, confirm.get("effects").size());
+
+        var undone = updater.update(confirm.get("model"), { "type" => "SELECT" }, 100);
+        var next = undone.get("model");
         Test.assertEqual("working", next.get("phase"));
-        Test.assert(next.get("workout").get("entries")[0].get("sets")[0].get("completed") == null);
         Test.assertEqual(0, next.get("entryIndex"));
         Test.assertEqual(0, next.get("setIndex"));
-        Test.assertEqual(2, next.get("queue").size());
-        Test.assertEqual("stopTicker", effectOf(result, 0));
-        Test.assertEqual("flushQueue", effectOf(result, 1));
+        Test.assert(next.get("workout").get("entries")[0].get("sets")[0].get("completed") == null);
+        Test.assertEqual("set1", next.get("queue")[0].get("setId"));
+        Test.assert(next.get("queue")[0].get("completed") == null);
+        Test.assert(next.get("queue")[0].get("undo") == true);
+        Test.assertEqual("stopTicker", effectOf(undone, 0));
+        Test.assertEqual("flushQueue", effectOf(undone, 1));
+        return true;
+    }
+
+    (:test)
+    static function cancelUndoReturnsToWorkoutMenu(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = undoModel("confirm-undo", 2);
+        var result = updater.update(model, { "type" => "BACK" }, 100);
+        Test.assertEqual("actions", result.get("model").get("phase"));
+        Test.assertEqual(2, result.get("model").get("selectedAction"));
+        Test.assertEqual(0, result.get("effects").size());
+        return true;
+    }
+
+    (:test)
+    static function undoAcknowledgementKeepsCursorOnUndoneSet(logger as Test.Logger) as Lang.Boolean {
+        var updater = new LiftosaurUpdate();
+        var model = undoModel("working", 0);
+        model["setIndex"] = 0;
+        model.get("workout").get("entries")[0].get("sets")[0]["completed"] = null;
+        model["queue"] = [
+            { "kind" => "set", "entryId" => "squat", "setId" => "set1", "completed" => null, "entryIndex" => 0, "setIndex" => 0, "undo" => true }
+        ];
+        model.get("workout").get("entries")[0].get("sets")[1]["completed"] = { "reps" => 5, "weight" => "45kg" };
+        var serverWorkout = {
+            "entries" => [
+                { "sets" => [
+                    { "setId" => "set1", "reps" => 5, "weight" => "45kg", "completed" => null },
+                    { "setId" => "set2", "reps" => 5, "weight" => "45kg", "completed" => { "reps" => 5, "weight" => "45kg" } }
+                ] }
+            ]
+        };
+        var result = updater.update(model, { "type" => "SET_RESULT", "code" => 200, "workout" => serverWorkout }, 100);
+        Test.assertEqual(0, result.get("model").get("entryIndex"));
+        Test.assertEqual(0, result.get("model").get("setIndex"));
+        Test.assertEqual("working", result.get("model").get("phase"));
+        Test.assertEqual("Set undone", result.get("model").get("status"));
         return true;
     }
 

@@ -1,5 +1,11 @@
 # Liftosaur tools
 
+## Source control
+
+Use the Jujutsu command-line tool for all source-control operations in this workspace. Do not
+use the Git command-line client, including for read-only status, diff, or log
+commands. Repository guidance for coding agents is in [AGENTS.md](AGENTS.md).
+
 Download Liftosaur workout history and convert it to Garmin FIT activity files:
 
 This repository also contains a personal Connect IQ app for controlling Liftosaur
