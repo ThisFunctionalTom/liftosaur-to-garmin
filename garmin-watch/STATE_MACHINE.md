@@ -18,7 +18,7 @@ discard operations. The dictionary is saved in Connect IQ storage.
 | `working` | Showing the selected set. It may be an incomplete set or a previously completed set being reviewed. |
 | `editing` | Editing reps or weight for a set, or entering reps for an AMRAP set. |
 | `rest` | A set has been logged and the rest countdown is running. The cursor points at the next set, if one exists. |
-| `actions` | Workout menu with Finish Workout, Leave / Keep Workout, Undo this/last set (when available), and Discard Workout. |
+| `actions` | Workout menu ordered Leave / Keep Workout, Finish Workout, Undo this/last set (when available), then Discard Workout. Leave / Keep is selected by default. |
 | `confirm-undo` | Confirms clearing the selected completed set, or the most recently completed set if the cursor is on an incomplete set. |
 | `confirm-finish` | Confirming that the workout should be finished and saved. |
 | `finishing` | Waiting for queued set writes, then saving the workout. Retries after a failed save. |
@@ -100,7 +100,7 @@ events; the hold threshold is 700 ms.
 | `editing` | Hold START | Save/log the edited set. |
 | `editing` | BACK | Cancel editing and return to `working`. |
 | `editing` | MENU | No action. |
-| `actions` | UP/DOWN | Select Finish Workout, Leave / Keep Workout, Undo this/last set (if available), or Discard Workout. |
+| `actions` | UP/DOWN | Select Leave / Keep Workout, Finish Workout, Undo this/last set (if available), or Discard Workout, in that order. |
 | `actions` | START | Open the selected confirmation phase, perform Undo after confirmation, or exit for Leave / Keep Workout. |
 | `actions` | START on Leave / Keep Workout | Save the underlying working/rest/complete phase and exit the app without changing the server workout. |
 | `actions` | BACK or MENU | Close the menu and return to the prior working/rest/complete phase as determined by the rest deadline and last-set flag. |

@@ -9,11 +9,6 @@ class LiftosaurView extends WatchUi.View {
     function initialize(store) {
         View.initialize();
         _store = store;
-        _store.setChanged(method(:refresh));
-    }
-
-    function refresh() {
-        WatchUi.requestUpdate();
     }
 
     function isText(value, expected) {
@@ -166,17 +161,17 @@ class LiftosaurView extends WatchUi.View {
         }
         line(dc, 38, entry.get("name").toString(), Graphics.FONT_SMALL);
         var setPosition = currentSetNumber(entry, set);
-        if (set.get("isWarmup") == true) {
+        if (LiftosaurSet.get(set, "isWarmup") == true) {
             line(dc, 82, "W" + setPosition.toString() + " / " + warmupSetCount(entry).toString(), Graphics.FONT_SMALL);
         } else {
             line(dc, 82, "SET " + setPosition.toString() + " / " + workSetCount(entry).toString(), Graphics.FONT_SMALL);
         }
-        var completed = set.get("completed");
-        var shownWeight = completed != null && completed.get("weight") != null ? completed.get("weight") : set.get("weight");
-        var plannedReps = set.get("reps").toString();
-        if (set.get("isAmrap") == true) { plannedReps += "+"; }
+        var completed = LiftosaurSet.get(set, "completed");
+        var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
+        var plannedReps = LiftosaurSet.get(set, "reps").toString();
+        if (LiftosaurSet.get(set, "isAmrap") == true) { plannedReps += "+"; }
         drawWeightAndReps(dc, 120, shownWeight, plannedReps);
-        var actualReps = completed == null ? null : completed.get("reps");
+        var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
         if (actualReps != null) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
             line(dc, 166, "done " + actualReps.toString(), Graphics.FONT_SMALL);
@@ -205,7 +200,7 @@ class LiftosaurView extends WatchUi.View {
         var nextSet = _store.currentSet();
         if (next != null) {
             var nextLabel = "NEXT ";
-            if (nextSet != null && nextSet.get("isWarmup") == true) {
+            if (nextSet != null && LiftosaurSet.get(nextSet, "isWarmup") == true) {
                 nextLabel += "W" + currentSetNumber(next, nextSet).toString();
             } else if (nextSet != null) {
                 nextLabel += currentSetNumber(next, nextSet).toString();
@@ -213,7 +208,7 @@ class LiftosaurView extends WatchUi.View {
             nextLabel += ": ";
             line(dc, 158, nextLabel + next.get("name").toString(), Graphics.FONT_XTINY);
             if (nextSet != null) {
-                drawWeight(dc, 190, nextSet.get("weight"));
+                drawWeight(dc, 190, LiftosaurSet.get(nextSet, "weight"));
             }
         } else {
             line(dc, 171, "WORKOUT COMPLETE", Graphics.FONT_SMALL);
@@ -255,7 +250,7 @@ class LiftosaurView extends WatchUi.View {
         var set = target.get("set");
         line(dc, 48, target.get("selected") == true ? "UNDO THIS SET?" : "UNDO LAST SET?", Graphics.FONT_SMALL);
         line(dc, 82, entry.get("name").toString(), Graphics.FONT_XTINY);
-        var setLabel = set.get("isWarmup") == true ? "W" : "SET ";
+        var setLabel = LiftosaurSet.get(set, "isWarmup") == true ? "W" : "SET ";
         line(dc, 111, setLabel + currentSetNumber(entry, set).toString(), Graphics.FONT_SMALL);
         line(dc, 143, "Logged reps will be cleared", Graphics.FONT_XTINY);
         line(dc, 177, "START  UNDO", Graphics.FONT_SMALL);
@@ -267,8 +262,8 @@ class LiftosaurView extends WatchUi.View {
         var hasUndo = target != null;
         var selected = state.get("selectedAction");
         line(dc, 38, "WORKOUT OPTIONS", Graphics.FONT_XTINY);
-        line(dc, 78, selected == 0 ? "> FINISH WORKOUT" : "FINISH WORKOUT", Graphics.FONT_XTINY);
-        line(dc, 108, selected == 1 ? "> LEAVE / KEEP" : "LEAVE / KEEP", Graphics.FONT_XTINY);
+        line(dc, 78, selected == 0 ? "> LEAVE / KEEP" : "LEAVE / KEEP", Graphics.FONT_XTINY);
+        line(dc, 108, selected == 1 ? "> FINISH WORKOUT" : "FINISH WORKOUT", Graphics.FONT_XTINY);
         if (hasUndo) {
             var undoLabel = target.get("selected") == true ? "UNDO THIS SET" : "UNDO LAST SET";
             line(dc, 138, selected == 2 ? "> " + undoLabel : undoLabel, Graphics.FONT_XTINY);
@@ -283,7 +278,7 @@ class LiftosaurView extends WatchUi.View {
         var sets = entry.get("sets");
         var count = 0;
         for (var i = 0; i < sets.size(); i += 1) {
-            if (sets[i].get("isWarmup") != true) { count += 1; }
+            if (LiftosaurSet.get(sets[i], "isWarmup") != true) { count += 1; }
         }
         return count;
     }
@@ -292,7 +287,7 @@ class LiftosaurView extends WatchUi.View {
         var sets = entry.get("sets");
         var count = 0;
         for (var i = 0; i < sets.size(); i += 1) {
-            if (sets[i].get("isWarmup") == true) { count += 1; }
+            if (LiftosaurSet.get(sets[i], "isWarmup") == true) { count += 1; }
         }
         return count;
     }
@@ -300,11 +295,11 @@ class LiftosaurView extends WatchUi.View {
     function currentSetNumber(entry, currentSet) {
         var sets = entry.get("sets");
         var count = 0;
-        var warmup = currentSet.get("isWarmup") == true;
+        var warmup = LiftosaurSet.get(currentSet, "isWarmup") == true;
         for (var i = 0; i < sets.size(); i += 1) {
-            if ((sets[i].get("isWarmup") == true) == warmup) {
+            if ((LiftosaurSet.get(sets[i], "isWarmup") == true) == warmup) {
                 count += 1;
-                if (sets[i].get("setId") == currentSet.get("setId")) { return count; }
+                if (LiftosaurSet.get(sets[i], "setId") == LiftosaurSet.get(currentSet, "setId")) { return count; }
             }
         }
         return count;
@@ -322,9 +317,9 @@ class LiftosaurView extends WatchUi.View {
         for (var i = 0; i < sets.size(); i += 1) {
             var set = sets[i];
             var x = startX + (index * spacing);
-            var selected = set.get("setId") == currentSet.get("setId");
-            var completed = set.get("completed") != null;
-            var warmup = set.get("isWarmup") == true;
+            var selected = LiftosaurSet.get(set, "setId") == LiftosaurSet.get(currentSet, "setId");
+            var completed = LiftosaurSet.get(set, "completed") != null;
+            var warmup = LiftosaurSet.get(set, "isWarmup") == true;
             if (completed) {
                 dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
                 dc.drawLine(x - 4, centerY, x - 1, centerY + 3);

@@ -4,15 +4,17 @@ using Toybox.Math;
 using Toybox.System;
 using Toybox.Time;
 using Toybox.Timer;
+using Toybox.WatchUi;
 
 class LiftosaurStore {
     var api;
     var state;
-    var changed;
     var ticker;
     var requestBusy;
     var retryAfter;
     var updater;
+    var saveTimer;
+    var savePending;
 
     function initialize() {
         api = new LiftosaurApi();
@@ -20,15 +22,19 @@ class LiftosaurStore {
         if (state == null) {
             state = { "phase" => "loading", "queue" => [], "status" => "" };
         }
-        changed = null;
         requestBusy = false;
         retryAfter = 0;
         updater = new LiftosaurUpdate();
         ticker = new Timer.Timer();
+        saveTimer = new Timer.Timer();
+        savePending = false;
     }
 
-    function setChanged(callback) {
-        changed = callback;
+    function stop() {
+        ticker.stop();
+        saveTimer.stop();
+        savePending = false;
+        save();
     }
 
     function isText(value, expected) {
@@ -45,7 +51,7 @@ class LiftosaurStore {
         }
         var updateResult = updater.update(state, message, Time.now().value());
         state = updateResult.get("model");
-        if (updateResult.get("changed") == true) { notify(); }
+        if (updateResult.get("changed") == true) { notify(type.equals("SET_RESULT")); }
         runEffects(updateResult.get("effects"));
     }
 
@@ -61,8 +67,7 @@ class LiftosaurStore {
             else if (isText(type, "sendDiscard")) { sendDiscardRequest(); }
             else if (isText(type, "loadNext")) { loadNext(); }
             else if (isText(type, "exitApp")) {
-                ticker.stop();
-                save();
+                // onStop flushes pending state and releases timer callbacks.
                 System.exit();
             }
             else if (isText(type, "vibrate")) {
@@ -99,9 +104,9 @@ class LiftosaurStore {
             var compactEntry = {};
             copyField(entry, compactEntry, "entryId");
             copyField(entry, compactEntry, "name");
-            compactEntry["hasSuperset"] = entry.get("superset") != null;
+            compactEntry["hasSuperset"] = entry.get("hasSuperset") == true || entry.get("superset") != null;
             var prompted = entry.get("promptedVars");
-            compactEntry["hasPromptedVars"] = prompted != null && prompted.size() > 0;
+            compactEntry["hasPromptedVars"] = entry.get("hasPromptedVars") == true || (prompted != null && prompted.size() > 0);
 
             var compactSets = [];
             var warmupSets = entry.get("warmupSets");
@@ -123,30 +128,41 @@ class LiftosaurStore {
         return compact;
     }
 
-    function compactSet(set, isWarmup) {
-        var compact = {};
-        copyField(set, compact, "setId");
-        compact["isWarmup"] = isWarmup || set.get("isWarmup") == true;
-        copyField(set, compact, "reps");
-        copyField(set, compact, "weight");
-        copyField(set, compact, "isAmrap");
-        copyField(set, compact, "timer");
-        copyField(set, compact, "askWeight");
-        copyField(set, compact, "logRpe");
-        copyField(set, compact, "isUnilateral");
-        compact["hasSetTimer"] = set.get("setTimer") != null;
-
-        var completed = set.get("completed");
-        if (completed != null) {
-            var compactCompleted = {};
-            copyField(completed, compactCompleted, "reps");
-            copyField(completed, compactCompleted, "weight");
-            compact["completed"] = compactCompleted;
-        }
-        return compact;
+    function compactResponseWorkout(data) {
+        if (data == null) { return null; }
+        var envelope = data.get("data");
+        var workout = envelope == null ? null : envelope.get("workout");
+        return workout == null ? null : compactWorkout(workout);
     }
 
-    function notify() {
+    function responseWorkout(data) {
+        if (data == null) { return null; }
+        var envelope = data.get("data");
+        return envelope == null ? null : envelope.get("workout");
+    }
+
+    function compactSet(set, isWarmup) {
+        return LiftosaurSet.pack(set, isWarmup);
+    }
+
+    function notify(deferSave) {
+        if (deferSave) {
+            // Communications callbacks can still hold transient response
+            // allocations while this call stack is active. Let that stack
+            // return before serializing the workout into Application.Storage.
+            if (!savePending) {
+                savePending = true;
+                saveTimer.start(method(:saveDeferred), 100, false);
+            }
+        } else {
+            savePending = false;
+            saveTimer.stop();
+            saveSafely();
+        }
+        refreshView();
+    }
+
+    function saveSafely() {
         // A workout response can exceed the simulator/device's remaining
         // object-store capacity. A failed save must not prevent the UI from
         // showing the response that was just received.
@@ -157,13 +173,17 @@ class LiftosaurStore {
             ex.printStackTrace();
             state["status"] = "Workout loaded; watch storage is full";
         }
-        refreshView();
+    }
+
+    function saveDeferred() {
+        if (!savePending) { return; }
+        savePending = false;
+        saveSafely();
     }
 
     function refreshView() {
-        if (changed != null) {
-            changed.invoke();
-        }
+        // A bound view callback here would create store -> view -> store.
+        WatchUi.requestUpdate();
     }
 
     function save() {
@@ -192,7 +212,7 @@ class LiftosaurStore {
     function undoTarget() {
         var selected = currentSet();
         var workout = state.get("workout");
-        if (selected != null && selected.get("completed") != null) {
+        if (selected != null && LiftosaurSet.get(selected, "completed") != null) {
             return { "entryIndex" => state.get("entryIndex"), "setIndex" => state.get("setIndex"), "entry" => currentEntry(), "set" => selected, "selected" => true };
         }
 
@@ -204,7 +224,7 @@ class LiftosaurStore {
                 lastEntryIndex >= 0 && lastEntryIndex < workout.get("entries").size()) {
                 var lastEntry = workout.get("entries")[lastEntryIndex];
                 var lastSets = lastEntry.get("sets");
-                if (lastSetIndex >= 0 && lastSetIndex < lastSets.size() && lastSets[lastSetIndex].get("completed") != null) {
+                if (lastSetIndex >= 0 && lastSetIndex < lastSets.size() && LiftosaurSet.get(lastSets[lastSetIndex], "completed") != null) {
                     var lastSet = lastSets[lastSetIndex];
                     return { "entryIndex" => lastEntryIndex, "setIndex" => lastSetIndex, "entry" => lastEntry, "set" => lastSet, "selected" => false };
                 }
@@ -218,7 +238,7 @@ class LiftosaurStore {
         for (var i = entries.size() - 1; i >= 0; i -= 1) {
             var sets = entries[i].get("sets");
             for (var j = sets.size() - 1; j >= 0; j -= 1) {
-                if (sets[j].get("completed") != null) {
+                if (LiftosaurSet.get(sets[j], "completed") != null) {
                     return { "entryIndex" => i, "setIndex" => j, "entry" => entries[i], "set" => sets[j], "selected" => false };
                 }
             }
@@ -236,12 +256,14 @@ class LiftosaurStore {
     function onCurrent(code, data) {
         if (code != 200) { System.println("[Liftosaur] ERROR GET /workout/current: " + code.toString()); }
         requestBusy = false;
+        var response = code == 200 ? responseWorkout(data) : null;
         var compact = null;
-        if (code == 200 && data != null) {
-            var envelope = data.get("data");
-            var workout = envelope == null ? null : envelope.get("workout");
-            if (workout != null) { compact = compactWorkout(workout); }
+        if (response != null) {
+            var localWorkout = state.get("workout");
+            compact = isActive() && localWorkout != null ? localWorkout : compactWorkout(response);
         }
+        response = null;
+        data = null;
         dispatchMessage("CURRENT_RESULT", code, compact);
     }
 
@@ -255,41 +277,34 @@ class LiftosaurStore {
     function onNext(code, data) {
         requestBusy = false;
         if (code != 200) { System.println("[Liftosaur] ERROR GET /workout/next: " + code.toString()); }
-        var compact = null;
-        if (code == 200 && data != null) {
-            var envelope = data.get("data");
-            var workout = envelope == null ? null : envelope.get("workout");
-            if (workout != null) { compact = compactWorkout(workout); }
-        }
+        var compact = code == 200 ? compactResponseWorkout(data) : null;
+        data = null;
         dispatchMessage("NEXT_RESULT", code, compact);
     }
 
     function startWorkout() {
-        if (!supportsWorkout(state.get("workout"))) {
+        var workout = state.get("workout");
+        if (!supportsWorkout(workout)) {
             dispatchMessage("UNSUPPORTED_WORKOUT", null, null);
             return;
         }
         if (requestBusy) { return; }
-        requestBusy = true;
-        dispatchMessage("START_REQUEST", null, null);
-        var dayData = state.get("workout").get("dayData");
+        var dayData = workout.get("dayData");
         var startBody = {
-            "programId" => state.get("workout").get("programId"),
+            "programId" => workout.get("programId"),
             "week" => dayData.get("week"),
             "dayInWeek" => dayData.get("dayInWeek")
         };
+        requestBusy = true;
+        dispatchMessage("START_REQUEST", null, null);
         api.post("/workout/start", startBody, method(:onStartWorkout));
     }
 
     function onStartWorkout(code, data) {
         requestBusy = false;
         if (code != 200) { System.println("[Liftosaur] ERROR POST /workout/start: " + code.toString()); }
-        var compact = null;
-        if (code == 200 && data != null) {
-            var envelope = data.get("data");
-            var workout = envelope == null ? null : envelope.get("workout");
-            if (workout != null) { compact = compactWorkout(workout); }
-        }
+        var compact = code == 200 ? compactResponseWorkout(data) : null;
+        data = null;
         dispatchMessage("START_RESULT", code, compact);
     }
 
@@ -334,8 +349,8 @@ class LiftosaurStore {
             var sets = entry.get("sets");
             for (var j = 0; j < sets.size(); j += 1) {
                 var set = sets[j];
-                if (set.get("isWarmup") == true) { continue; }
-                if (set.get("askWeight") == true || set.get("logRpe") == true || set.get("isUnilateral") == true || set.get("hasSetTimer") == true) { return false; }
+                if (LiftosaurSet.get(set, "isWarmup") == true) { continue; }
+                if (LiftosaurSet.get(set, "askWeight") == true || LiftosaurSet.get(set, "logRpe") == true || LiftosaurSet.get(set, "isUnilateral") == true || LiftosaurSet.get(set, "hasSetTimer") == true) { return false; }
             }
         }
         return true;
@@ -353,7 +368,7 @@ class LiftosaurStore {
             var body = {
                 "entryId" => action.get("entryId"),
                 "setId" => action.get("setId"),
-                "completed" => action.get("completed")
+                "completed" => LiftosaurSet.apiCompleted(action.get("completed"))
             };
             api.post("/workout/set", body, method(:onSetSynced));
         }
@@ -362,15 +377,14 @@ class LiftosaurStore {
     function onSetSynced(code, data) {
         requestBusy = false;
         if (code != 200) { System.println("[Liftosaur] ERROR POST /workout/set: " + code.toString()); }
-        var compact = null;
-        if (code == 200 && data != null) {
-            var envelope = data.get("data");
-            var updatedWorkout = envelope == null ? null : envelope.get("workout");
-            if (updatedWorkout != null) { compact = compactWorkout(updatedWorkout); }
-        } else {
+        // The set was applied optimistically before it entered the queue. The
+        // server response repeats the entire workout, so use this callback as
+        // an acknowledgement and avoid allocating a second workout snapshot.
+        data = null;
+        if (code != 200) {
             retryAfter = Time.now().value() + (code <= 0 ? 15 : 60);
         }
-        dispatchMessage("SET_RESULT", code, compact);
+        dispatchMessage("SET_RESULT", code, null);
     }
 
     function sendDiscardRequest() {

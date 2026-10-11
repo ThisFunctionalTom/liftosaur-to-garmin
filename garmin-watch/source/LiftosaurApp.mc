@@ -24,7 +24,7 @@ class LiftosaurApp extends Application.AppBase {
     }
 
     function onStop(state) {
-        _store.save();
+        _store.stop();
     }
 
     function onSettingsChanged() {

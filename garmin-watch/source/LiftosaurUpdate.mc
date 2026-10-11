@@ -49,8 +49,7 @@ class LiftosaurUpdate {
         var entry = copyObjectFields(sourceEntry, ["entryId", "name", "hasSuperset", "hasPromptedVars"]);
         var sets = copyArray(sourceEntry.get("sets"));
         var sourceSet = sets[setIndex];
-        var set = copyObjectFields(sourceSet, ["setId", "isWarmup", "reps", "weight", "isAmrap", "timer", "askWeight", "logRpe", "isUnilateral", "hasSetTimer", "completed"]);
-        set["completed"] = completed;
+        var set = LiftosaurSet.withCompleted(sourceSet, completed);
         sets[setIndex] = set;
         entry["sets"] = sets;
         entries[entryIndex] = entry;
@@ -69,8 +68,7 @@ class LiftosaurUpdate {
     function setCompletedValue(model, entryIndex, setIndex, reps, weight, remove) {
         var completed = null;
         if (!remove) {
-            completed = { "reps" => reps };
-            if (weight != null) { completed["weight"] = weight; }
+            completed = [reps, weight];
         }
         replaceSet(model, entryIndex, setIndex, completed);
     }
@@ -80,17 +78,16 @@ class LiftosaurUpdate {
         var setIndex = model.get("setIndex");
         var set = currentSet(model);
         var entry = model.get("workout").get("entries")[entryIndex];
-        if (set == null || entry == null || set.get("completed") != null) { return false; }
-        var reps = isText(model.get("phase"), "editing") ? model.get("editReps") : set.get("reps");
-        var weight = isText(model.get("phase"), "editing") ? model.get("editWeight") : set.get("weight");
-        var completed = { "reps" => reps };
-        if (weight != null) { completed["weight"] = weight; }
+        if (set == null || entry == null || LiftosaurSet.get(set, "completed") != null) { return false; }
+        var reps = isText(model.get("phase"), "editing") ? model.get("editReps") : LiftosaurSet.get(set, "reps");
+        var weight = isText(model.get("phase"), "editing") ? model.get("editWeight") : LiftosaurSet.get(set, "weight");
+        var completed = [reps, weight];
         var action = {
             "kind" => "set", "entryId" => entry.get("entryId"),
-            "setId" => set.get("setId"), "completed" => completed,
+            "setId" => LiftosaurSet.get(set, "setId"), "completed" => completed,
             "entryIndex" => entryIndex, "setIndex" => setIndex
         };
-        setCompletedValue(next, entryIndex, setIndex, reps, weight, false);
+        replaceSet(next, entryIndex, setIndex, completed);
         appendQueue(next, action);
         next["undo"] = action;
         next["entryIndex"] = entryIndex;
@@ -99,7 +96,7 @@ class LiftosaurUpdate {
         normalizeCursor(next);
         next["lastSet"] = isText(next.get("phase"), "complete");
         next["phase"] = "rest";
-        var timer = set.get("timer");
+        var timer = LiftosaurSet.get(set, "timer");
         next["restEnd"] = now + (timer == null ? 0 : timer);
         next["status"] = "";
         next["editCompleted"] = false;
@@ -114,17 +111,16 @@ class LiftosaurUpdate {
             var setIndex = model.get("setIndex");
             var set = currentSet(model);
             var entry = model.get("workout").get("entries")[entryIndex];
-            if (set == null || entry == null || set.get("completed") == null) { return false; }
+            if (set == null || entry == null || LiftosaurSet.get(set, "completed") == null) { return false; }
             var reps = model.get("editReps");
             var weight = model.get("editWeight");
-            var completed = { "reps" => reps };
-            if (weight != null) { completed["weight"] = weight; }
+            var completed = [reps, weight];
             var action = {
                 "kind" => "set", "correction" => true,
-                "entryId" => entry.get("entryId"), "setId" => set.get("setId"),
+                "entryId" => entry.get("entryId"), "setId" => LiftosaurSet.get(set, "setId"),
                 "completed" => completed, "entryIndex" => entryIndex, "setIndex" => setIndex
             };
-            setCompletedValue(next, entryIndex, setIndex, reps, weight, false);
+            replaceSet(next, entryIndex, setIndex, completed);
             appendQueue(next, action);
             next["phase"] = "working";
             next["editCompleted"] = false;
@@ -155,7 +151,7 @@ class LiftosaurUpdate {
         next["entryIndex"] = positions[target][0];
         next["setIndex"] = positions[target][1];
         var selected = entries[positions[target][0]].get("sets")[positions[target][1]];
-        next["status"] = selected.get("completed") == null ? "" : "Already logged";
+        next["status"] = LiftosaurSet.get(selected, "completed") == null ? "" : "Already logged";
         return true;
     }
 
@@ -221,7 +217,7 @@ class LiftosaurUpdate {
 
     function undoTarget(model) {
         var set = currentSet(model);
-        if (set != null && set.get("completed") != null) {
+        if (set != null && LiftosaurSet.get(set, "completed") != null) {
             return { "entryIndex" => model.get("entryIndex"), "setIndex" => model.get("setIndex") };
         }
 
@@ -236,7 +232,7 @@ class LiftosaurUpdate {
             if (lastEntryIndex != null && lastSetIndex != null && lastEntryIndex >= 0 && lastEntryIndex < entries.size()) {
                 var lastEntry = entries[lastEntryIndex];
                 var sets = lastEntry.get("sets");
-                if (lastSetIndex >= 0 && lastSetIndex < sets.size() && sets[lastSetIndex].get("completed") != null) {
+                if (lastSetIndex >= 0 && lastSetIndex < sets.size() && LiftosaurSet.get(sets[lastSetIndex], "completed") != null) {
                     return { "entryIndex" => lastEntryIndex, "setIndex" => lastSetIndex };
                 }
             }
@@ -250,7 +246,7 @@ class LiftosaurUpdate {
         for (var i = entries.size() - 1; i >= 0; i -= 1) {
             var sets = entries[i].get("sets");
             for (var j = sets.size() - 1; j >= 0; j -= 1) {
-                if (sets[j].get("completed") != null) {
+                if (LiftosaurSet.get(sets[j], "completed") != null) {
                     return { "entryIndex" => i, "setIndex" => j };
                 }
             }
@@ -265,11 +261,11 @@ class LiftosaurUpdate {
         var setIndex = target.get("setIndex");
         var entry = model.get("workout").get("entries")[entryIndex];
         var set = entry.get("sets")[setIndex];
-        if (set.get("completed") == null) { return false; }
+        if (LiftosaurSet.get(set, "completed") == null) { return false; }
 
         setCompletedValue(next, entryIndex, setIndex, null, null, true);
         appendQueue(next, {
-            "kind" => "set", "entryId" => entry.get("entryId"), "setId" => set.get("setId"),
+            "kind" => "set", "entryId" => entry.get("entryId"), "setId" => LiftosaurSet.get(set, "setId"),
             "completed" => null, "entryIndex" => entryIndex, "setIndex" => setIndex, "undo" => true
         });
         next["entryIndex"] = entryIndex;
@@ -316,7 +312,7 @@ class LiftosaurUpdate {
         while (entryIndex < entries.size()) {
             var sets = entries[entryIndex].get("sets");
             while (setIndex < sets.size()) {
-                if (sets[setIndex].get("completed") == null) {
+                if (LiftosaurSet.get(sets[setIndex], "completed") == null) {
                     model["entryIndex"] = entryIndex;
                     model["setIndex"] = setIndex;
                     return;
@@ -340,12 +336,12 @@ class LiftosaurUpdate {
     }
 
     function beginEdit(model, set) {
-        var completed = set.get("completed");
-        var reps = completed != null && completed.get("reps") != null ? completed.get("reps") : set.get("reps");
+        var completed = LiftosaurSet.get(set, "completed");
+        var reps = completed != null && LiftosaurSet.doneGet(completed, "reps") != null ? LiftosaurSet.doneGet(completed, "reps") : LiftosaurSet.get(set, "reps");
         model["editReps"] = reps == null ? 1 : reps;
-        model["editWeight"] = completed != null && completed.get("weight") != null ? completed.get("weight") : set.get("weight");
+        model["editWeight"] = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
         model["editField"] = "reps";
-        model["editAmrap"] = set.get("isAmrap") == true;
+        model["editAmrap"] = LiftosaurSet.get(set, "isAmrap") == true;
         model["editCompleted"] = completed != null;
         model["phase"] = "editing";
         model["status"] = completed != null ? "Correct logged reps" : "";
@@ -365,7 +361,7 @@ class LiftosaurUpdate {
                 changed = saveEditedSet(next, model, now, effects);
             } else if (isText(phase, "rest")) {
                 var nextSet = currentSet(model);
-                if (nextSet != null && nextSet.get("isAmrap") == true) {
+                if (nextSet != null && LiftosaurSet.get(nextSet, "isAmrap") == true) {
                     next["restEnd"] = null;
                     next["phase"] = "working";
                     next["status"] = "Rest skipped";
@@ -375,10 +371,10 @@ class LiftosaurUpdate {
                 }
             } else if (isText(phase, "working")) {
                 var set = currentSet(model);
-                if (set != null && set.get("completed") != null) {
+                if (set != null && LiftosaurSet.get(set, "completed") != null) {
                     next["status"] = "Set already logged";
                     changed = true;
-                } else if (set != null && set.get("isAmrap") == true) {
+                } else if (set != null && LiftosaurSet.get(set, "isAmrap") == true) {
                     beginEdit(next, set);
                     changed = true;
                 } else if (set != null) {
@@ -388,7 +384,7 @@ class LiftosaurUpdate {
                 changed = beginFinish(next, model, now, effects);
             } else if (isText(phase, "actions")) {
                 var undoTargetExists = undoTarget(model) != null;
-                if (model.get("selectedAction") == 1) {
+                if (model.get("selectedAction") == 0) {
                     cancelOverlay(next, model, now);
                     effects.add({ "type" => "exitApp" });
                     changed = true;
@@ -503,6 +499,9 @@ class LiftosaurUpdate {
             changed = true;
         } else if (isText(type, "START_REQUEST")) {
             next["status"] = "Starting workout";
+            // The preview's full set list is no longer needed once its start
+            // parameters have been copied into the HTTP request body.
+            next["workout"] = null;
             changed = true;
         } else if (isText(type, "NO_API_KEY")) {
             next["phase"] = "error";
@@ -519,7 +518,7 @@ class LiftosaurUpdate {
                 if (workout != null) {
                     var savedPhase = phase;
                     var viewedSet = currentSet(model);
-                    var preserveViewedSet = viewedSet != null && viewedSet.get("completed") != null;
+                    var preserveViewedSet = viewedSet != null && LiftosaurSet.get(viewedSet, "completed") != null;
                     next["workout"] = workout;
                     next["startedAt"] = workout.get("startTime");
                     next["status"] = "";
@@ -594,7 +593,7 @@ class LiftosaurUpdate {
         } else if (isText(type, "SET_RESULT")) {
             var setCode = message.get("code");
             var updatedWorkout = message.get("workout");
-            if (setCode != 200 || updatedWorkout == null) {
+            if (setCode != 200) {
                 next["status"] = setCode <= 0 ? "Offline - set saved on watch" : "Set not accepted - check supported set types";
                 if (model.get("discardPending") == true) {
                     next["discardPending"] = false;
@@ -607,8 +606,10 @@ class LiftosaurUpdate {
                 var isUndo = syncedAction != null && syncedAction.get("undo") == true;
                 var savedPhase = phase;
                 var viewedSet = currentSet(model);
-                var preserveViewedSet = isText(savedPhase, "working") && viewedSet != null && viewedSet.get("completed") != null;
-                next["workout"] = updatedWorkout;
+                var preserveViewedSet = isText(savedPhase, "working") && viewedSet != null && LiftosaurSet.get(viewedSet, "completed") != null;
+                // The store may omit the response workout to save memory. Local
+                // set logs, corrections, and undo changes are already applied.
+                if (updatedWorkout != null) { next["workout"] = updatedWorkout; }
                 if (isCorrection && syncedAction != null) {
                     next["entryIndex"] = syncedAction.get("entryIndex");
                     next["setIndex"] = syncedAction.get("setIndex");

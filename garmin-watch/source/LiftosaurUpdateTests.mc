@@ -1,6 +1,7 @@
 using Toybox.Test as Test;
 using Toybox.Lang as Lang;
 
+(:test)
 class LiftosaurUpdateTests {
     static function amrapModel(phase) {
         return {
@@ -94,7 +95,7 @@ class LiftosaurUpdateTests {
         set["isAmrap"] = false;
         var result = updater.update(model, { "type" => "SELECT" }, 100);
         Test.assertEqual("rest", result.get("model").get("phase"));
-        Test.assertEqual(8, result.get("model").get("workout").get("entries")[0].get("sets")[0].get("completed").get("reps"));
+        Test.assertEqual(8, LiftosaurSet.doneGet(LiftosaurSet.get(result.get("model").get("workout").get("entries")[0].get("sets")[0], "completed"), "reps"));
         Test.assertEqual("startTicker", effectOf(result, 0));
         Test.assertEqual("flushQueue", effectOf(result, 1));
         return true;
@@ -230,12 +231,12 @@ class LiftosaurUpdateTests {
         var next = result.get("model");
         Test.assertEqual("rest", next.get("phase"));
         Test.assertEqual(175, next.get("restEnd"));
-        Test.assertEqual(8, next.get("workout").get("entries")[0].get("sets")[0].get("completed").get("reps"));
+        Test.assertEqual(8, LiftosaurSet.doneGet(LiftosaurSet.get(next.get("workout").get("entries")[0].get("sets")[0], "completed"), "reps"));
         Test.assertEqual("amrap1", next.get("queue")[0].get("setId"));
         Test.assertEqual("startTicker", effectOf(result, 0));
         Test.assertEqual("flushQueue", effectOf(result, 1));
         Test.assert(result.get("model").get("workout") != model.get("workout"));
-        Test.assert(model.get("workout").get("entries")[0].get("sets")[0].get("completed") == null);
+        Test.assert(LiftosaurSet.get(model.get("workout").get("entries")[0].get("sets")[0], "completed") == null);
         return true;
     }
 
@@ -267,7 +268,7 @@ class LiftosaurUpdateTests {
     static function leaveActionRestoresWorkoutAndRequestsAppExit(logger as Test.Logger) as Lang.Boolean {
         var updater = new LiftosaurUpdate();
         var model = amrapModel("actions");
-        model["selectedAction"] = 1;
+        model["selectedAction"] = 0;
         model["restEnd"] = 150;
         var result = updater.update(model, { "type" => "SELECT" }, 100);
         Test.assertEqual("rest", result.get("model").get("phase"));
@@ -300,7 +301,7 @@ class LiftosaurUpdateTests {
         Test.assertEqual("working", next.get("phase"));
         Test.assertEqual(0, next.get("entryIndex"));
         Test.assertEqual(0, next.get("setIndex"));
-        Test.assert(next.get("workout").get("entries")[0].get("sets")[0].get("completed") == null);
+        Test.assert(LiftosaurSet.get(next.get("workout").get("entries")[0].get("sets")[0], "completed") == null);
         Test.assertEqual("set1", next.get("queue")[0].get("setId"));
         Test.assert(next.get("queue")[0].get("completed") == null);
         Test.assert(next.get("queue")[0].get("undo") == true);
@@ -356,7 +357,7 @@ class LiftosaurUpdateTests {
         model["editReps"] = 7;
         var result = updater.update(model, { "type" => "SELECT" }, 100);
         Test.assertEqual("working", result.get("model").get("phase"));
-        Test.assertEqual(7, result.get("model").get("workout").get("entries")[0].get("sets")[0].get("completed").get("reps"));
+        Test.assertEqual(7, LiftosaurSet.doneGet(LiftosaurSet.get(result.get("model").get("workout").get("entries")[0].get("sets")[0], "completed"), "reps"));
         Test.assert(result.get("model").get("queue")[0].get("correction") == true);
         Test.assertEqual("Saving correction", result.get("model").get("status"));
         Test.assertEqual("flushQueue", effectOf(result, 0));
