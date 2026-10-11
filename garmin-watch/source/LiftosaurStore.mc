@@ -68,6 +68,7 @@ class LiftosaurStore {
             else if (isText(type, "loadNext")) { loadNext(); }
             else if (isText(type, "exitApp")) {
                 // onStop flushes pending state and releases timer callbacks.
+                System.println("[Liftosaur] exiting app");
                 System.exit();
             }
             else if (isText(type, "vibrate")) {
@@ -261,6 +262,8 @@ class LiftosaurStore {
         if (response != null) {
             var localWorkout = state.get("workout");
             compact = isActive() && localWorkout != null ? localWorkout : compactWorkout(response);
+        } else if (code == 200 && isActive() && state.get("workout") != null) {
+            System.println("[Liftosaur] server has no current workout; clearing local workout");
         }
         response = null;
         data = null;
@@ -391,14 +394,24 @@ class LiftosaurStore {
         if (requestBusy) {
             return;
         }
-        if (state.get("workout") == null || state.get("startedAt") == null) { return; }
+        var workout = state.get("workout");
+        var startedAt = state.get("startedAt");
+        if (startedAt == null && workout != null) {
+            startedAt = workout.get("startTime");
+        }
+        if (workout == null || startedAt == null) {
+            System.println("[Liftosaur] ERROR discard skipped: workout startTime is missing");
+            dispatchMessage("DISCARD_LOCAL_ERROR", null, null);
+            return;
+        }
+        state["startedAt"] = startedAt;
         requestBusy = true;
-        api.delete("/workout/current", { "startTime" => state.get("startedAt") }, method(:onDiscarded));
+        api.delete("/workout/current", { "startTime" => startedAt }, method(:onDiscarded));
     }
 
     function onDiscarded(code, data) {
         requestBusy = false;
-        if (code != 200) { System.println("[Liftosaur] ERROR DELETE /workout/current: " + code.toString()); }
+        System.println("[Liftosaur] DELETE /workout/current code=" + code.toString());
         dispatchMessage("DISCARD_RESULT", code, null);
     }
 

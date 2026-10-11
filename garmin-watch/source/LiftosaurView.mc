@@ -159,7 +159,12 @@ class LiftosaurView extends WatchUi.View {
             line(dc, 133, "SELECT  FINISH", Graphics.FONT_SMALL);
             return;
         }
+        var activeEntryIndex = state.get("activeEntryIndex");
+        if (activeEntryIndex == null) { activeEntryIndex = state.get("entryIndex"); }
+        var nextSet = state.get("entryIndex") == activeEntryIndex && isNextSet(entry, set);
+        dc.setColor(nextSet ? Graphics.COLOR_GREEN : Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         line(dc, 38, entry.get("name").toString(), Graphics.FONT_SMALL);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var setPosition = currentSetNumber(entry, set);
         if (LiftosaurSet.get(set, "isWarmup") == true) {
             line(dc, 82, "W" + setPosition.toString() + " / " + warmupSetCount(entry).toString(), Graphics.FONT_SMALL);
@@ -177,7 +182,7 @@ class LiftosaurView extends WatchUi.View {
             line(dc, 166, "done " + actualReps.toString(), Graphics.FONT_SMALL);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         }
-        drawSetProgress(dc, entry, set);
+        drawSetProgress(dc, entry, set, nextSet);
     }
 
     function drawEdit(dc, state) {
@@ -220,41 +225,48 @@ class LiftosaurView extends WatchUi.View {
         if (isText(state.get("phase"), "confirm-finish")) {
             line(dc, 70, "FINISH WORKOUT?", Graphics.FONT_MEDIUM);
             line(dc, 113, "Completed sets will save", Graphics.FONT_XTINY);
-            line(dc, 155, "SELECT  CONFIRM", Graphics.FONT_SMALL);
-            line(dc, 200, "BACK  CANCEL", Graphics.FONT_XTINY);
         } else {
             line(dc, 76, "WORKOUT", Graphics.FONT_SMALL);
             line(dc, 111, "COMPLETE", Graphics.FONT_MEDIUM);
-            line(dc, 158, "SELECT  FINISH", Graphics.FONT_SMALL);
         }
-        line(dc, 222, statusText(state), Graphics.FONT_XTINY);
     }
 
     function drawDiscardConfirmation(dc, state) {
         dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-        line(dc, 65, "DISCARD WORKOUT", Graphics.FONT_SMALL);
+        line(dc, 65, "DISCARD WORKOUT?", Graphics.FONT_SMALL);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         line(dc, 108, "This cannot be undone", Graphics.FONT_XTINY);
-        line(dc, 153, "START  DISCARD", Graphics.FONT_SMALL);
-        line(dc, 194, "BACK  CANCEL", Graphics.FONT_XTINY);
     }
 
     function drawUndoConfirmation(dc, state) {
         var target = _store.undoTarget();
         if (target == null) {
-            line(dc, 82, "NO SET TO UNDO", Graphics.FONT_MEDIUM);
-            line(dc, 178, "BACK  CANCEL", Graphics.FONT_XTINY);
+            line(dc, 120, "NO SET TO UNDO", Graphics.FONT_MEDIUM);
             return;
         }
         var entry = target.get("entry");
         var set = target.get("set");
-        line(dc, 48, target.get("selected") == true ? "UNDO THIS SET?" : "UNDO LAST SET?", Graphics.FONT_SMALL);
-        line(dc, 82, entry.get("name").toString(), Graphics.FONT_XTINY);
-        var setLabel = LiftosaurSet.get(set, "isWarmup") == true ? "W" : "SET ";
-        line(dc, 111, setLabel + currentSetNumber(entry, set).toString(), Graphics.FONT_SMALL);
-        line(dc, 143, "Logged reps will be cleared", Graphics.FONT_XTINY);
-        line(dc, 177, "START  UNDO", Graphics.FONT_SMALL);
-        line(dc, 204, "BACK  CANCEL", Graphics.FONT_XTINY);
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+        line(dc, 28, "UNDO?", Graphics.FONT_SMALL);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        line(dc, 65, entry.get("name").toString(), Graphics.FONT_SMALL);
+        var setPosition = currentSetNumber(entry, set);
+        if (LiftosaurSet.get(set, "isWarmup") == true) {
+            line(dc, 99, "W" + setPosition.toString() + " / " + warmupSetCount(entry).toString(), Graphics.FONT_SMALL);
+        } else {
+            line(dc, 99, "SET " + setPosition.toString() + " / " + workSetCount(entry).toString(), Graphics.FONT_SMALL);
+        }
+        var completed = LiftosaurSet.get(set, "completed");
+        var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
+        var plannedReps = LiftosaurSet.get(set, "reps").toString();
+        if (LiftosaurSet.get(set, "isAmrap") == true) { plannedReps += "+"; }
+        drawWeightAndReps(dc, 132, shownWeight, plannedReps);
+        var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
+        if (actualReps != null) {
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
+            line(dc, 178, "done " + actualReps.toString(), Graphics.FONT_SMALL);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        }
     }
 
     function drawActions(dc, state) {
@@ -305,7 +317,18 @@ class LiftosaurView extends WatchUi.View {
         return count;
     }
 
-    function drawSetProgress(dc, entry, currentSet) {
+    function isNextSet(entry, set) {
+        if (set == null) { return false; }
+        var sets = entry.get("sets");
+        for (var i = 0; i < sets.size(); i += 1) {
+            if (LiftosaurSet.get(sets[i], "completed") == null) {
+                return LiftosaurSet.get(sets[i], "setId") == LiftosaurSet.get(set, "setId");
+            }
+        }
+        return false;
+    }
+
+    function drawSetProgress(dc, entry, currentSet, nextSet) {
         var sets = entry.get("sets");
         var count = sets.size();
         if (count == 0) { return; }
@@ -330,7 +353,7 @@ class LiftosaurView extends WatchUi.View {
                     else { dc.drawCircle(x, centerY, 7); }
                 }
             } else if (selected) {
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+                dc.setColor(nextSet ? Graphics.COLOR_GREEN : Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
                 if (warmup) { dc.fillRectangle(x - 4, centerY - 4, 9, 9); }
                 else { dc.fillCircle(x, centerY, 5); }
             } else {
@@ -394,6 +417,9 @@ class LiftosaurView extends WatchUi.View {
         var unitWidth = dc.getTextWidthInPixels(unit, Graphics.FONT_SMALL);
         var multiplyWidth = dc.getTextWidthInPixels("x", Graphics.FONT_SMALL);
         var repsWidth = dc.getTextWidthInPixels(reps, Graphics.FONT_NUMBER_MEDIUM);
+        var numberHeight = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
+        var multiplyHeight = dc.getFontHeight(Graphics.FONT_SMALL);
+        var multiplyY = y + ((numberHeight - multiplyHeight) / 2);
         var gap = 4;
         var unitGap = unit.length() > 0 ? gap : 0;
         var totalWidth = numberWidth + unitGap + unitWidth + gap + multiplyWidth + gap + repsWidth;
@@ -405,7 +431,7 @@ class LiftosaurView extends WatchUi.View {
             dc.drawText(suffixX, y + 15, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);
             suffixX += unitWidth + gap;
         }
-        dc.drawText(suffixX, y + 12, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(suffixX, multiplyY, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
         dc.drawText(suffixX + multiplyWidth + gap, y, Graphics.FONT_NUMBER_MEDIUM, reps, Graphics.TEXT_JUSTIFY_LEFT);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }

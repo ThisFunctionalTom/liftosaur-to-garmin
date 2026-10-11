@@ -9,3 +9,7 @@
 - If the Jujutsu command is unavailable, stop before running any source-control
   command and tell the user that Jujutsu needs to be installed or added to PATH.
 
+
+## Mermaid diagrams
+
+- Keep state diagram transition labels short and plain. Put explanations in Markdown prose or tables; avoid semicolons and long sentences in Mermaid labels because Mermaid may parse them as separate statements.

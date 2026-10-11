@@ -109,3 +109,13 @@ To build the app, start the simulator, and launch it with one command, run:
 ```powershell
 ./run-simulator.ps1
 ```
+
+To build the app and copy it to a watch mounted as `F:\`, run:
+
+```powershell
+./install.ps1
+```
+
+The script copies `bin/Liftosaur.prg` to `F:\GARMIN\APPS\Liftosaur.prg`.
+Pass `-WatchDrive G:` if Windows mounted the watch under another drive letter.
+Safely eject the watch after copying, then disconnect it to finish installation.

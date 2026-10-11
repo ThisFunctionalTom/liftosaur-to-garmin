@@ -6,9 +6,10 @@ class LiftosaurUpdate {
     function copyModel(model) {
         var next = {};
         var keys = [
-            "phase", "status", "workout", "queue", "entryIndex", "setIndex",
+            "phase", "status", "workout", "queue", "entryIndex", "setIndex", "activeEntryIndex",
             "startedAt", "restEnd", "lastSet", "undo", "selectedAction",
             "editReps", "editWeight", "editField", "editAmrap", "editCompleted",
+            "editEntryIndex", "editSetIndex", "editSetId",
             "discardPending", "finishPending", "endTime"
         ];
         for (var i = 0; i < keys.size(); i += 1) {
@@ -73,12 +74,48 @@ class LiftosaurUpdate {
         replaceSet(model, entryIndex, setIndex, completed);
     }
 
+    function isFirstIncompleteSet(model, entryIndex, setIndex) {
+        var workout = model.get("workout");
+        if (workout == null || entryIndex == null || setIndex == null) { return false; }
+        var entries = workout.get("entries");
+        if (entryIndex < 0 || entryIndex >= entries.size()) { return false; }
+        var sets = entries[entryIndex].get("sets");
+        if (setIndex < 0 || setIndex >= sets.size() || LiftosaurSet.get(sets[setIndex], "completed") != null) { return false; }
+        for (var i = 0; i < setIndex; i += 1) {
+            if (LiftosaurSet.get(sets[i], "completed") == null) { return false; }
+        }
+        return true;
+    }
+
+    function nextActiveSet(model) {
+        var workout = model.get("workout");
+        if (workout == null) { return null; }
+        var entries = workout.get("entries");
+        var firstEntry = model.get("activeEntryIndex");
+        if (firstEntry == null) { firstEntry = model.get("entryIndex"); }
+        if (firstEntry == null || firstEntry < 0) { firstEntry = 0; }
+        for (var i = firstEntry; i < entries.size(); i += 1) {
+            var sets = entries[i].get("sets");
+            for (var j = 0; j < sets.size(); j += 1) {
+                if (LiftosaurSet.get(sets[j], "completed") == null) {
+                    return { "entryIndex" => i, "setIndex" => j };
+                }
+            }
+        }
+        return null;
+    }
+
     function logSet(next, model, now, effects) {
         var entryIndex = model.get("entryIndex");
         var setIndex = model.get("setIndex");
-        var set = currentSet(model);
+        if (isText(model.get("phase"), "editing")) {
+            if (model.get("editEntryIndex") != null) { entryIndex = model.get("editEntryIndex"); }
+            if (model.get("editSetIndex") != null) { setIndex = model.get("editSetIndex"); }
+        }
+        if (entryIndex == null || setIndex == null) { return false; }
         var entry = model.get("workout").get("entries")[entryIndex];
-        if (set == null || entry == null || LiftosaurSet.get(set, "completed") != null) { return false; }
+        var set = entry == null ? null : entry.get("sets")[setIndex];
+        if (set == null || entry == null || LiftosaurSet.get(set, "completed") != null || !isFirstIncompleteSet(model, entryIndex, setIndex)) { return false; }
         var reps = isText(model.get("phase"), "editing") ? model.get("editReps") : LiftosaurSet.get(set, "reps");
         var weight = isText(model.get("phase"), "editing") ? model.get("editWeight") : LiftosaurSet.get(set, "weight");
         var completed = [reps, weight];
@@ -90,6 +127,7 @@ class LiftosaurUpdate {
         replaceSet(next, entryIndex, setIndex, completed);
         appendQueue(next, action);
         next["undo"] = action;
+        next["activeEntryIndex"] = entryIndex;
         next["entryIndex"] = entryIndex;
         next["setIndex"] = setIndex + 1;
         next["phase"] = "working";
@@ -100,6 +138,9 @@ class LiftosaurUpdate {
         next["restEnd"] = now + (timer == null ? 0 : timer);
         next["status"] = "";
         next["editCompleted"] = false;
+        next["editEntryIndex"] = null;
+        next["editSetIndex"] = null;
+        next["editSetId"] = null;
         effects.add({ "type" => "startTicker" });
         effects.add({ "type" => "flushQueue" });
         return true;
@@ -107,11 +148,14 @@ class LiftosaurUpdate {
 
     function saveEditedSet(next, model, now, effects) {
         if (model.get("editCompleted") == true) {
-            var entryIndex = model.get("entryIndex");
-            var setIndex = model.get("setIndex");
-            var set = currentSet(model);
+            var entryIndex = model.get("editEntryIndex") == null ? model.get("entryIndex") : model.get("editEntryIndex");
+            var setIndex = model.get("editSetIndex") == null ? model.get("setIndex") : model.get("editSetIndex");
+            if (entryIndex == null || setIndex == null) { return false; }
             var entry = model.get("workout").get("entries")[entryIndex];
+            var set = entry == null ? null : entry.get("sets")[setIndex];
             if (set == null || entry == null || LiftosaurSet.get(set, "completed") == null) { return false; }
+            var editSetId = model.get("editSetId");
+            if (editSetId != null && LiftosaurSet.get(set, "setId") != editSetId) { return false; }
             var reps = model.get("editReps");
             var weight = model.get("editWeight");
             var completed = [reps, weight];
@@ -122,8 +166,13 @@ class LiftosaurUpdate {
             };
             replaceSet(next, entryIndex, setIndex, completed);
             appendQueue(next, action);
+            next["entryIndex"] = entryIndex;
+            next["setIndex"] = setIndex;
             next["phase"] = "working";
             next["editCompleted"] = false;
+            next["editEntryIndex"] = null;
+            next["editSetIndex"] = null;
+            next["editSetId"] = null;
             next["status"] = "Saving correction";
             effects.add({ "type" => "flushQueue" });
             return true;
@@ -141,15 +190,20 @@ class LiftosaurUpdate {
             for (var j = 0; j < sets.size(); j += 1) { positions.add([i, j]); }
         }
         if (positions.size() == 0) { return false; }
-        var current = 0;
+        var current = -1;
         for (var k = 0; k < positions.size(); k += 1) {
             if (positions[k][0] == model.get("entryIndex") && positions[k][1] == model.get("setIndex")) { current = k; break; }
         }
+        if (current < 0) { current = direction > 0 ? -1 : positions.size(); }
         var target = current + direction;
         if (target < 0) { target = positions.size() - 1; }
         if (target >= positions.size()) { target = 0; }
         next["entryIndex"] = positions[target][0];
         next["setIndex"] = positions[target][1];
+        if (isText(model.get("phase"), "complete") || (direction > 0 && positions[target][0] != model.get("entryIndex"))) {
+            next["activeEntryIndex"] = positions[target][0];
+        }
+        if (isText(model.get("phase"), "complete")) { next["phase"] = "working"; }
         var selected = entries[positions[target][0]].get("sets")[positions[target][1]];
         next["status"] = LiftosaurSet.get(selected, "completed") == null ? "" : "Already logged";
         return true;
@@ -205,6 +259,7 @@ class LiftosaurUpdate {
         appendQueue(next, { "kind" => "set", "entryId" => last.get("entryId"), "setId" => last.get("setId"), "completed" => null });
         next["entryIndex"] = entryIndex;
         next["setIndex"] = setIndex;
+        next["activeEntryIndex"] = entryIndex;
         next["phase"] = "working";
         next["restEnd"] = null;
         next["status"] = "Set undone";
@@ -270,6 +325,7 @@ class LiftosaurUpdate {
         });
         next["entryIndex"] = entryIndex;
         next["setIndex"] = setIndex;
+        next["activeEntryIndex"] = entryIndex;
         next["phase"] = "working";
         next["restEnd"] = null;
         next["lastSet"] = false;
@@ -305,22 +361,20 @@ class LiftosaurUpdate {
         var workout = model.get("workout");
         if (workout == null) { return; }
         var entries = workout.get("entries");
-        var entryIndex = model.get("entryIndex");
-        var setIndex = model.get("setIndex");
-        if (entryIndex == null) { entryIndex = 0; }
-        if (setIndex == null) { setIndex = 0; }
+        var entryIndex = model.get("activeEntryIndex");
+        if (entryIndex == null) { entryIndex = model.get("entryIndex"); }
+        if (entryIndex == null || entryIndex < 0) { entryIndex = 0; }
         while (entryIndex < entries.size()) {
             var sets = entries[entryIndex].get("sets");
-            while (setIndex < sets.size()) {
+            for (var setIndex = 0; setIndex < sets.size(); setIndex += 1) {
                 if (LiftosaurSet.get(sets[setIndex], "completed") == null) {
+                    model["activeEntryIndex"] = entryIndex;
                     model["entryIndex"] = entryIndex;
                     model["setIndex"] = setIndex;
                     return;
                 }
-                setIndex += 1;
             }
             entryIndex += 1;
-            setIndex = 0;
         }
         model["phase"] = "complete";
         model["entryIndex"] = entries.size();
@@ -343,6 +397,9 @@ class LiftosaurUpdate {
         model["editField"] = "reps";
         model["editAmrap"] = LiftosaurSet.get(set, "isAmrap") == true;
         model["editCompleted"] = completed != null;
+        model["editEntryIndex"] = model.get("entryIndex");
+        model["editSetIndex"] = model.get("setIndex");
+        model["editSetId"] = LiftosaurSet.get(set, "setId");
         model["phase"] = "editing";
         model["status"] = completed != null ? "Correct logged reps" : "";
     }
@@ -373,6 +430,9 @@ class LiftosaurUpdate {
                 var set = currentSet(model);
                 if (set != null && LiftosaurSet.get(set, "completed") != null) {
                     next["status"] = "Set already logged";
+                    changed = true;
+                } else if (set != null && !isFirstIncompleteSet(model, model.get("entryIndex"), model.get("setIndex"))) {
+                    next["status"] = "Complete earlier sets first";
                     changed = true;
                 } else if (set != null && LiftosaurSet.get(set, "isAmrap") == true) {
                     beginEdit(next, set);
@@ -412,7 +472,12 @@ class LiftosaurUpdate {
             if (isText(phase, "working")) {
                 var editSet = currentSet(model);
                 if (editSet != null) {
-                    beginEdit(next, editSet);
+                    var editCompleted = LiftosaurSet.get(editSet, "completed") != null;
+                    if (editCompleted || isFirstIncompleteSet(model, model.get("entryIndex"), model.get("setIndex"))) {
+                        beginEdit(next, editSet);
+                    } else {
+                        next["status"] = "Complete earlier sets first";
+                    }
                     changed = true;
                 }
             } else if (isText(phase, "editing")) {
@@ -422,7 +487,18 @@ class LiftosaurUpdate {
             if (isText(phase, "preview") || isText(phase, "loading") || isText(phase, "error")) {
                 effects.add({ "type" => "exitApp" });
                 changed = true;
-            } else if (isText(phase, "working") || isText(phase, "complete")) {
+            } else if (isText(phase, "working")) {
+                var activeSet = nextActiveSet(model);
+                if (activeSet != null && (activeSet.get("entryIndex") != model.get("entryIndex") || activeSet.get("setIndex") != model.get("setIndex"))) {
+                    next["entryIndex"] = activeSet.get("entryIndex");
+                    next["setIndex"] = activeSet.get("setIndex");
+                    next["status"] = "";
+                } else {
+                    next["phase"] = "actions";
+                    next["selectedAction"] = 0;
+                }
+                changed = true;
+            } else if (isText(phase, "complete")) {
                 next["phase"] = "actions";
                 next["selectedAction"] = 0;
                 changed = true;
@@ -435,6 +511,9 @@ class LiftosaurUpdate {
             } else if (isText(phase, "editing")) {
                 next["phase"] = "working";
                 next["editCompleted"] = false;
+                next["editEntryIndex"] = null;
+                next["editSetIndex"] = null;
+                next["editSetId"] = null;
                 next["status"] = "";
                 changed = true;
             } else if (isText(phase, "actions")) {
@@ -474,7 +553,7 @@ class LiftosaurUpdate {
                 if (selectedAction > maxAction) { selectedAction = 0; }
                 next["selectedAction"] = selectedAction;
                 changed = true;
-            } else if (isText(phase, "working")) {
+            } else if (isText(phase, "working") || isText(phase, "complete")) {
                 changed = moveSet(next, model, direction);
             } else if (isText(phase, "editing")) {
                 if (isText(model.get("editField"), "weight")) {
@@ -520,6 +599,10 @@ class LiftosaurUpdate {
                     var viewedSet = currentSet(model);
                     var preserveViewedSet = viewedSet != null && LiftosaurSet.get(viewedSet, "completed") != null;
                     next["workout"] = workout;
+                    if (next.get("activeEntryIndex") == null) {
+                        var savedEntryIndex = model.get("entryIndex");
+                        next["activeEntryIndex"] = savedEntryIndex != null && savedEntryIndex < workout.get("entries").size() ? savedEntryIndex : 0;
+                    }
                     next["startedAt"] = workout.get("startTime");
                     next["status"] = "";
                     if (!isActive(model)) { next["phase"] = "working"; }
@@ -546,15 +629,21 @@ class LiftosaurUpdate {
                     next["phase"] = "loading";
                     next["workout"] = null;
                     next["status"] = "Workout saved";
-                    effects.add({ "type" => "loadNext" });
-                } else if (next.get("queue").size() > 0) {
-                    next["status"] = "Waiting for saved sets to sync";
-                    effects.add({ "type" => "flushQueue" });
-                } else {
-                    next["phase"] = "loading";
-                    next["workout"] = null;
                     next["queue"] = [];
-                    next["status"] = "";
+                    effects.add({ "type" => "stopTicker" });
+                    effects.add({ "type" => "loadNext" });
+                } else if (isText(phase, "discarding") || isText(phase, "confirm-discard") || model.get("discardPending") == true) {
+                    // A successful current-workout lookup with no workout
+                    // confirms that a pending discard already took effect.
+                    next = { "phase" => "loading", "queue" => [], "status" => "Workout discarded" };
+                    effects.add({ "type" => "stopTicker" });
+                    effects.add({ "type" => "exitApp" });
+                } else {
+                    // The server is authoritative when it returns HTTP 200
+                    // with no current workout. Drop stale local sets and
+                    // queued writes that can no longer be applied.
+                    next = { "phase" => "loading", "queue" => [], "status" => "" };
+                    effects.add({ "type" => "stopTicker" });
                     effects.add({ "type" => "loadNext" });
                 }
             } else if (isActive(model)) {
@@ -581,6 +670,7 @@ class LiftosaurUpdate {
                 next["startedAt"] = startedWorkout.get("startTime");
                 next["entryIndex"] = 0;
                 next["setIndex"] = 0;
+                next["activeEntryIndex"] = 0;
                 next["undo"] = null;
                 next["queue"] = [];
                 next["status"] = "";
@@ -607,18 +697,21 @@ class LiftosaurUpdate {
                 var savedPhase = phase;
                 var viewedSet = currentSet(model);
                 var preserveViewedSet = isText(savedPhase, "working") && viewedSet != null && LiftosaurSet.get(viewedSet, "completed") != null;
+                var preserveEditor = isText(savedPhase, "editing");
                 // The store may omit the response workout to save memory. Local
                 // set logs, corrections, and undo changes are already applied.
                 if (updatedWorkout != null) { next["workout"] = updatedWorkout; }
-                if (isCorrection && syncedAction != null) {
+                if (isCorrection && syncedAction != null && !preserveEditor) {
                     next["entryIndex"] = syncedAction.get("entryIndex");
                     next["setIndex"] = syncedAction.get("setIndex");
+                    next["activeEntryIndex"] = syncedAction.get("entryIndex");
                     next["phase"] = "working";
-                } else if (isUndo && syncedAction != null) {
+                } else if (isUndo && syncedAction != null && !preserveEditor) {
                     next["entryIndex"] = syncedAction.get("entryIndex");
                     next["setIndex"] = syncedAction.get("setIndex");
+                    next["activeEntryIndex"] = syncedAction.get("entryIndex");
                     next["phase"] = "working";
-                } else if (!preserveViewedSet) {
+                } else if (!preserveViewedSet && !preserveEditor) {
                     normalizeCursor(next);
                     if (isText(savedPhase, "rest")) { next["phase"] = "rest"; }
                 }
@@ -648,7 +741,8 @@ class LiftosaurUpdate {
             changed = true;
         } else if (isText(type, "DISCARD_RESULT")) {
             var discardCode = message.get("code");
-            if (discardCode == 200) {
+            // DELETE endpoints may report either 200 or 204 for success.
+            if (discardCode >= 200 && discardCode < 300) {
                 next = { "phase" => "loading", "queue" => [], "status" => "Workout discarded" };
                 effects.add({ "type" => "stopTicker" });
                 effects.add({ "type" => "exitApp" });
@@ -657,6 +751,11 @@ class LiftosaurUpdate {
                 next["phase"] = "confirm-discard";
                 next["status"] = discardCode <= 0 ? "Offline - discard not sent" : "Discard failed: " + discardCode.toString();
             }
+            changed = true;
+        } else if (isText(type, "DISCARD_LOCAL_ERROR")) {
+            next["discardPending"] = false;
+            next["phase"] = "confirm-discard";
+            next["status"] = "Cannot discard: start time is missing";
             changed = true;
         } else if (isText(type, "REST_EXPIRED") && isText(phase, "rest")) {
             next["restEnd"] = null;

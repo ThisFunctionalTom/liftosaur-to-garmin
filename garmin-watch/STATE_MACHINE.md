@@ -8,14 +8,15 @@ are handled by the reducer. The store parses responses and runs effects.
 
 `state["phase"]` is the current screen/workflow phase. The same dictionary also
 holds workout data and workflow details such as the selected exercise and set,
-the edit values, the rest deadline, queued API writes, and pending finish or
-discard operations. The dictionary is saved in Connect IQ storage.
+the active exercise, edit values, the rest deadline, queued API writes, and
+pending finish or discard operations. The dictionary is saved in Connect IQ
+storage.
 
 | Phase | Meaning |
 | --- | --- |
 | `loading` | Fetching the live workout, or fetching the next workout when none is live. |
 | `preview` | The next workout is loaded and can be started on the watch. |
-| `working` | Showing the selected set. It may be an incomplete set or a previously completed set being reviewed. |
+| `working` | Showing the selected set. Sets must be logged in order within an exercise; exercises can be done in any order. |
 | `editing` | Editing reps or weight for a set, or entering reps for an AMRAP set. |
 | `rest` | A set has been logged and the rest countdown is running. The cursor points at the next set, if one exists. |
 | `actions` | Workout menu ordered Leave / Keep Workout, Finish Workout, Undo this/last set (when available), then Discard Workout. Leave / Keep is selected by default. |
@@ -24,7 +25,7 @@ discard operations. The dictionary is saved in Connect IQ storage.
 | `finishing` | Waiting for queued set writes, then saving the workout. Retries after a failed save. |
 | `confirm-discard` | Confirming that the workout should be discarded. |
 | `discarding` | Waiting for queued writes or sending the discard request. |
-| `complete` | All sets are complete; Select finishes and saves the workout. |
+| `complete` | No unfinished sets remain in the active exercise or later exercises. Earlier skipped exercises can still be revisited with UP/DOWN. START finishes and saves. |
 | `error` | A blocking API or unsupported-workout error is displayed. |
 
 Rest expiration transitions directly to `working` or `complete`.
@@ -32,42 +33,45 @@ Rest expiration transitions directly to `working` or `complete`.
 ```mermaid
 stateDiagram-v2
     [*] --> loading
-    loading --> preview : no live workout, next loaded
+    loading --> preview : Workout loaded
     loading --> working : live workout found
-    loading --> error : request fails or API key missing
+    loading --> error : Load fails
     loading --> [*] : BACK
     preview --> [*] : BACK
-    preview --> working : START, start succeeds
-    preview --> complete : START, no sets remain
-    preview --> error : start fails or workout unsupported
+    preview --> working : Start succeeds
+    preview --> complete : No sets remain
+    preview --> error : Start fails
     error --> [*] : BACK
-    working --> editing : START on AMRAP or hold START
-    working --> rest : START logs planned set
-    editing --> rest : START saves new set
-    editing --> working : BACK cancels or correction saved
-    rest --> working : BACK skips rest or timer expires
-    rest --> editing : START on next AMRAP
-    rest --> complete : final rest ends or is skipped
-    working --> actions : BACK or MENU
+    working --> editing : Edit reps
+    working --> rest : Log active set
+    working --> working : Later set blocked
+    working --> working : BACK returns to active set
+    editing --> rest : Save reps
+    editing --> working : Cancel edit
+    rest --> working : Skip rest or timer ends
+    rest --> editing : Edit next AMRAP
+    rest --> complete : Final rest ends
+    working --> actions : BACK on active set or MENU
+    working --> working : Browse sets
     rest --> actions : MENU
     complete --> actions : BACK
-    actions --> confirmFinish : choose Finish Workout
-    actions --> confirmUndo : choose Undo this/last set
-    actions --> confirmDiscard : choose Discard Workout
-    actions --> [*] : choose Leave / Keep Workout
-    actions --> working : BACK or MENU, no rest remains
-    actions --> rest : BACK or MENU, rest remains
-    actions --> complete : BACK or MENU, workout complete
+    actions --> confirmFinish : Finish workout
+    actions --> confirmUndo : Undo set
+    actions --> confirmDiscard : Discard workout
+    actions --> [*] : Leave app
+    actions --> working : Close menu
+    actions --> rest : Close menu during rest
+    actions --> complete : Close menu when complete
     confirmFinish --> finishing : START
-    confirmFinish --> working : BACK or MENU, cancel
+    confirmFinish --> working : Cancel
     finishing --> loading : save succeeds
-    finishing --> finishing : save fails, retry later
-    confirmUndo --> working : START clears reps locally and queues set update
-    confirmUndo --> actions : BACK or MENU
+    finishing --> finishing : Save fails
+    confirmUndo --> working : Confirm undo
+    confirmUndo --> actions : Cancel undo
     confirmDiscard --> discarding : START
-    confirmDiscard --> working : BACK or MENU, cancel
+    confirmDiscard --> working : Cancel discard
     discarding --> [*] : discard succeeds, app exits
-    discarding --> confirmDiscard : discard fails, retry
+    discarding --> confirmDiscard : Discard fails
 
     note right of working
         Set writes stay queued after failure and retry later.
@@ -87,9 +91,12 @@ events; the hold threshold is 700 ms.
 | `preview`, `loading`, or `error` | BACK | Exit the app. |
 | `preview` | START | Validate supported set types; send start request. On success go to `working`; otherwise go to `error`. |
 | `working` | START on an incomplete planned set | Log a regular set and enter `rest`. On an AMRAP set, enter `editing`. A completed set stays selected and displays “Set already logged”. |
+| `working` | START on a later unfinished set in the same exercise | Do not log it; show "Complete earlier sets first". |
 | `working` | Hold START | Enter `editing` for the selected set, including a previously completed set. |
-| `working` | UP/DOWN | Move to the previous/next set. Navigation wraps across exercise boundaries. |
-| `working` | BACK | Open `actions`. |
+| `working` | Hold START on a later unfinished set in the same exercise | Do not open the editor; show "Complete earlier sets first". |
+| `working` | UP/DOWN | Browse sets. Moving forward across an exercise boundary makes that exercise active, skipping its predecessor's remaining sets. Moving backward only browses; START on the first unfinished set of any exercise makes it active. |
+| `working` | BACK while viewing a set other than the active exercise's next set | Return to that next set. |
+| `working` | BACK on the active exercise's next set | Open `actions`. |
 | `working` | MENU | Open `actions`. |
 | `rest` | START on an upcoming AMRAP set | Skip the rest timer and enter `editing` for that AMRAP set. START otherwise has no action. |
 | `rest` | BACK | Cancel rest and preserve the completed set. Go to `working`, or `complete` if it was the last set. |
@@ -113,6 +120,7 @@ events; the hold threshold is 700 ms.
 | `finishing` | API failure / retry timer | Keep the phase and retry the finish request. |
 | `complete` | BACK | Open `actions`. |
 | `complete` | START | Finish and save the workout. |
+| `complete` | UP/DOWN | Reopen a set for review. Moving to an unfinished set resumes `working` from that exercise. |
 | Active workout | Successful set API response | Adopt server workout, remove the acknowledged queue item, then send the next queued write if present. |
 | Active workout | Failed set API response / retry timer | Keep queued action and retry after the configured delay. |
 
