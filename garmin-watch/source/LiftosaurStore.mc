@@ -12,6 +12,7 @@ class LiftosaurStore {
     var ticker;
     var requestBusy;
     var retryAfter;
+    var updater;
 
     function initialize() {
         api = new LiftosaurApi();
@@ -22,6 +23,7 @@ class LiftosaurStore {
         changed = null;
         requestBusy = false;
         retryAfter = 0;
+        updater = new LiftosaurUpdate();
         ticker = new Timer.Timer();
     }
 
@@ -31,6 +33,39 @@ class LiftosaurStore {
 
     function isText(value, expected) {
         return value != null && value.equals(expected);
+    }
+
+    function dispatchMessage(type, value, payload) {
+        var message = { "type" => type };
+        message["requestBusy"] = requestBusy;
+        if (value != null) { message["direction"] = value; }
+        if (type.equals("CURRENT_RESULT") || type.equals("NEXT_RESULT") || type.equals("START_RESULT") || type.equals("SET_RESULT") || type.equals("FINISH_RESULT") || type.equals("DISCARD_RESULT")) {
+            message["code"] = value;
+            message["workout"] = payload;
+        }
+        var updateResult = updater.update(state, message, Time.now().value());
+        state = updateResult.get("model");
+        if (updateResult.get("changed") == true) { notify(); }
+        runEffects(updateResult.get("effects"));
+    }
+
+    function runEffects(effects) {
+        for (var i = 0; i < effects.size(); i += 1) {
+            var effect = effects[i];
+            var type = effect.get("type");
+            if (isText(type, "startWorkout")) { startWorkout(); }
+            else if (isText(type, "stopTicker")) { ticker.stop(); }
+            else if (isText(type, "startTicker")) { startTicker(); }
+            else if (isText(type, "flushQueue")) { flushQueue(); }
+            else if (isText(type, "sendFinish")) { sendFinish(); }
+            else if (isText(type, "sendDiscard")) { sendDiscardRequest(); }
+            else if (isText(type, "loadNext")) { loadNext(); }
+            else if (isText(type, "vibrate")) {
+                if (Attention has :vibrate) {
+                    Attention.vibrate([ new Attention.VibeProfile(100, 500) ]);
+                }
+            }
+        }
     }
 
     function copyField(source, destination, key) {
@@ -141,9 +176,7 @@ class LiftosaurStore {
         }
         System.println("[Liftosaur] open; API key present=" + api.hasKey().toString());
         if (!api.hasKey()) {
-            state["phase"] = "error";
-            state["status"] = "Missing API key\ncheck Connect IQ settings";
-            notify();
+            dispatchMessage("NO_API_KEY", null, null);
             return;
         }
 
@@ -160,117 +193,51 @@ class LiftosaurStore {
         if (requestBusy) { return; }
         System.println("[Liftosaur] GET /workout/current");
         requestBusy = true;
-        state["status"] = "Checking workout";
-        notify();
+        dispatchMessage("CURRENT_REQUEST", null, null);
         api.get("/workout/current", method(:onCurrent));
     }
 
     function onCurrent(code, data) {
         System.println("[Liftosaur] /workout/current callback code=" + code.toString() + " data=" + (data == null ? "null" : "present"));
         requestBusy = false;
+        var compact = null;
         if (code == 200 && data != null) {
             var envelope = data.get("data");
             var workout = envelope == null ? null : envelope.get("workout");
-            if (workout != null) {
-                var savedPhase = state.get("phase");
-                var viewedSet = currentSet();
-                var preserveViewedSet = viewedSet != null && viewedSet.get("completed") != null;
-                state["workout"] = compactWorkout(workout);
-                state["startedAt"] = workout.get("startTime");
-                workout = null;
-                envelope = null;
-                data = null;
-                if (!isActive()) { state["phase"] = "working"; }
-                state["status"] = "";
-                if (!preserveViewedSet) { normalizeCursor(); }
-                if (state.get("finishPending") == true) {
-                    state["phase"] = "finishing";
-                } else if (isText(savedPhase, "rest")) {
-                    state["phase"] = "rest";
-                } else if (isText(savedPhase, "editing") && currentSet() != null) {
-                    state["phase"] = "editing";
-                } else if (isText(savedPhase, "actions") && currentSet() != null) {
-                    state["phase"] = "actions";
-                } else if (isText(savedPhase, "confirm-finish")) {
-                    state["phase"] = "confirm-finish";
-                } else if (isText(savedPhase, "confirm-discard")) {
-                    state["phase"] = "confirm-discard";
-                } else if (isText(savedPhase, "discarding")) {
-                    state["phase"] = "confirm-discard";
-                    state["status"] = "Tap START to retry discard";
-                }
-                notify();
-                if (state.get("discardPending") == true) {
-                    state["discardPending"] = false;
-                    discardWorkout();
-                    return;
-                }
-                if (state.get("finishPending") == true && state.get("queue").size() == 0) {
-                    sendFinish();
-                } else {
-                    flushQueue();
-                }
-                return;
-            }
-            if (state.get("finishPending") == true) {
-                clearWorkout("Workout saved");
-                loadNext();
-                return;
-            }
-            if (state.get("queue").size() > 0) {
-                state["status"] = "Waiting for saved sets to sync";
-                notify();
-                flushQueue();
-                return;
-            }
-            clearWorkout("");
-            System.println("[Liftosaur] no current workout; fetching next");
-            loadNext();
-            return;
+            if (workout != null) { compact = compactWorkout(workout); }
         }
-
-        if (isActive()) {
-            state["status"] = "Offline - workout is saved on the watch";
-            notify();
-            return;
-        }
-        setError(code, data);
+        dispatchMessage("CURRENT_RESULT", code, compact);
     }
 
     function loadNext() {
         if (requestBusy) { return; }
         System.println("[Liftosaur] GET /workout/next");
         requestBusy = true;
-        state["phase"] = "loading";
-        state["status"] = "Loading next workout";
-        notify();
+        dispatchMessage("LOAD_NEXT", null, null);
         api.get("/workout/next", method(:onNext));
     }
 
     function onNext(code, data) {
         requestBusy = false;
         System.println("[Liftosaur] /workout/next callback code=" + code.toString() + " data=" + (data == null ? "null" : "present"));
+        var compact = null;
         if (code == 200 && data != null) {
             var envelope = data.get("data");
             var workout = envelope == null ? null : envelope.get("workout");
             System.println("[Liftosaur] next workout=" + (workout == null ? "null" : "present"));
-            if (workout != null) {
-                state = { "phase" => "preview", "workout" => compactWorkout(workout), "queue" => [], "status" => "" };
-                workout = null;
-                envelope = null;
-                data = null;
-                notify();
-                return;
-            }
+            if (workout != null) { compact = compactWorkout(workout); }
         }
-        setError(code, data);
+        dispatchMessage("NEXT_RESULT", code, compact);
     }
 
     function startWorkout() {
+        if (!supportsWorkout(state.get("workout"))) {
+            dispatchMessage("UNSUPPORTED_WORKOUT", null, null);
+            return;
+        }
         if (requestBusy) { return; }
         requestBusy = true;
-        state["status"] = "Starting workout";
-        notify();
+        dispatchMessage("START_REQUEST", null, null);
         var dayData = state.get("workout").get("dayData");
         var startBody = {
             "programId" => state.get("workout").get("programId"),
@@ -282,28 +249,13 @@ class LiftosaurStore {
 
     function onStartWorkout(code, data) {
         requestBusy = false;
+        var compact = null;
         if (code == 200 && data != null) {
             var envelope = data.get("data");
             var workout = envelope == null ? null : envelope.get("workout");
-            if (workout != null) {
-                state["workout"] = compactWorkout(workout);
-                state["phase"] = "working";
-                state["startedAt"] = workout.get("startTime");
-                workout = null;
-                envelope = null;
-                data = null;
-                state["entryIndex"] = 0;
-                state["setIndex"] = 0;
-                state["undo"] = null;
-                state["queue"] = [];
-                state["status"] = "";
-                normalizeCursor();
-                startTicker();
-                notify();
-                return;
-            }
+            if (workout != null) { compact = compactWorkout(workout); }
         }
-        setError(code, data);
+        dispatchMessage("START_RESULT", code, compact);
     }
 
     function entryAt(index) {
@@ -318,33 +270,6 @@ class LiftosaurStore {
         return setIndex < sets.size() ? sets[setIndex] : null;
     }
 
-    function normalizeCursor() {
-        if (state.get("workout") == null) { return; }
-        if (state.get("entryIndex") == null) { state["entryIndex"] = 0; }
-        if (state.get("setIndex") == null) { state["setIndex"] = 0; }
-        var entries = state.get("workout").get("entries");
-        var entryIndex = state.get("entryIndex");
-        var setIndex = state.get("setIndex");
-        while (entryIndex < entries.size()) {
-            var entry = entries[entryIndex];
-            var sets = entry.get("sets");
-            while (setIndex < sets.size()) {
-                var set = sets[setIndex];
-                if (set.get("completed") == null) {
-                    state["entryIndex"] = entryIndex;
-                    state["setIndex"] = setIndex;
-                    return;
-                }
-                setIndex += 1;
-            }
-            entryIndex += 1;
-            setIndex = 0;
-        }
-        state["phase"] = "complete";
-        state["entryIndex"] = entries.size();
-        state["setIndex"] = 0;
-    }
-
     function currentEntry() {
         return entryAt(state.get("entryIndex") == null ? 0 : state.get("entryIndex"));
     }
@@ -354,247 +279,15 @@ class LiftosaurStore {
     }
 
     function select() {
-        var phase = state.get("phase");
-        if (isText(phase, "preview")) {
-            if (!supportsWorkout(state.get("workout"))) {
-                state["phase"] = "error";
-                state["status"] = "This workout has set types not supported in v1";
-                notify();
-                return;
-            }
-            startWorkout();
-        } else if (isText(phase, "editing")) {
-            saveEditedSet();
-        } else if (isText(phase, "rest")) {
-            var nextSet = currentSet();
-            if (nextSet != null && nextSet.get("isAmrap") == true) {
-                System.println("[Liftosaur] START during rest; opening AMRAP reps editor");
-                skipRest();
-                beginEdit(true);
-            }
-        } else if (isText(phase, "working")) {
-            var set = currentSet();
-            if (set != null && set.get("completed") != null) {
-                state["status"] = "Set already logged";
-                notify();
-                return;
-            }
-            if (set != null && set.get("isAmrap") == true) {
-                beginEdit(true);
-            } else {
-                logCurrentSet();
-            }
-        } else if (isText(phase, "complete")) {
-            finishWorkout();
-        } else if (isText(phase, "actions")) {
-            if (state.get("selectedAction") == 1) {
-                state["phase"] = "confirm-discard";
-                state["status"] = "This permanently deletes this workout";
-                notify();
-            } else {
-                state["phase"] = "confirm-finish";
-                state["status"] = "Press SELECT to finish early";
-                notify();
-            }
-        } else if (isText(phase, "confirm-finish")) {
-            finishWorkout();
-        } else if (isText(phase, "confirm-discard")) {
-            discardWorkout();
-        } else if (isText(phase, "rest-done")) {
-            finishWorkout();
-        }
+        dispatchMessage("SELECT", null, null);
     }
 
     function menu() {
-        var phase = state.get("phase");
-        if (isText(phase, "working") || isText(phase, "rest")) {
-            state["phase"] = "actions";
-            state["selectedAction"] = 0;
-            notify();
-        } else if (isText(phase, "actions")) {
-            cancelActions();
-        } else if (isText(phase, "editing")) {
-            return;
-        } else if (isText(phase, "confirm-finish")) {
-            cancelFinish();
-        } else if (isText(phase, "confirm-discard")) {
-            cancelDiscard();
-        } else if (isActive()) {
-            state["phase"] = "confirm-finish";
-            state["status"] = "Press SELECT to finish early";
-            notify();
-        }
-    }
-
-    function beginEdit(amrap) {
-        var set = currentSet();
-        if (set == null) { return; }
-        var completed = set.get("completed");
-        var reps = completed != null && completed.get("reps") != null ? completed.get("reps") : set.get("reps");
-        state["editReps"] = reps == null ? 1 : reps;
-        state["editWeight"] = completed != null && completed.get("weight") != null ? completed.get("weight") : set.get("weight");
-        state["editField"] = "reps";
-        state["editAmrap"] = amrap;
-        state["editCompleted"] = completed != null;
-        state["phase"] = "editing";
-        state["status"] = completed != null ? "Correct logged reps" : "UP/DOWN reps, START log, BACK cancel";
-        notify();
+        dispatchMessage("MENU", null, null);
     }
 
     function adjust(direction) {
-        if (isText(state.get("phase"), "actions")) {
-            var selectedAction = state.get("selectedAction") + direction;
-            if (selectedAction < 0) { selectedAction = 1; }
-            if (selectedAction > 1) { selectedAction = 0; }
-            state["selectedAction"] = selectedAction;
-            notify();
-            return;
-        }
-        if (isText(state.get("phase"), "working")) {
-            moveSet(direction);
-            return;
-        }
-        if (!isText(state.get("phase"), "editing")) { return; }
-        {
-            // UP is direction -1 in the navigation layer but adds a rep;
-            // DOWN is direction +1 and removes one.
-            var newReps = state.get("editReps") - direction;
-            state["editReps"] = newReps < 1 ? 1 : newReps;
-        }
-        notify();
-    }
-
-    function moveSet(direction) {
-        var workout = state.get("workout");
-        if (workout == null) { return; }
-        var entries = workout.get("entries");
-        var positions = [];
-        for (var i = 0; i < entries.size(); i += 1) {
-            var sets = entries[i].get("sets");
-            for (var j = 0; j < sets.size(); j += 1) {
-                positions.add([i, j]);
-            }
-        }
-        if (positions.size() == 0) { return; }
-        var current = 0;
-        for (var k = 0; k < positions.size(); k += 1) {
-            if (positions[k][0] == state.get("entryIndex") && positions[k][1] == state.get("setIndex")) { current = k; break; }
-        }
-        var next = current + direction;
-        if (next < 0) { next = positions.size() - 1; }
-        if (next >= positions.size()) { next = 0; }
-        state["entryIndex"] = positions[next][0];
-        state["setIndex"] = positions[next][1];
-        var selected = setAt(positions[next][0], positions[next][1]);
-        state["status"] = selected.get("completed") == null ? "" : "Already logged";
-        notify();
-    }
-
-    function editCurrentReps() {
-        var set = currentSet();
-        if (set == null) { return; }
-        beginEdit(set.get("isAmrap") == true);
-    }
-
-    function adjustWeight(direction) {
-        var weight = state.get("editWeight");
-        if (weight == null) { return; }
-        var chars = weight.toCharArray();
-        var splitAt = chars.size();
-        for (var i = 0; i < chars.size(); i += 1) {
-            var c = chars[i].toString().toLower();
-            if (c.equals("k") || c.equals("l")) { splitAt = i; break; }
-        }
-        var value = parseWeight(weight);
-        if (value == null) { return; }
-        var step = 1.0;
-        var newValue = value + (direction * step);
-        if (newValue < 0) { newValue = 0; }
-        var suffix = weight.substring(splitAt, chars.size());
-        state["editWeight"] = newValue.toString() + suffix;
-    }
-
-    function parseWeight(weight) {
-        if (weight == null) { return null; }
-        var chars = weight.toCharArray();
-        var splitAt = chars.size();
-        for (var i = 0; i < chars.size(); i += 1) {
-            var c = chars[i].toString().toLower();
-            if (c.equals("k") || c.equals("l")) { splitAt = i; break; }
-        }
-        return weight.substring(0, splitAt).toFloat();
-    }
-
-    function toggleEditField() {
-        if (isText(state.get("phase"), "editing") && state.get("editAmrap") != true) {
-            state["editField"] = isText(state.get("editField"), "reps") ? "weight" : "reps";
-            notify();
-        }
-    }
-
-    function saveEditedSet() {
-        if (!isText(state.get("phase"), "editing")) { return; }
-        if (state.get("editCompleted") == true) {
-            correctLoggedSet();
-            return;
-        }
-        logCurrentSet();
-    }
-
-    function correctLoggedSet() {
-        var entry = currentEntry();
-        var set = currentSet();
-        if (entry == null || set == null || set.get("completed") == null) { return; }
-        var completed = { "reps" => state.get("editReps") };
-        var weight = state.get("editWeight");
-        if (weight != null) { completed["weight"] = weight; }
-        enqueue({
-            "kind" => "set",
-            "correction" => true,
-            "entryId" => entry.get("entryId"),
-            "setId" => set.get("setId"),
-            "completed" => completed,
-            "entryIndex" => state.get("entryIndex"),
-            "setIndex" => state.get("setIndex")
-        });
-        state["phase"] = "working";
-        state["editCompleted"] = false;
-        state["status"] = "Saving correction";
-        notify();
-        flushQueue();
-    }
-
-    function cancelEdit() {
-        if (!isText(state.get("phase"), "editing")) { return; }
-        state["phase"] = "working";
-        state["editCompleted"] = false;
-        state["status"] = "";
-        notify();
-    }
-
-    function cancelFinish() {
-        if (!isText(state.get("phase"), "confirm-finish")) { return; }
-        state["phase"] = state.get("restEnd") != null && remainingRest() > 0 ? "rest" : (state.get("lastSet") == true ? "complete" : "working");
-        state["status"] = "";
-        notify();
-    }
-
-    function cancelDiscard() {
-        if (!isText(state.get("phase"), "confirm-discard")) { return; }
-        state["phase"] = state.get("restEnd") != null && remainingRest() > 0 ? "rest" : (state.get("lastSet") == true ? "complete" : "working");
-        state["status"] = "Discard canceled";
-        notify();
-    }
-
-    function cancelActions() {
-        if (isText(state.get("phase"), "confirm-finish")) {
-            cancelFinish();
-            return;
-        }
-        if (!isText(state.get("phase"), "actions")) { return; }
-        state["phase"] = state.get("restEnd") != null && remainingRest() > 0 ? "rest" : (state.get("lastSet") == true ? "complete" : "working");
-        state["status"] = "";
-        notify();
+        dispatchMessage("ADJUST", direction, null);
     }
 
     function supportsWorkout(workout) {
@@ -611,75 +304,6 @@ class LiftosaurStore {
             }
         }
         return true;
-    }
-
-    function logCurrentSet() {
-        var entry = currentEntry();
-        var set = currentSet();
-        if (entry == null || set == null) { return; }
-        var reps = isText(state.get("phase"), "editing") ? state.get("editReps") : set.get("reps");
-        var weight = isText(state.get("phase"), "editing") ? state.get("editWeight") : set.get("weight");
-        var completed = { "reps" => reps };
-        if (weight != null) { completed["weight"] = weight; }
-        var action = {
-            "kind" => "set",
-            "entryId" => entry.get("entryId"),
-            "setId" => set.get("setId"),
-            "completed" => completed,
-            "entryIndex" => state.get("entryIndex"),
-            "setIndex" => state.get("setIndex")
-        };
-        state["undo"] = action;
-        enqueue(action);
-        var loggedTimer = set.get("timer");
-        state["restEnd"] = Time.now().value() + (loggedTimer == null ? 0 : loggedTimer);
-        state["phase"] = "rest";
-        state["status"] = "";
-        state["entryIndex"] = state.get("entryIndex");
-        state["setIndex"] = state.get("setIndex") + 1;
-        normalizeCursor();
-        state["lastSet"] = isText(state.get("phase"), "complete");
-        state["phase"] = "rest";
-        startTicker();
-        notify();
-        flushQueue();
-    }
-
-    function undo() {
-        if (state.get("undo") == null || !isActive() || isText(state.get("phase"), "finishing")) { return; }
-        var last = state.get("undo");
-        var undoAction = {
-            "kind" => "set",
-            "entryId" => last.get("entryId"),
-            "setId" => last.get("setId"),
-            "completed" => null
-        };
-        enqueue(undoAction);
-        state["entryIndex"] = last.get("entryIndex");
-        state["setIndex"] = last.get("setIndex");
-        state["phase"] = "working";
-        state["restEnd"] = null;
-        state["status"] = "Set undone";
-        state["undo"] = null;
-        ticker.stop();
-        notify();
-        flushQueue();
-    }
-
-    function skipRest() {
-        if (!isText(state.get("phase"), "rest")) { return; }
-        ticker.stop();
-        state["restEnd"] = null;
-        state["phase"] = state.get("lastSet") == true ? "complete" : "working";
-        state["status"] = "Rest skipped";
-        notify();
-    }
-
-    function enqueue(action) {
-        var queue = state.get("queue");
-        if (queue == null) { queue = []; }
-        queue.add(action);
-        state["queue"] = queue;
     }
 
     function flushQueue() {
@@ -706,87 +330,24 @@ class LiftosaurStore {
         var responseQueue = state.get("queue");
         System.println("[Liftosaur] set sync callback code=" + code.toString() + " data=" + (data == null ? "null" : "present") + " queue=" + (responseQueue == null ? "null" : responseQueue.size().toString()));
         requestBusy = false;
-        if (code != 200 || data == null) {
-            state["status"] = code <= 0 ? "Offline - set saved on watch" : "Set not accepted - check supported set types";
-            retryAfter = Time.now().value() + (code <= 0 ? 15 : 60);
-            if (state.get("discardPending") == true) {
-                state["discardPending"] = false;
-                discardWorkout();
-                return;
-            }
-            notify();
-            return;
-        }
-        var pendingQueue = state.get("queue");
-        var syncedAction = pendingQueue.size() > 0 ? pendingQueue[0] : null;
-        var isCorrection = syncedAction != null && syncedAction.get("correction") == true;
-        var savedPhase = state.get("phase");
-        var viewedSet = currentSet();
-        var preserveViewedSet = isText(savedPhase, "working") && viewedSet != null && viewedSet.get("completed") != null;
-        var envelope = data.get("data");
-        var updatedWorkout = envelope == null ? null : envelope.get("workout");
-        if (updatedWorkout != null) {
-            state["workout"] = compactWorkout(updatedWorkout);
-            updatedWorkout = null;
-            envelope = null;
-            data = null;
-            if (isCorrection) {
-                state["entryIndex"] = syncedAction.get("entryIndex");
-                state["setIndex"] = syncedAction.get("setIndex");
-                state["phase"] = "working";
-            } else if (preserveViewedSet) {
-                // A sync may arrive after the lifter has browsed back to a
-                // completed set. Keep that view instead of snapping forward.
-            } else {
-                normalizeCursor();
-                if (isText(savedPhase, "rest")) { state["phase"] = "rest"; }
-            }
-        }
-        var queue = state.get("queue");
-        if (queue.size() > 0) { queue.remove(queue[0]); }
-        state["queue"] = queue;
-        if (queue.size() == 0) { state["status"] = isCorrection ? "Reps corrected" : ""; }
-        notify();
-        if (state.get("discardPending") == true) {
-            state["discardPending"] = false;
-            discardWorkout();
-            return;
-        }
-        if (queue.size() > 0) {
-            flushQueue();
-        } else if (state.get("finishPending") == true) {
-            sendFinish();
-        }
-    }
-
-    function finishWorkout() {
-        if (state.get("workout") == null) { return; }
-        state["phase"] = "finishing";
-        state["finishPending"] = true;
-        state["endTime"] = Time.now().value() * 1000;
-        state["status"] = "Saving workout";
-        notify();
-        if (state.get("queue").size() > 0) {
-            flushQueue();
+        var compact = null;
+        if (code == 200 && data != null) {
+            var envelope = data.get("data");
+            var updatedWorkout = envelope == null ? null : envelope.get("workout");
+            if (updatedWorkout != null) { compact = compactWorkout(updatedWorkout); }
         } else {
-            sendFinish();
+            retryAfter = Time.now().value() + (code <= 0 ? 15 : 60);
         }
+        dispatchMessage("SET_RESULT", code, compact);
     }
 
-    function discardWorkout() {
+    function sendDiscardRequest() {
         if (requestBusy) {
-            state["discardPending"] = true;
-            state["phase"] = "discarding";
-            state["status"] = "Waiting for sync to discard";
-            notify();
             return;
         }
         if (state.get("workout") == null || state.get("startedAt") == null) { return; }
         requestBusy = true;
-        state["phase"] = "discarding";
-        state["status"] = "Discarding workout";
         System.println("[Liftosaur] DELETE /workout/current startTime=" + state.get("startedAt").toString());
-        notify();
         api.delete("/workout/current", { "startTime" => state.get("startedAt") }, method(:onDiscarded));
     }
 
@@ -794,15 +355,7 @@ class LiftosaurStore {
         requestBusy = false;
         System.println("[Liftosaur] DELETE /workout/current callback code=" + code.toString());
         System.println("[Liftosaur] discard response=" + (data == null ? "null" : data.toString()));
-        if (code == 200) {
-            clearWorkout("Workout discarded");
-            loadNext();
-        } else {
-            state["discardPending"] = false;
-            state["phase"] = "confirm-discard";
-            state["status"] = code <= 0 ? "Offline - discard not sent" : "Discard failed: " + code.toString();
-            notify();
-        }
+        dispatchMessage("DISCARD_RESULT", code, null);
     }
 
     function sendFinish() {
@@ -817,21 +370,10 @@ class LiftosaurStore {
 
     function onFinished(code, data) {
         requestBusy = false;
-        if (code == 200) {
-            clearWorkout("Workout saved");
-            loadNext();
-        } else {
-            state["phase"] = "finishing";
-            state["status"] = "Offline - finish will sync when connected";
+        if (code != 200) {
             retryAfter = Time.now().value() + 15;
-            notify();
         }
-    }
-
-    function clearWorkout(message) {
-        ticker.stop();
-        state = { "phase" => "loading", "queue" => [], "status" => message };
-        notify();
+        dispatchMessage("FINISH_RESULT", code, null);
     }
 
     function startTicker() {
@@ -847,17 +389,7 @@ class LiftosaurStore {
         if (isText(state.get("phase"), "rest") && state.get("restEnd") != null) {
             var remaining = state.get("restEnd") - Time.now().value();
             if (remaining <= 0) {
-                ticker.stop();
-                if (Attention has :vibrate) {
-                    Attention.vibrate([ new Attention.VibeProfile(100, 500) ]);
-                }
-                if (state.get("lastSet") == true) {
-                    state["phase"] = "complete";
-                } else {
-                    state["phase"] = "working";
-                }
-                state["status"] = "";
-                notify();
+                dispatchMessage("REST_EXPIRED", null, null);
                 return;
             }
             refreshView();
@@ -876,17 +408,4 @@ class LiftosaurStore {
         return remaining < 0 ? 0 : remaining;
     }
 
-    function setError(code, data) {
-        state["phase"] = "error";
-        if (code == 401) {
-            state["status"] = "Check API key in Connect IQ settings";
-        } else if (code == 403) {
-            state["status"] = "Liftosaur Premium is required";
-        } else if (code <= 0) {
-            state["status"] = "No connection - try again";
-        } else {
-            state["status"] = "Liftosaur request failed: " + code.toString();
-        }
-        notify();
-    }
 }

@@ -1,9 +1,8 @@
 # Workout state machine
 
-This describes the behavior currently implemented by `LiftosaurStore` and
-`LiftosaurDelegate`. It is a description of the code today, including its
-asynchronous API and timer transitions. It is not yet a centralized or pure
-state machine.
+This describes the behavior implemented by `LiftosaurUpdate` and its runtime
+adapter, `LiftosaurStore`. Button, rest-expiration, and API-result transitions
+are handled by the reducer. The store parses responses and runs effects.
 
 ## State model
 
@@ -27,8 +26,7 @@ discard operations. The dictionary is saved in Connect IQ storage.
 | `complete` | All sets are complete; Select finishes and saves the workout. |
 | `error` | A blocking API or unsupported-workout error is displayed. |
 
-`rest-done` is still mentioned in `select()`, but no current transition enters
-that phase. Rest expiration transitions directly to `working` or `complete`.
+Rest expiration transitions directly to `working` or `complete`.
 
 ```mermaid
 stateDiagram-v2
@@ -93,11 +91,12 @@ events; the hold threshold is 700 ms.
 
 ## Effects and persisted data
 
-User input and callbacks currently call `LiftosaurStore` methods that update
-state, save it, refresh the view, and sometimes start HTTP requests or timers.
-Set writes are queued and persisted so they can be retried after a connection
+The reducer returns a new model and effects. The store persists it, refreshes
+the view, and runs HTTP requests, timer control, and vibration effects. Set
+writes are queued and persisted so they can be retried after a connection
 failure or app restart. The rest timer is represented by an absolute `restEnd`
-timestamp; the one-second timer refreshes the countdown and detects expiration.
+timestamp; the one-second timer refreshes the countdown and sends expiration to
+the reducer.
 
 API operations are `GET /workout/current`, `GET /workout/next`, `POST
 /workout/start`, `POST /workout/set`, `POST /workout/finish`, and `DELETE
@@ -105,18 +104,23 @@ API operations are `GET /workout/current`, `GET /workout/next`, `POST
 
 ## Is this a state machine?
 
-Yes, informally: the `phase` values are states, and button events, timer events,
-and API callbacks cause transitions. `LiftosaurStore` is also more than a state
-machine, though. It mixes transition rules with API calls, persistence, timer
-management, cursor navigation, and view notifications. There is no single
-transition table enforced by the implementation, and phase strings can be
-assigned in many methods. That makes accidental or inconsistent transitions
-harder to spot.
+Yes. `LiftosaurUpdate.update(model, message, now)` handles button, menu,
+navigation, timer-expiration, and current/next/start/set/finish/discard API
+result messages. It returns a new model, a list of effects, and whether the
+view should refresh. `LiftosaurStore` parses API responses, dispatches result
+messages, persists and renders the returned model, then runs effects.
+
+Phase and workout transitions are now reducer-owned, including local set logs,
+corrections, undo, finish/discard initiation, and request status. The store
+handles API parsing, persistence, timer/request busy flags, and external I/O.
+It still compacts a previously saved workout on app open and reports a storage
+write failure directly because those are adapter-level recovery paths.
 
 ## Model View Update (MVU)
 
-MVU fits this app well and does not require a Monkey C framework. A practical
-shape would be:
+MVU is implemented for watch inputs, rest-timer expiration, request status,
+local set changes, and API results. The architecture for any remaining paths
+is:
 
 1. **Model** — the full workout state: phase, workout, cursor, edit values,
    rest deadline, pending queue, and request status.
@@ -134,10 +138,9 @@ For example, `StartPressed` in `rest` could produce an effect-free transition
 to `working`, or to `editing` when the upcoming set is AMRAP. A separate
 `LogSet` message would update the local model and return a `SendSet` effect.
 
-The first refactoring step should be to centralize transitions in an `update`
-function while keeping the existing screen and API code. Then move effects
-behind a small runner. This allows tests to exercise transition logic without
-network access or a simulator UI.
+Effects now perform external work only: network requests, timers, and
+vibration. Reducer tests run without network access or simulator UI
+interaction.
 
 ## Unit testing with Monkey C
 
@@ -146,10 +149,8 @@ runner. Test functions use the `(:test)` annotation and a `Test.Logger`; the
 SDK can compile tests with `--unit-test` and run them in the simulator using
 `monkeydo ... /t`. The fēnix 5 target API level (3.1) supports this testing API.
 
-There are no state-machine unit tests in the repository yet. The current store
-is coupled to HTTP, time, storage, and timers, so useful transition tests would
-be easier after separating a pure update function from those effects. Early
-cases should cover:
+The repository has a simulator test suite in `source/LiftosaurUpdateTests.mc`.
+Run it with `./run-tests.ps1` (or pass `-SdkPath`). Current tests cover:
 
 - START on a planned set logs it; START on an AMRAP opens the editor.
 - START on AMRAP during rest skips rest and opens the editor without undoing
@@ -160,8 +161,11 @@ cases should cover:
   set.
 - A successful set response removes exactly one queue item; a failed response
   preserves it for retry.
-- Finish and discard wait for queued writes and only clear the workout on
-  success.
+- Successful finish clears the active workout and requests the next one;
+  failed discard returns to its confirmation phase.
+- Planned set logging, correction, undo, finish/discard initiation, and request
+  status transitions are handled by the reducer.
+- Rep adjustment stays inside the editing phase.
 
 See Garmin's [unit testing guide](https://developer.garmin.com/connect-iq/core-topics/unit-testing/)
 and [`Toybox.Test` reference](https://developer.garmin.com/connect-iq/api-docs/Toybox/Test.html).

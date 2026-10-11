@@ -150,21 +150,16 @@ class LiftosaurView extends WatchUi.View {
         }
         var completed = set.get("completed");
         var shownWeight = completed != null && completed.get("weight") != null ? completed.get("weight") : set.get("weight");
-        drawWeight(dc, 122, shownWeight);
-        var reps = set.get("reps");
-        if (set.get("isAmrap") == true) {
-            var actualReps = completed == null ? null : completed.get("reps");
-            if (actualReps != null) {
-                line(dc, 160, "target " + reps.toString() + "+ / done " + actualReps.toString(), Graphics.FONT_XTINY);
-            } else {
-                line(dc, 160, reps.toString() + "+", Graphics.FONT_SMALL);
-            }
-        } else {
-            if (completed != null && completed.get("reps") != null) { reps = completed.get("reps"); }
-            line(dc, 160, "x " + reps.toString() + " reps", Graphics.FONT_SMALL);
+        var plannedReps = set.get("reps").toString();
+        if (set.get("isAmrap") == true) { plannedReps += "+"; }
+        drawWeightAndReps(dc, 120, shownWeight, plannedReps);
+        var actualReps = completed == null ? null : completed.get("reps");
+        if (actualReps != null) {
+            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
+            line(dc, 166, "done " + actualReps.toString(), Graphics.FONT_SMALL);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         }
         drawSetProgress(dc, entry, set);
-        line(dc, 226, statusText(state), Graphics.FONT_XTINY);
     }
 
     function drawEdit(dc, state) {
@@ -219,12 +214,11 @@ class LiftosaurView extends WatchUi.View {
 
     function drawDiscardConfirmation(dc, state) {
         dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-        line(dc, 65, "DISCARD WORKOUT?", Graphics.FONT_MEDIUM);
+        line(dc, 65, "DISCARD WORKOUT", Graphics.FONT_SMALL);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         line(dc, 108, "This cannot be undone", Graphics.FONT_XTINY);
         line(dc, 153, "START  DISCARD", Graphics.FONT_SMALL);
         line(dc, 194, "BACK  CANCEL", Graphics.FONT_XTINY);
-        line(dc, 220, statusText(state), Graphics.FONT_XTINY);
     }
 
     function drawActions(dc, state) {
@@ -275,7 +269,7 @@ class LiftosaurView extends WatchUi.View {
         if (spacing > 18) { spacing = 18; }
         var startX = (dc.getWidth() - ((count - 1) * spacing)) / 2;
         var index = 0;
-        var centerY = 192;
+        var centerY = 204;
         for (var i = 0; i < sets.size(); i += 1) {
             var set = sets[i];
             var x = startX + (index * spacing);
@@ -331,6 +325,44 @@ class LiftosaurView extends WatchUi.View {
         if (unit.length() > 0) {
             dc.drawText(x + numberWidth + 6, y, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);
         }
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+    }
+
+    function drawWeightAndReps(dc, y, weight, reps) {
+        var number = "BW";
+        var unit = "";
+        if (weight != null) {
+            var text = weight.toString();
+            var chars = text.toCharArray();
+            var unitStart = chars.size();
+            for (var i = 0; i < chars.size(); i += 1) {
+                var character = chars[i].toString().toLower();
+                if (character.equals("k") || character.equals("l")) {
+                    unitStart = i;
+                    break;
+                }
+            }
+            number = text.substring(0, unitStart);
+            unit = text.substring(unitStart, chars.size());
+        }
+
+        var numberWidth = dc.getTextWidthInPixels(number, Graphics.FONT_NUMBER_MEDIUM);
+        var unitWidth = dc.getTextWidthInPixels(unit, Graphics.FONT_SMALL);
+        var multiplyWidth = dc.getTextWidthInPixels("x", Graphics.FONT_SMALL);
+        var repsWidth = dc.getTextWidthInPixels(reps, Graphics.FONT_NUMBER_MEDIUM);
+        var gap = 4;
+        var unitGap = unit.length() > 0 ? gap : 0;
+        var totalWidth = numberWidth + unitGap + unitWidth + gap + multiplyWidth + gap + repsWidth;
+        var x = (dc.getWidth() - totalWidth) / 2;
+        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+        dc.drawText(x, y, Graphics.FONT_NUMBER_MEDIUM, number, Graphics.TEXT_JUSTIFY_LEFT);
+        var suffixX = x + numberWidth + unitGap;
+        if (unit.length() > 0) {
+            dc.drawText(suffixX, y + 15, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);
+            suffixX += unitWidth + gap;
+        }
+        dc.drawText(suffixX, y + 12, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(suffixX + multiplyWidth + gap, y, Graphics.FONT_NUMBER_MEDIUM, reps, Graphics.TEXT_JUSTIFY_LEFT);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
 

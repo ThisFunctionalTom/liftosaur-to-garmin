@@ -38,6 +38,8 @@ class LiftosaurApp extends Application.AppBase {
 class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     var _store;
     var _keyDownAt;
+    var _keyHandled;
+    var _suppressNextSelect;
 
     function initialize(store) {
         BehaviorDelegate.initialize();
@@ -45,6 +47,22 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onSelect() {
+        if (_suppressNextSelect) {
+            _suppressNextSelect = false;
+            System.println("[Liftosaur] consumed duplicate START select behavior");
+            return true;
+        }
+        if (_keyDownAt != null) {
+            var held = System.getTimer() - _keyDownAt;
+            if (held >= 700) {
+                System.println("[Liftosaur] START hold detected by select behavior heldMs=" + held.toString());
+                _store.dispatchMessage("LONG_START", null, null);
+                _keyHandled = true;
+            }
+            // Defer short presses to onKeyReleased so there is one consistent
+            // decision point for both the behavior and raw key callbacks.
+            return true;
+        }
         _store.select();
         return true;
     }
@@ -65,19 +83,7 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onBack() {
-        if (_store.isText(_store.state.get("phase"), "rest")) {
-            _store.skipRest();
-        } else if (_store.isText(_store.state.get("phase"), "editing")) {
-            _store.cancelEdit();
-        } else if (_store.isText(_store.state.get("phase"), "actions")) {
-            _store.cancelActions();
-        } else if (_store.isText(_store.state.get("phase"), "confirm-finish")) {
-            _store.cancelFinish();
-        } else if (_store.isText(_store.state.get("phase"), "confirm-discard")) {
-            _store.cancelDiscard();
-        } else {
-            _store.undo();
-        }
+        _store.dispatchMessage("BACK", null, null);
         return true;
     }
 
@@ -86,6 +92,7 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     function onKeyPressed(keyEvent) {
         if (keyEvent.getKey() == WatchUi.KEY_ENTER) {
             _keyDownAt = System.getTimer();
+            _keyHandled = false;
             return true;
         }
         return false;
@@ -93,16 +100,18 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
 
     function onKeyReleased(keyEvent) {
         if (keyEvent.getKey() != WatchUi.KEY_ENTER) { return false; }
-        var held = _keyDownAt != null && System.getTimer() - _keyDownAt >= 700;
+        var heldMs = _keyDownAt != null ? System.getTimer() - _keyDownAt : 0;
+        var held = heldMs >= 700;
+        System.println("[Liftosaur] START released heldMs=" + heldMs.toString() + " alreadyHandled=" + (_keyHandled == true).toString());
+        var alreadyHandled = _keyHandled == true;
         _keyDownAt = null;
-
-        if (held && _store.isText(_store.state.get("phase"), "working")) {
-            _store.editCurrentReps();
-        } else if (held && _store.isText(_store.state.get("phase"), "editing")) {
-            _store.saveEditedSet();
-        } else if (!held) {
-            _store.select();
+        _keyHandled = false;
+        if (!alreadyHandled) {
+            if (held) { _store.dispatchMessage("LONG_START", null, null); }
+            else { _store.dispatchMessage("SELECT", null, null); }
         }
+        // BehaviorDelegate may report onSelect after this raw release event.
+        _suppressNextSelect = !alreadyHandled;
         return true;
     }
 }

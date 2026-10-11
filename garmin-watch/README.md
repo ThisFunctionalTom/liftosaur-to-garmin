@@ -10,22 +10,31 @@ history, progression, and the next workout.
 - Target: fēnix 5 (Connect IQ API level 3.1, button controls).
 - The watch needs a Liftosaur Premium API key, entered in Connect IQ app settings.
 - The watch fetches the next workout; Select starts it.
-- Select logs a planned set. Menu opens options to edit the set or finish early.
-  In the editor, Up/Down changes the selected value, Select switches between reps
-  and weight, and Menu saves. Weight changes in 1 kg or 1 lb steps based on the
-  displayed unit. AMRAP sets open with reps selected and only reps are editable.
-- Back undoes the most recently logged set.
-- Rest uses the Liftosaur timer. It cannot be paused, changed, or skipped. The watch
-  vibrates when rest ends.
+- Select logs a planned set. AMRAP sets open the reps editor; hold Select edits
+  reps on any set. Up/Down changes reps in the editor. Select saves the set or
+  correction.
+- Back during rest skips the timer without undoing the completed set. Back during
+  work undoes the most recently logged set.
+- Menu opens Finish Early and Discard Workout. The watch vibrates when rest ends.
 - Set completions queue on the watch during a connection loss and retry later.
   Fetching and starting a workout require a connection.
-- Warmup sets are skipped. Supersets, unilateral sets, timed sets, RPE prompts,
-  and other prompted set types are not supported in v1; the app refuses to start a
-  workout containing them.
+- Warmup sets are included before work sets. Supersets, unilateral sets, timed
+  sets, RPE prompts, and other prompted set types are not supported in v1; the
+  app refuses to start a workout containing them.
 - The app writes to Liftosaur only. It does not record a Garmin Connect activity.
 
 Every Liftosaur write includes the required stable device ID and client headers.
 The local queue is stored in Connect IQ app storage and survives app restarts.
+
+## State machine and tests
+
+`STATE_MACHINE.md` documents the phases and transitions. Button and rest-timer
+events use a reducer in `source/LiftosaurUpdate.mc`; effects are run by the store.
+Run the simulator unit tests with:
+
+```powershell
+./run-tests.ps1
+```
 
 ## Build
 

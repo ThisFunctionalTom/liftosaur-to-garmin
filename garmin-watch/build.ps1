@@ -1,7 +1,9 @@
 param(
     [string]$SdkPath,
 
-    [string]$DeveloperKey
+    [string]$DeveloperKey,
+
+    [switch]$UnitTest
 )
 
 if ([string]::IsNullOrWhiteSpace($DeveloperKey)) {
@@ -34,7 +36,8 @@ if (-not (Test-Path -LiteralPath $DeveloperKey)) {
 
 $outputDir = Join-Path $PSScriptRoot 'bin'
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
-$outputPath = Join-Path $outputDir 'Liftosaur.prg'
+$outputName = if ($UnitTest) { 'Liftosaur-tests.prg' } else { 'Liftosaur.prg' }
+$outputPath = Join-Path $outputDir $outputName
 $buildInfoPath = Join-Path $PSScriptRoot 'source/LiftosaurBuildInfo.mc'
 $buildId = [DateTime]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
 @(
@@ -46,7 +49,9 @@ $buildId = [DateTime]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")
 ) | Set-Content -LiteralPath $buildInfoPath -Encoding Ascii
 
 try {
-    & $compilerPath -f (Join-Path $PSScriptRoot 'monkey.jungle') -d fenix5 -y $DeveloperKey -o $outputPath
+    $compilerArgs = @('-f', (Join-Path $PSScriptRoot 'monkey.jungle'), '-d', 'fenix5', '-y', $DeveloperKey, '-o', $outputPath)
+    if ($UnitTest) { $compilerArgs += '--unit-test' }
+    & $compilerPath @compilerArgs
     $compileExitCode = $LASTEXITCODE
 } finally {
     Remove-Item -LiteralPath $buildInfoPath -Force -ErrorAction SilentlyContinue
