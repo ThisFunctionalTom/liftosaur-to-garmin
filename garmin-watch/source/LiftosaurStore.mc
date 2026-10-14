@@ -15,6 +15,7 @@ class LiftosaurStore {
     var updater;
     var saveTimer;
     var savePending;
+    var starting;
 
     function initialize() {
         api = new LiftosaurApi();
@@ -28,6 +29,11 @@ class LiftosaurStore {
         ticker = new Timer.Timer();
         saveTimer = new Timer.Timer();
         savePending = false;
+        starting = true;
+    }
+
+    function isStarting() {
+        return starting;
     }
 
     function stop() {
@@ -102,6 +108,8 @@ class LiftosaurStore {
         var compactEntries = [];
         for (var i = 0; i < entries.size(); i += 1) {
             var entry = entries[i];
+            var equipment = entry.get("equipment");
+            var isBarbell = equipment != null && equipment.equals("barbell");
             var compactEntry = {};
             copyField(entry, compactEntry, "entryId");
             copyField(entry, compactEntry, "name");
@@ -113,13 +121,13 @@ class LiftosaurStore {
             var warmupSets = entry.get("warmupSets");
             if (warmupSets != null) {
                 for (var j = 0; j < warmupSets.size(); j += 1) {
-                    compactSets.add(compactSet(warmupSets[j], true));
+                    compactSets.add(compactSet(warmupSets[j], true, isBarbell));
                 }
             }
             var sets = entry.get("sets");
             if (sets != null) {
                 for (var k = 0; k < sets.size(); k += 1) {
-                    compactSets.add(compactSet(sets[k], false));
+                    compactSets.add(compactSet(sets[k], false, isBarbell));
                 }
             }
             compactEntry["sets"] = compactSets;
@@ -142,8 +150,8 @@ class LiftosaurStore {
         return envelope == null ? null : envelope.get("workout");
     }
 
-    function compactSet(set, isWarmup) {
-        return LiftosaurSet.pack(set, isWarmup);
+    function compactSet(set, isWarmup, isBarbell) {
+        return isBarbell ? LiftosaurSet.packBarbell(set, isWarmup) : LiftosaurSet.pack(set, isWarmup);
     }
 
     function notify(deferSave) {
@@ -199,11 +207,13 @@ class LiftosaurStore {
             state["workout"] = compactWorkout(state.get("workout"));
         }
         if (state.get("demo") == true) {
+            starting = false;
             if (isText(state.get("phase"), "rest")) { startTicker(); }
             refreshView();
             return;
         }
         if (!api.hasKey()) {
+            starting = false;
             System.println("[Liftosaur] ERROR Liftosaur API key is missing");
             dispatchMessage("NO_API_KEY", null, null);
             return;
@@ -265,6 +275,7 @@ class LiftosaurStore {
     function onCurrent(code, data) {
         if (code != 200) { System.println("[Liftosaur] ERROR GET /workout/current: " + code.toString()); }
         requestBusy = false;
+        starting = false;
         var response = code == 200 ? responseWorkout(data) : null;
         var compact = null;
         if (response != null) {
@@ -345,7 +356,7 @@ class LiftosaurStore {
     }
 
     function menu() {
-        dispatchMessage("MENU", null, null);
+        dispatchMessage("TOGGLE_DETAILS", null, null);
     }
 
     function adjust(direction) {
@@ -362,7 +373,7 @@ class LiftosaurStore {
             for (var j = 0; j < sets.size(); j += 1) {
                 var set = sets[j];
                 if (LiftosaurSet.get(set, "isWarmup") == true) { continue; }
-                if (LiftosaurSet.get(set, "askWeight") == true || LiftosaurSet.get(set, "logRpe") == true || LiftosaurSet.get(set, "isUnilateral") == true || LiftosaurSet.get(set, "hasSetTimer") == true) { return false; }
+                if (LiftosaurSet.get(set, "askWeight") == true || LiftosaurSet.get(set, "logRpe") == true || LiftosaurSet.get(set, "hasSetTimer") == true) { return false; }
             }
         }
         return true;
@@ -447,6 +458,8 @@ class LiftosaurStore {
     }
 
     function startTicker() {
+        // Restart the shared timer cleanly when entering rest or reopening an active workout.
+        ticker.stop();
         ticker.start(method(:tick), 1000, true);
     }
 

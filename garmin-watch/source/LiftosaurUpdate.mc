@@ -8,7 +8,8 @@ class LiftosaurUpdate {
         var keys = [
             "phase", "status", "workout", "previewWorkout", "demo", "queue", "entryIndex", "setIndex", "activeEntryIndex",
             "startedAt", "restEnd", "lastSet", "undo", "selectedAction",
-            "editReps", "editWeight", "editField", "editAmrap", "editCompleted",
+            "detailMode",
+            "editReps", "editRepsLeft", "editWeight", "editField", "editAmrap", "editUnilateral", "editSide", "editCompleted",
             "editEntryIndex", "editSetIndex", "editSetId",
             "discardPending", "finishPending", "endTime"
         ];
@@ -82,6 +83,9 @@ class LiftosaurUpdate {
         next["selectedAction"] = 0;
         next["editCompleted"] = false;
         next["editReps"] = null;
+        next["editRepsLeft"] = null;
+        next["editSide"] = null;
+        next["editUnilateral"] = false;
         next["editWeight"] = null;
         next["editField"] = null;
         next["editEntryIndex"] = null;
@@ -119,6 +123,13 @@ class LiftosaurUpdate {
             completed = [reps, weight];
         }
         replaceSet(model, entryIndex, setIndex, completed);
+    }
+
+    function completedReps(set, rightReps, leftReps, weight) {
+        if (LiftosaurSet.get(set, "isUnilateral") == true) {
+            return [rightReps, weight, leftReps];
+        }
+        return [rightReps, weight];
     }
 
     function isFirstIncompleteSet(model, entryIndex, setIndex) {
@@ -164,8 +175,9 @@ class LiftosaurUpdate {
         var set = entry == null ? null : entry.get("sets")[setIndex];
         if (set == null || entry == null || LiftosaurSet.get(set, "completed") != null || !isFirstIncompleteSet(model, entryIndex, setIndex)) { return false; }
         var reps = isText(model.get("phase"), "editing") ? model.get("editReps") : LiftosaurSet.get(set, "reps");
+        var repsLeft = isText(model.get("phase"), "editing") ? model.get("editRepsLeft") : reps;
         var weight = isText(model.get("phase"), "editing") ? model.get("editWeight") : LiftosaurSet.get(set, "weight");
-        var completed = [reps, weight];
+        var completed = completedReps(set, reps, repsLeft, weight);
         var action = {
             "kind" => "set", "entryId" => entry.get("entryId"),
             "setId" => LiftosaurSet.get(set, "setId"), "completed" => completed,
@@ -185,6 +197,7 @@ class LiftosaurUpdate {
         next["restEnd"] = now + (timer == null ? 0 : timer);
         next["status"] = "";
         next["editCompleted"] = false;
+        next["editSide"] = null;
         next["editEntryIndex"] = null;
         next["editSetIndex"] = null;
         next["editSetId"] = null;
@@ -204,8 +217,9 @@ class LiftosaurUpdate {
             var editSetId = model.get("editSetId");
             if (editSetId != null && LiftosaurSet.get(set, "setId") != editSetId) { return false; }
             var reps = model.get("editReps");
+            var repsLeft = model.get("editRepsLeft");
             var weight = model.get("editWeight");
-            var completed = [reps, weight];
+            var completed = completedReps(set, reps, repsLeft, weight);
             var action = {
                 "kind" => "set", "correction" => true,
                 "entryId" => entry.get("entryId"), "setId" => LiftosaurSet.get(set, "setId"),
@@ -217,6 +231,7 @@ class LiftosaurUpdate {
             next["setIndex"] = setIndex;
             next["phase"] = "working";
             next["editCompleted"] = false;
+            next["editSide"] = null;
             next["editEntryIndex"] = null;
             next["editSetIndex"] = null;
             next["editSetId"] = null;
@@ -479,10 +494,14 @@ class LiftosaurUpdate {
     function beginEdit(model, set) {
         var completed = LiftosaurSet.get(set, "completed");
         var reps = completed != null && LiftosaurSet.doneGet(completed, "reps") != null ? LiftosaurSet.doneGet(completed, "reps") : LiftosaurSet.get(set, "reps");
+        var repsLeft = completed != null && LiftosaurSet.doneGet(completed, "repsLeft") != null ? LiftosaurSet.doneGet(completed, "repsLeft") : LiftosaurSet.get(set, "reps");
         model["editReps"] = reps == null ? 1 : reps;
+        model["editRepsLeft"] = repsLeft == null ? model["editReps"] : repsLeft;
         model["editWeight"] = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
         model["editField"] = "reps";
         model["editAmrap"] = LiftosaurSet.get(set, "isAmrap") == true;
+        model["editUnilateral"] = LiftosaurSet.get(set, "isUnilateral") == true;
+        model["editSide"] = LiftosaurSet.get(set, "isUnilateral") == true ? "left" : null;
         model["editCompleted"] = completed != null;
         model["editEntryIndex"] = model.get("entryIndex");
         model["editSetIndex"] = model.get("setIndex");
@@ -502,7 +521,13 @@ class LiftosaurUpdate {
             if (isText(phase, "preview")) {
                 effects.add({ "type" => "startWorkout" });
             } else if (isText(phase, "editing")) {
-                changed = saveEditedSet(next, model, now, effects);
+                if (model.get("editUnilateral") == true && isText(model.get("editSide"), "left")) {
+                    next["editSide"] = "right";
+                    next["status"] = "Right side reps";
+                    changed = true;
+                } else {
+                    changed = saveEditedSet(next, model, now, effects);
+                }
             } else if (isText(phase, "rest")) {
                 var nextSet = currentSet(model);
                 var activeRestSet = nextActiveSet(model);
@@ -617,6 +642,7 @@ class LiftosaurUpdate {
             } else if (isText(phase, "editing")) {
                 next["phase"] = "working";
                 next["editCompleted"] = false;
+                next["editSide"] = null;
                 next["editEntryIndex"] = null;
                 next["editSetIndex"] = null;
                 next["editSetId"] = null;
@@ -634,20 +660,9 @@ class LiftosaurUpdate {
             } else {
                 changed = undoLastSet(next, model, effects);
             }
-        } else if (isText(type, "MENU")) {
+        } else if (isText(type, "TOGGLE_DETAILS")) {
             if (isText(phase, "working") || isText(phase, "rest")) {
-                next["phase"] = "actions";
-                next["selectedAction"] = 0;
-                changed = true;
-            } else if (isText(phase, "actions") || isText(phase, "confirm-finish") || isText(phase, "confirm-discard")) {
-                cancelOverlay(next, model, now);
-                changed = true;
-            } else if (isText(phase, "confirm-undo")) {
-                next["phase"] = "actions";
-                changed = true;
-            } else if (isText(phase, "complete")) {
-                next["phase"] = "confirm-finish";
-                next["status"] = "Press SELECT to finish early";
+                next["detailMode"] = isText(model.get("detailMode"), "plates") ? "1rm" : "plates";
                 changed = true;
             }
         } else if (isText(type, "ADJUST")) {
@@ -665,8 +680,9 @@ class LiftosaurUpdate {
                 if (isText(model.get("editField"), "weight")) {
                     changed = adjustEditedWeight(next, model, direction);
                 } else {
-                    var newReps = model.get("editReps") - direction;
-                    next["editReps"] = newReps < 1 ? 1 : newReps;
+                    var repsField = model.get("editUnilateral") == true && isText(model.get("editSide"), "left") ? "editRepsLeft" : "editReps";
+                    var newReps = model.get(repsField) - direction;
+                    next[repsField] = newReps < 1 ? 1 : newReps;
                     changed = true;
                 }
             }

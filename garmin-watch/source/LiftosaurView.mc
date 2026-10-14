@@ -1,4 +1,5 @@
 using Toybox.Graphics;
+using Toybox.Math;
 using Toybox.System;
 using Toybox.Time;
 using Toybox.WatchUi;
@@ -65,7 +66,7 @@ class LiftosaurView extends WatchUi.View {
         }
         if (state.get("demo") == true) {
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
-            line(dc, 14, "DEMO", Graphics.FONT_XTINY);
+            line(dc, 2, "DEMO", Graphics.FONT_XTINY);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         }
     }
@@ -174,20 +175,31 @@ class LiftosaurView extends WatchUi.View {
     }
 
     function drawSetDetails(dc, entry, set, highlight, resting, progressY) {
+        var nameY = 26;
+        var setY = 62;
+        var repsY = 94;
+        var extraY = 145;
         dc.setColor(highlight ? Graphics.COLOR_BLUE : Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        line(dc, 32, entry.get("name").toString(), Graphics.FONT_SMALL);
         var setPosition = currentSetNumber(entry, set);
+        var setLabel = "SET " + setPosition.toString() + " / " + workSetCount(entry).toString();
         if (LiftosaurSet.get(set, "isWarmup") == true) {
-            line(dc, 76, "W" + setPosition.toString() + " / " + warmupSetCount(entry).toString(), Graphics.FONT_SMALL);
-        } else {
-            line(dc, 76, "SET " + setPosition.toString() + " / " + workSetCount(entry).toString(), Graphics.FONT_SMALL);
+            setLabel = "W" + setPosition.toString() + " / " + warmupSetCount(entry).toString();
         }
+        line(dc, nameY, setLabel, Graphics.FONT_SMALL);
+        line(dc, setY, entry.get("name").toString(), Graphics.FONT_SMALL);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
 
         var completed = LiftosaurSet.get(set, "completed");
         var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
         var expectedReps = LiftosaurSet.get(set, "reps");
         var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
+        drawSetRepsAndWeight(dc, repsY, set, completed, expectedReps, actualReps, shownWeight);
+        drawSetExtra(dc, extraY, set, shownWeight, expectedReps, actualReps, _store.state.get("detailMode"));
+        drawSetProgress(dc, entry, set, highlight, progressY - 8, resting);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+    }
+
+    function drawSetRepsAndWeight(dc, y, set, completed, expectedReps, actualReps, weight) {
         var shownReps = expectedReps.toString();
         var repsColor = Graphics.COLOR_YELLOW;
         if (actualReps != null) {
@@ -196,17 +208,87 @@ class LiftosaurView extends WatchUi.View {
         } else if (LiftosaurSet.get(set, "isAmrap") == true) {
             shownReps += "+";
         }
-        drawRepsAndWeight(dc, 112, shownReps, shownWeight, repsColor);
-        drawSetProgress(dc, entry, set, highlight, progressY - 8, resting);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        if (LiftosaurSet.get(set, "isUnilateral") == true) {
+            var repsLeft = completed == null ? expectedReps : LiftosaurSet.doneGet(completed, "repsLeft");
+            if (repsLeft == null) { repsLeft = expectedReps; }
+            if (completed == null && LiftosaurSet.get(set, "isAmrap") == true) {
+                shownReps = repsLeft.toString() + "+/" + expectedReps.toString() + "+";
+            } else {
+                shownReps = repsLeft.toString() + "/" + shownReps;
+            }
+            if (completed != null && repsLeft < expectedReps) { repsColor = Graphics.COLOR_RED; }
+        }
+        drawRepsAndWeight(dc, y, shownReps, weight, repsColor);
+    }
+
+    function drawSetExtra(dc, y, set, weight, expectedReps, actualReps, mode) {
+        var text = "";
+        if (isText(mode, "plates")) {
+            var plates = LiftosaurSet.get(set, "plateSummary");
+            text = plates == null ? "NO PLATE DATA" : plates.toString();
+        } else {
+            var reps = actualReps == null ? expectedReps : actualReps;
+            if (actualReps != null && LiftosaurSet.get(set, "isUnilateral") == true) {
+                var completed = LiftosaurSet.get(set, "completed");
+                var repsLeft = LiftosaurSet.doneGet(completed, "repsLeft");
+                if (repsLeft != null && repsLeft < reps) { reps = repsLeft; }
+            }
+            var weightText = weight == null ? "" : weight.toString();
+            var chars = weightText.toCharArray();
+            var unitStart = chars.size();
+            for (var i = 0; i < chars.size(); i += 1) {
+                var character = chars[i].toString().toLower();
+                if (character.equals("k") || character.equals("l")) {
+                    unitStart = i;
+                    break;
+                }
+            }
+            if (reps == null || reps <= 0 || unitStart == 0 || unitStart == chars.size()) {
+                text = "e1RM UNAVAILABLE";
+            } else {
+                var unit = weightText.substring(unitStart, chars.size());
+                var value = weightText.substring(0, unitStart).toFloat();
+                var rounded = Math.round(value * (1.0 + (reps / 30.0)) * 10.0).toString();
+                var roundedChars = rounded.toCharArray();
+                var wholeEnd = roundedChars.size();
+                for (var j = 0; j < roundedChars.size(); j += 1) {
+                    if (roundedChars[j].toString().equals(".")) {
+                        wholeEnd = j;
+                        break;
+                    }
+                }
+                var tenthsText = rounded.substring(0, wholeEnd);
+                var wholeText = tenthsText.substring(0, tenthsText.length() - 1);
+                if (wholeText.length() == 0) { wholeText = "0"; }
+                var decimalText = tenthsText.substring(tenthsText.length() - 1, tenthsText.length());
+                text = "e1RM " + wholeText + "." + decimalText + unit;
+            }
+        }
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
+        dc.drawText(dc.getWidth() / 2, y, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawEdit(dc, state) {
         var entry = _store.currentEntry();
         if (entry != null) { line(dc, 38, entry.get("name").toString(), Graphics.FONT_SMALL); }
         if (isText(state.get("editField"), "reps")) {
-            line(dc, 88, state.get("editCompleted") == true ? "FIX LOGGED REPS" : "REPS", Graphics.FONT_SMALL);
-            line(dc, 125, state.get("editReps").toString(), Graphics.FONT_NUMBER_HOT);
+            if (state.get("editUnilateral") == true) {
+                var leftSide = isText(state.get("editSide"), "left");
+                var leftCenter = dc.getWidth() / 3;
+                var rightCenter = (dc.getWidth() * 2) / 3;
+                var activeColor = Graphics.COLOR_YELLOW;
+                var inactiveColor = Graphics.COLOR_LT_GRAY;
+                dc.setColor(leftSide ? activeColor : inactiveColor, Graphics.COLOR_BLACK);
+                dc.drawText(leftCenter, 76, Graphics.FONT_XTINY, "LEFT", Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(leftCenter, 111, Graphics.FONT_NUMBER_HOT, state.get("editRepsLeft").toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.setColor(leftSide ? inactiveColor : activeColor, Graphics.COLOR_BLACK);
+                dc.drawText(rightCenter, 76, Graphics.FONT_XTINY, "RIGHT", Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(rightCenter, 111, Graphics.FONT_NUMBER_HOT, state.get("editReps").toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            } else {
+                line(dc, 88, state.get("editCompleted") == true ? "FIX LOGGED REPS" : "REPS", Graphics.FONT_SMALL);
+                line(dc, 125, state.get("editReps").toString(), Graphics.FONT_NUMBER_HOT);
+            }
         } else {
             line(dc, 88, "WEIGHT", Graphics.FONT_SMALL);
             drawWeight(dc, 125, state.get("editWeight"));
@@ -298,7 +380,12 @@ class LiftosaurView extends WatchUi.View {
         var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
         if (actualReps != null) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
-            line(dc, 178, "done " + actualReps.toString(), Graphics.FONT_SMALL);
+            if (LiftosaurSet.get(set, "isUnilateral") == true) {
+                var repsLeft = LiftosaurSet.doneGet(completed, "repsLeft");
+                line(dc, 178, "L" + (repsLeft == null ? "?" : repsLeft.toString()) + " R" + actualReps.toString(), Graphics.FONT_SMALL);
+            } else {
+                line(dc, 178, "done " + actualReps.toString(), Graphics.FONT_SMALL);
+            }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         }
     }
@@ -468,11 +555,11 @@ class LiftosaurView extends WatchUi.View {
             unit = text.substring(unitStart, chars.size());
         }
 
-        var repsWidth = dc.getTextWidthInPixels(reps, Graphics.FONT_NUMBER_HOT);
-        var weightWidth = dc.getTextWidthInPixels(weightNumber, Graphics.FONT_NUMBER_HOT);
+        var repsWidth = dc.getTextWidthInPixels(reps, Graphics.FONT_NUMBER_MEDIUM);
+        var weightWidth = dc.getTextWidthInPixels(weightNumber, Graphics.FONT_NUMBER_MEDIUM);
         var unitWidth = dc.getTextWidthInPixels(unit, Graphics.FONT_SMALL);
         var multiplyWidth = dc.getTextWidthInPixels("x", Graphics.FONT_SMALL);
-        var numberHeight = dc.getFontHeight(Graphics.FONT_NUMBER_HOT);
+        var numberHeight = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
         var multiplyHeight = dc.getFontHeight(Graphics.FONT_SMALL);
         var multiplyY = y + ((numberHeight - multiplyHeight) / 2);
         var gap = 4;
@@ -480,11 +567,11 @@ class LiftosaurView extends WatchUi.View {
         var totalWidth = repsWidth + gap + multiplyWidth + gap + weightWidth + unitGap + unitWidth;
         var x = (dc.getWidth() - totalWidth) / 2;
         dc.setColor(color, Graphics.COLOR_BLACK);
-        dc.drawText(x, y, Graphics.FONT_NUMBER_HOT, reps, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(x, y, Graphics.FONT_NUMBER_MEDIUM, reps, Graphics.TEXT_JUSTIFY_LEFT);
         var multiplyX = x + repsWidth + gap;
         dc.drawText(multiplyX, multiplyY, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
         var suffixX = multiplyX + multiplyWidth + gap;
-        dc.drawText(suffixX, y, Graphics.FONT_NUMBER_HOT, weightNumber, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(suffixX, y, Graphics.FONT_NUMBER_MEDIUM, weightNumber, Graphics.TEXT_JUSTIFY_LEFT);
         suffixX += weightWidth + unitGap;
         if (unit.length() > 0) {
             dc.drawText(suffixX, y + 15, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);

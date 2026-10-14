@@ -58,9 +58,10 @@ stateDiagram-v2
     rest --> complete : Final rest ends
     working --> preview : Demo finish or cancel
     rest --> preview : Demo completes
-    working --> actions : BACK on active set or MENU
+    working --> actions : BACK on active set
+    working --> working : Hold MENU toggles detail row
     working --> working : Browse sets
-    rest --> actions : MENU
+    rest --> rest : Hold MENU toggles detail row
     complete --> actions : BACK
     actions --> confirmFinish : Finish workout
     actions --> confirmUndo : Undo set
@@ -104,43 +105,43 @@ start, set, finish, or discard request is sent for a demo.
 | `preview` | START | Validate supported set types; send start request. On success go to `working`; otherwise go to `error`. |
 | `preview` | Hold START | Enter a RAM-only demo using the already downloaded workout. |
 | Demo `working`, `rest`, or `editing` | Set actions | Keep logs, edits, and undo changes in memory only. |
-| `working` | START on an incomplete planned set | Log a regular set and enter `rest`. On an AMRAP set, enter `editing`. A completed set stays selected and displays “Set already logged”. |
+| `working` | START on an incomplete planned set | Log a regular set and enter `rest`, recording the target reps for both sides on a unilateral set. On an AMRAP set, enter `editing`. A completed set stays selected and displays "Set already logged". |
 | `working` | START on a later unfinished set in the same exercise | Do not log it; show "Complete earlier sets first". |
-| `working` | Hold START | Enter `editing` for the selected set, including a previously completed set. |
+| `working` | Hold START | Enter `editing` for the selected set, including a previously completed set. On a unilateral set, edit left reps first. |
 | `working` | Hold START on a later unfinished set in the same exercise | Do not open the editor; show "Complete earlier sets first". |
 | `working` | UP/DOWN | Browse sets. Moving forward across an exercise boundary makes that exercise active, skipping its predecessor's remaining sets. Moving backward only browses; START on the first unfinished set of any exercise makes it active. Completed sets are green, the next set is blue, and future sets are light gray. |
-| `working` | Hold UP/DOWN | Jump to the previous/next exercise, selecting its last/first set. |
+| `working` | Hold DOWN | Jump to the next exercise and select its first set. |
 | `working` | BACK while viewing a set other than the active exercise's next set | Return to that next set. |
 | `working` | BACK on the active exercise's next set | Open `actions`. |
-| `working` | MENU | Open `actions`. |
+| `working` | Hold MENU | Toggle the extra row between estimated 1RM and plates per side. |
 | `rest` | START on an upcoming AMRAP set | Skip the rest timer and enter `editing` for that AMRAP set. START otherwise has no action. |
 | `rest` | UP/DOWN | Browse sets while the rest countdown continues. The arc remains visible; completed sets are green, the next set is blue, and future sets are light gray. |
-| `rest` | Hold UP/DOWN | Jump to the previous/next exercise while the rest countdown continues. |
+| `rest` | Hold DOWN | Jump to the next exercise while the rest countdown continues. |
 | `rest` | BACK while viewing another set | Return to the next set without canceling rest. |
 | `rest` | BACK on the next set | Cancel rest and preserve the completed set. Go to `working`, or `complete` if it was the last set. |
-| `rest` | MENU | Open `actions`; closing the menu returns to rest if time remains. |
+| `rest` | Hold MENU | Toggle the extra row between estimated 1RM and plates per side while the timer continues. |
 | `rest` | Timer expires | Vibrate and go to `working`, or `complete` if no sets remain. |
-| `editing` | UP/DOWN | Increase/decrease reps. Weight editing also supports weight adjustment where available. |
-| `editing` | START | Save/log the edited set, or save a correction to an already logged set. A newly logged set enters `rest`. |
-| `editing` | Hold START | Save/log the edited set. |
+| `editing` | UP/DOWN | Increase/decrease the selected reps. Unilateral sets show both side counts together and highlight the active side. Weight editing also supports weight adjustment where available. |
+| `editing` | START | On a unilateral set, move selection from left to right; START on the right saves/logs the set or correction. Other sets save/log immediately. A newly logged set enters `rest`. |
+| `editing` | Hold START | Save/log the edited set. On unilateral sets, START advances from left reps to right reps before saving. |
 | `editing` | BACK | Cancel editing and return to `working`. |
 | `editing` | MENU | No action. |
 | `actions` | UP/DOWN | Select Leave / Keep Workout, Finish Workout, Undo this/last set (if available), or Discard Workout, in that order. |
 | `actions` | START | Open the selected confirmation phase, perform Undo after confirmation, or exit for Leave / Keep Workout. |
 | Demo complete, Finish confirmation, or Discard confirmation | START | Finish or cancel the demo and return to the original preview. |
 | `actions` | START on Leave / Keep Workout | Save the underlying working/rest/complete phase and exit the app without changing the server workout. |
-| `actions` | BACK or MENU | Close the menu and return to the prior working/rest/complete phase as determined by the rest deadline and last-set flag. |
+| `actions` | BACK | Close the menu and return to the prior working/rest/complete phase as determined by the rest deadline and last-set flag. |
 | `confirm-finish` | START | Wait for queued set writes, then send finish; success loads the next workout. |
-| `confirm-finish` | BACK or MENU | Cancel and return to the prior workout phase. |
+| `confirm-finish` | BACK | Cancel and return to the prior workout phase. |
 | `confirm-undo` | START | Clear the selected completed set, or the most recently completed set if the cursor is on an incomplete set. Send its `POST /workout/set` update with `completed: null`, then return the cursor to that set. |
-| `confirm-undo` | BACK or MENU | Cancel and return to the workout menu. |
+| `confirm-undo` | BACK | Cancel and return to the workout menu. |
 | `confirm-discard` | START | If a request is in flight, wait for that callback; then send discard. Success clears the workout and exits the app. |
-| `confirm-discard` | BACK or MENU | Cancel and return to the prior workout phase. |
+| `confirm-discard` | BACK | Cancel and return to the prior workout phase. |
 | `finishing` | API failure / retry timer | Keep the phase and retry the finish request. |
 | `complete` | BACK | Open `actions`. |
 | `complete` | START | Finish and save the workout. |
 | `complete` | UP/DOWN | Reopen a set for review. Moving to an unfinished set resumes `working` from that exercise. |
-| `complete` | Hold UP/DOWN | Jump to the previous/next exercise and resume `working`. |
+| `complete` | Hold DOWN | Jump to the next exercise and resume `working`. |
 | Active workout | Successful set API response | Adopt server workout, remove the acknowledged queue item, then send the next queued write if present. |
 | Active workout | Failed set API response / retry timer | Keep queued action and retry after the configured delay. |
 

@@ -14,17 +14,19 @@ history, progression, and the next workout.
   stay in memory and are never written to watch storage or sent to Liftosaur.
   Finishing or canceling the demo returns to that workout preview.
 - Select logs a planned set. AMRAP sets open the reps editor; hold Select edits
-  reps on any set. Up/Down changes reps in the editor. Select saves the set or
-  correction.
+  reps on any set. For unilateral sets, reps are tracked separately for left and
+  right; planned sets use the target for both sides, and the editor lets you
+  adjust each side. Up/Down changes the selected reps. Select advances between
+  sides and saves the set or correction.
 - During rest, Back returns to the next set and cancels rest when already there.
 - Back during work returns to the active exercise's next set, or opens workout
   options when already on it.
 - Menu opens Finish Early and Discard Workout. The watch vibrates when rest ends.
 - Set completions queue on the watch during a connection loss and retry later.
   Fetching and starting a workout require a connection.
-- Warmup sets are included before work sets. Supersets, unilateral sets, timed
-  sets, RPE prompts, and other prompted set types are not supported in v1; the
-  app refuses to start a workout containing them.
+- Warmup sets are included before work sets. Supersets, timed sets, RPE prompts,
+  and other prompted set types are not supported in v1; the app refuses to start
+  a workout containing them.
 - The app writes to Liftosaur only. It does not record a Garmin Connect activity.
 
 Every Liftosaur write includes the required stable device ID and client headers.
