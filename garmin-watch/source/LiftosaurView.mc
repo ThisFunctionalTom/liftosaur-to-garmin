@@ -186,17 +186,17 @@ class LiftosaurView extends WatchUi.View {
 
         var completed = LiftosaurSet.get(set, "completed");
         var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
-        var plannedReps = LiftosaurSet.get(set, "reps").toString();
-        if (LiftosaurSet.get(set, "isAmrap") == true) { plannedReps += "+"; }
-        drawRepsAndWeight(dc, 112, plannedReps, shownWeight);
-
-        if (!resting) {
-            var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
-            if (actualReps != null) {
-                dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
-                line(dc, 158, "done " + actualReps.toString(), Graphics.FONT_SMALL);
-            }
+        var expectedReps = LiftosaurSet.get(set, "reps");
+        var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
+        var shownReps = expectedReps.toString();
+        var repsColor = Graphics.COLOR_YELLOW;
+        if (actualReps != null) {
+            shownReps = actualReps.toString();
+            repsColor = actualReps < expectedReps ? Graphics.COLOR_RED : Graphics.COLOR_GREEN;
+        } else if (LiftosaurSet.get(set, "isAmrap") == true) {
+            shownReps += "+";
         }
+        drawRepsAndWeight(dc, 112, shownReps, shownWeight, repsColor);
         drawSetProgress(dc, entry, set, highlight, progressY - 8, resting);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
@@ -294,7 +294,7 @@ class LiftosaurView extends WatchUi.View {
         var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
         var plannedReps = LiftosaurSet.get(set, "reps").toString();
         if (LiftosaurSet.get(set, "isAmrap") == true) { plannedReps += "+"; }
-        drawRepsAndWeight(dc, 132, plannedReps, shownWeight);
+        drawRepsAndWeight(dc, 132, plannedReps, shownWeight, Graphics.COLOR_YELLOW);
         var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
         if (actualReps != null) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
@@ -380,9 +380,18 @@ class LiftosaurView extends WatchUi.View {
             var completed = LiftosaurSet.get(set, "completed") != null;
             var warmup = LiftosaurSet.get(set, "isWarmup") == true;
             if (completed) {
-                dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
-                dc.drawLine(x - 4, centerY, x - 1, centerY + 3);
-                dc.drawLine(x - 1, centerY + 3, x + 5, centerY - 4);
+                var result = LiftosaurSet.get(set, "completed");
+                var actualReps = LiftosaurSet.doneGet(result, "reps");
+                var expectedReps = LiftosaurSet.get(set, "reps");
+                var missed = actualReps != null && actualReps < expectedReps;
+                dc.setColor(missed ? Graphics.COLOR_RED : Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
+                if (missed) {
+                    dc.drawLine(x - 3, centerY - 3, x + 3, centerY + 3);
+                    dc.drawLine(x + 3, centerY - 3, x - 3, centerY + 3);
+                } else {
+                    dc.drawLine(x - 4, centerY, x - 1, centerY + 3);
+                    dc.drawLine(x - 1, centerY + 3, x + 5, centerY - 4);
+                }
                 if (selected) {
                     dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_BLACK);
                     if (warmup) { dc.drawRectangle(x - 7, centerY - 7, 14, 14); }
@@ -441,7 +450,7 @@ class LiftosaurView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
 
-    function drawRepsAndWeight(dc, y, reps, weight) {
+    function drawRepsAndWeight(dc, y, reps, weight, color) {
         var weightNumber = "BW";
         var unit = "";
         if (weight != null) {
@@ -470,7 +479,7 @@ class LiftosaurView extends WatchUi.View {
         var unitGap = unit.length() > 0 ? gap : 0;
         var totalWidth = repsWidth + gap + multiplyWidth + gap + weightWidth + unitGap + unitWidth;
         var x = (dc.getWidth() - totalWidth) / 2;
-        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+        dc.setColor(color, Graphics.COLOR_BLACK);
         dc.drawText(x, y, Graphics.FONT_NUMBER_HOT, reps, Graphics.TEXT_JUSTIFY_LEFT);
         var multiplyX = x + repsWidth + gap;
         dc.drawText(multiplyX, multiplyY, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
