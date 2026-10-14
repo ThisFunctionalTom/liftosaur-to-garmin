@@ -37,6 +37,11 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     var _keyDownAt;
     var _keyHandled;
     var _suppressNextSelect;
+    var _navigationKey;
+    var _navigationKeyDownAt;
+    var _navigationBehaviorSeen;
+    var _suppressNextPage;
+    var _suppressPreviousPage;
 
     function initialize(store) {
         BehaviorDelegate.initialize();
@@ -58,16 +63,30 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
             // decision point for both the behavior and raw key callbacks.
             return true;
         }
-        _store.select();
+        selectOrPreview();
         return true;
     }
 
+    function selectOrPreview() {
+        _store.select();
+    }
+
     function onNextPage() {
+        if (_suppressNextPage) { _suppressNextPage = false; return true; }
+        if (_navigationKey == WatchUi.KEY_DOWN && _navigationKeyDownAt != null) {
+            _navigationBehaviorSeen = true;
+            return true;
+        }
         _store.adjust(1);
         return true;
     }
 
     function onPreviousPage() {
+        if (_suppressPreviousPage) { _suppressPreviousPage = false; return true; }
+        if (_navigationKey == WatchUi.KEY_UP && _navigationKeyDownAt != null) {
+            _navigationBehaviorSeen = true;
+            return true;
+        }
         _store.adjust(-1);
         return true;
     }
@@ -90,16 +109,44 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     // Raw key events let us distinguish a short START press from a hold on
     // devices such as the fēnix 5, whose behavior delegate has no long-select.
     function onKeyPressed(keyEvent) {
-        if (keyEvent.getKey() == WatchUi.KEY_ENTER) {
+        var key = keyEvent.getKey();
+        if (key == WatchUi.KEY_ENTER) {
             _keyDownAt = System.getTimer();
             _keyHandled = false;
+            return true;
+        }
+        var phase = _store.state.get("phase");
+        var canJumpExercise = phase != null &&
+            (phase.equals("working") || phase.equals("rest") || phase.equals("complete"));
+        if (canJumpExercise && (key == WatchUi.KEY_UP || key == WatchUi.KEY_DOWN)) {
+            _navigationKey = key;
+            _navigationKeyDownAt = System.getTimer();
+            _navigationBehaviorSeen = false;
+            _suppressNextPage = false;
+            _suppressPreviousPage = false;
             return true;
         }
         return false;
     }
 
     function onKeyReleased(keyEvent) {
-        if (keyEvent.getKey() != WatchUi.KEY_ENTER) { return false; }
+        var key = keyEvent.getKey();
+        if (_navigationKeyDownAt != null && key == _navigationKey) {
+            var navigationHeld = System.getTimer() - _navigationKeyDownAt >= 700;
+            var direction = key == WatchUi.KEY_UP ? -1 : 1;
+            if (navigationHeld) {
+                _store.dispatchMessage("LONG_NAV", direction, null);
+            } else {
+                _store.adjust(direction);
+            }
+            _suppressNextPage = key == WatchUi.KEY_DOWN && !_navigationBehaviorSeen;
+            _suppressPreviousPage = key == WatchUi.KEY_UP && !_navigationBehaviorSeen;
+            _navigationKey = null;
+            _navigationKeyDownAt = null;
+            _navigationBehaviorSeen = false;
+            return true;
+        }
+        if (key != WatchUi.KEY_ENTER) { return false; }
         var heldMs = _keyDownAt != null ? System.getTimer() - _keyDownAt : 0;
         var held = heldMs >= 700;
         var alreadyHandled = _keyHandled == true;
@@ -107,7 +154,7 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
         _keyHandled = false;
         if (!alreadyHandled) {
             if (held) { _store.dispatchMessage("LONG_START", null, null); }
-            else { _store.dispatchMessage("SELECT", null, null); }
+            else { selectOrPreview(); }
         }
         // BehaviorDelegate may report onSelect after this raw release event.
         _suppressNextSelect = !alreadyHandled;

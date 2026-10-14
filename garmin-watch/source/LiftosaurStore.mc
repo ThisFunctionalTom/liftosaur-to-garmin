@@ -188,12 +188,20 @@ class LiftosaurStore {
     }
 
     function save() {
+        // Demo state is deliberately RAM-only. Keep the last real preview in
+        // storage so a crash or app exit cannot persist simulated set logs.
+        if (state.get("demo") == true) { return; }
         Storage.setValue("workoutState", state);
     }
 
     function open() {
         if (state.get("workout") != null) {
             state["workout"] = compactWorkout(state.get("workout"));
+        }
+        if (state.get("demo") == true) {
+            if (isText(state.get("phase"), "rest")) { startTicker(); }
+            refreshView();
+            return;
         }
         if (!api.hasKey()) {
             System.println("[Liftosaur] ERROR Liftosaur API key is missing");
@@ -286,6 +294,7 @@ class LiftosaurStore {
     }
 
     function startWorkout() {
+        if (state.get("demo") == true) { return; }
         var workout = state.get("workout");
         if (!supportsWorkout(workout)) {
             dispatchMessage("UNSUPPORTED_WORKOUT", null, null);
@@ -360,6 +369,7 @@ class LiftosaurStore {
     }
 
     function flushQueue() {
+        if (state.get("demo") == true) { return; }
         var queue = state.get("queue");
         if (queue == null || queue.size() == 0) { return; }
         if (requestBusy) {
@@ -391,6 +401,7 @@ class LiftosaurStore {
     }
 
     function sendDiscardRequest() {
+        if (state.get("demo") == true) { return; }
         if (requestBusy) {
             return;
         }
@@ -416,6 +427,7 @@ class LiftosaurStore {
     }
 
     function sendFinish() {
+        if (state.get("demo") == true) { return; }
         if (requestBusy || state.get("finishPending") != true) { return; }
         if (state.get("queue").size() > 0) { flushQueue(); return; }
         requestBusy = true;
@@ -439,7 +451,7 @@ class LiftosaurStore {
     }
 
     function tick() {
-        if (isActive() && state.get("queue") != null && state.get("queue").size() > 0 && !requestBusy && Time.now().value() >= retryAfter) {
+        if (state.get("demo") != true && isActive() && state.get("queue") != null && state.get("queue").size() > 0 && !requestBusy && Time.now().value() >= retryAfter) {
             retryAfter = Time.now().value() + 15;
             flushQueue();
         }
@@ -463,6 +475,20 @@ class LiftosaurStore {
         if (state.get("restEnd") == null) { return 0; }
         var remaining = state.get("restEnd") - Time.now().value();
         return remaining < 0 ? 0 : remaining;
+    }
+
+    function restDuration() {
+        var workout = state.get("workout");
+        var last = state.get("undo");
+        if (workout == null || last == null) { return 0; }
+        var entryIndex = last.get("entryIndex");
+        var setIndex = last.get("setIndex");
+        var entries = workout.get("entries");
+        if (entryIndex == null || setIndex == null || entryIndex < 0 || entryIndex >= entries.size()) { return 0; }
+        var sets = entries[entryIndex].get("sets");
+        if (setIndex < 0 || setIndex >= sets.size()) { return 0; }
+        var timer = LiftosaurSet.get(sets[setIndex], "timer");
+        return timer == null ? 0 : timer;
     }
 
 }

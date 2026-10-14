@@ -9,8 +9,8 @@ are handled by the reducer. The store parses responses and runs effects.
 `state["phase"]` is the current screen/workflow phase. The same dictionary also
 holds workout data and workflow details such as the selected exercise and set,
 the active exercise, edit values, the rest deadline, queued API writes, and
-pending finish or discard operations. The dictionary is saved in Connect IQ
-storage.
+pending finish or discard operations. Real workout state is saved in Connect IQ
+storage; Demo mode state is intentionally RAM-only.
 
 | Phase | Meaning |
 | --- | --- |
@@ -39,6 +39,7 @@ stateDiagram-v2
     loading --> [*] : BACK
     preview --> [*] : BACK
     preview --> working : Start succeeds
+    preview --> working : Hold START demo
     preview --> complete : No sets remain
     preview --> error : Start fails
     error --> [*] : BACK
@@ -48,9 +49,15 @@ stateDiagram-v2
     working --> working : BACK returns to active set
     editing --> rest : Save reps
     editing --> working : Cancel edit
-    rest --> working : Skip rest or timer ends
+    rest --> rest : Browse sets
+    rest --> rest : BACK returns to next set
+    rest --> working : BACK on next set
+    rest --> working : Timer ends
+    rest --> working : Skip rest
     rest --> editing : Edit next AMRAP
     rest --> complete : Final rest ends
+    working --> preview : Demo finish or cancel
+    rest --> preview : Demo completes
     working --> actions : BACK on active set or MENU
     working --> working : Browse sets
     rest --> actions : MENU
@@ -84,22 +91,33 @@ stateDiagram-v2
 `START` below means a short press. Holding START is recognized from raw key
 events; the hold threshold is 700 ms.
 
+Demo mode is a local-only flag over the workout phases. It starts from the
+already downloaded preview with a hold of START, keeps set changes in memory,
+and returns to that preview when the demo is canceled or finished. No workout
+start, set, finish, or discard request is sent for a demo.
+
 | Current phase | Input | State/action |
 | --- | --- | --- |
 | `loading` | API current-workout response | If a live workout exists, adopt it and go to its saved active phase or `working`. If none exists, fetch next. |
 | `loading` | API next-workout response with a workout | Save it and go to `preview`. |
 | `preview`, `loading`, or `error` | BACK | Exit the app. |
 | `preview` | START | Validate supported set types; send start request. On success go to `working`; otherwise go to `error`. |
+| `preview` | Hold START | Enter a RAM-only demo using the already downloaded workout. |
+| Demo `working`, `rest`, or `editing` | Set actions | Keep logs, edits, and undo changes in memory only. |
 | `working` | START on an incomplete planned set | Log a regular set and enter `rest`. On an AMRAP set, enter `editing`. A completed set stays selected and displays “Set already logged”. |
 | `working` | START on a later unfinished set in the same exercise | Do not log it; show "Complete earlier sets first". |
 | `working` | Hold START | Enter `editing` for the selected set, including a previously completed set. |
 | `working` | Hold START on a later unfinished set in the same exercise | Do not open the editor; show "Complete earlier sets first". |
-| `working` | UP/DOWN | Browse sets. Moving forward across an exercise boundary makes that exercise active, skipping its predecessor's remaining sets. Moving backward only browses; START on the first unfinished set of any exercise makes it active. |
+| `working` | UP/DOWN | Browse sets. Moving forward across an exercise boundary makes that exercise active, skipping its predecessor's remaining sets. Moving backward only browses; START on the first unfinished set of any exercise makes it active. Completed sets are green, the next set is blue, and future sets are light gray. |
+| `working` | Hold UP/DOWN | Jump to the previous/next exercise, selecting its last/first set. |
 | `working` | BACK while viewing a set other than the active exercise's next set | Return to that next set. |
 | `working` | BACK on the active exercise's next set | Open `actions`. |
 | `working` | MENU | Open `actions`. |
 | `rest` | START on an upcoming AMRAP set | Skip the rest timer and enter `editing` for that AMRAP set. START otherwise has no action. |
-| `rest` | BACK | Cancel rest and preserve the completed set. Go to `working`, or `complete` if it was the last set. |
+| `rest` | UP/DOWN | Browse sets while the rest countdown continues. The arc remains visible; completed sets are green, the next set is blue, and future sets are light gray. |
+| `rest` | Hold UP/DOWN | Jump to the previous/next exercise while the rest countdown continues. |
+| `rest` | BACK while viewing another set | Return to the next set without canceling rest. |
+| `rest` | BACK on the next set | Cancel rest and preserve the completed set. Go to `working`, or `complete` if it was the last set. |
 | `rest` | MENU | Open `actions`; closing the menu returns to rest if time remains. |
 | `rest` | Timer expires | Vibrate and go to `working`, or `complete` if no sets remain. |
 | `editing` | UP/DOWN | Increase/decrease reps. Weight editing also supports weight adjustment where available. |
@@ -109,6 +127,7 @@ events; the hold threshold is 700 ms.
 | `editing` | MENU | No action. |
 | `actions` | UP/DOWN | Select Leave / Keep Workout, Finish Workout, Undo this/last set (if available), or Discard Workout, in that order. |
 | `actions` | START | Open the selected confirmation phase, perform Undo after confirmation, or exit for Leave / Keep Workout. |
+| Demo complete, Finish confirmation, or Discard confirmation | START | Finish or cancel the demo and return to the original preview. |
 | `actions` | START on Leave / Keep Workout | Save the underlying working/rest/complete phase and exit the app without changing the server workout. |
 | `actions` | BACK or MENU | Close the menu and return to the prior working/rest/complete phase as determined by the rest deadline and last-set flag. |
 | `confirm-finish` | START | Wait for queued set writes, then send finish; success loads the next workout. |
@@ -121,6 +140,7 @@ events; the hold threshold is 700 ms.
 | `complete` | BACK | Open `actions`. |
 | `complete` | START | Finish and save the workout. |
 | `complete` | UP/DOWN | Reopen a set for review. Moving to an unfinished set resumes `working` from that exercise. |
+| `complete` | Hold UP/DOWN | Jump to the previous/next exercise and resume `working`. |
 | Active workout | Successful set API response | Adopt server workout, remove the acknowledged queue item, then send the next queued write if present. |
 | Active workout | Failed set API response / retry timer | Keep queued action and retry after the configured delay. |
 
@@ -191,8 +211,8 @@ Run it with `./run-tests.ps1` (or pass `-SdkPath`). Current tests cover:
 - START on a planned set logs it; START on an AMRAP opens the editor.
 - START on AMRAP during rest skips rest and opens the editor without undoing
   the preceding completed set.
-- BACK during rest skips rest but preserves the completed set; BACK during
-  working opens workout options.
+- BACK during rest returns to the next set, then skips rest on a second press;
+  BACK during working opens workout options.
 - Timer expiration enters the correct next phase, including after the final
   set.
 - A successful set response removes exactly one queue item; a failed response

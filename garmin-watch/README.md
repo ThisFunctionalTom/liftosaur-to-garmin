@@ -10,11 +10,15 @@ history, progression, and the next workout.
 - Target: fēnix 5 (Connect IQ API level 3.1, button controls).
 - The watch needs a Liftosaur Premium API key, entered in Connect IQ app settings.
 - The watch fetches the next workout; Select starts it.
+- Hold START on the next-workout preview to enter Demo mode. Demo logs and edits
+  stay in memory and are never written to watch storage or sent to Liftosaur.
+  Finishing or canceling the demo returns to that workout preview.
 - Select logs a planned set. AMRAP sets open the reps editor; hold Select edits
   reps on any set. Up/Down changes reps in the editor. Select saves the set or
   correction.
-- Back during rest skips the timer without undoing the completed set. Back during
-  work undoes the most recently logged set.
+- During rest, Back returns to the next set and cancels rest when already there.
+- Back during work returns to the active exercise's next set, or opens workout
+  options when already on it.
 - Menu opens Finish Early and Discard Workout. The watch vibrates when rest ends.
 - Set completions queue on the watch during a connection loss and retry later.
   Fetching and starting a workout require a connection.
@@ -109,6 +113,19 @@ To build the app, start the simulator, and launch it with one command, run:
 ```powershell
 ./run-simulator.ps1
 ```
+
+For a save-and-relaunch loop, run:
+
+```powershell
+./watch-simulator.ps1
+```
+
+This starts the simulator once, builds and launches the app, then watches
+`source/`, `resources/`, `manifest.xml`, and `monkey.jungle`. Saving a change
+rebuilds and relaunches the app in the open simulator after a short debounce.
+The app restarts on each change. Hold START on the next-workout preview to
+inspect the real workout screens in Demo mode without sending changes to
+Liftosaur. Press Ctrl+C to stop the watcher.
 
 To build the app and copy it to a watch mounted as `F:\`, run:
 

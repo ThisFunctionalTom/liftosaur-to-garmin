@@ -6,7 +6,7 @@ class LiftosaurUpdate {
     function copyModel(model) {
         var next = {};
         var keys = [
-            "phase", "status", "workout", "queue", "entryIndex", "setIndex", "activeEntryIndex",
+            "phase", "status", "workout", "previewWorkout", "demo", "queue", "entryIndex", "setIndex", "activeEntryIndex",
             "startedAt", "restEnd", "lastSet", "undo", "selectedAction",
             "editReps", "editWeight", "editField", "editAmrap", "editCompleted",
             "editEntryIndex", "editSetIndex", "editSetId",
@@ -64,6 +64,53 @@ class LiftosaurUpdate {
         var queue = copyArray(model.get("queue"));
         queue.add(action);
         model["queue"] = queue;
+    }
+
+    function returnFromDemo(next, model, effects) {
+        next["phase"] = "preview";
+        next["workout"] = model.get("previewWorkout");
+        next["previewWorkout"] = null;
+        next["demo"] = false;
+        next["queue"] = [];
+        next["entryIndex"] = 0;
+        next["setIndex"] = 0;
+        next["activeEntryIndex"] = 0;
+        next["startedAt"] = null;
+        next["restEnd"] = null;
+        next["lastSet"] = false;
+        next["undo"] = null;
+        next["selectedAction"] = 0;
+        next["editCompleted"] = false;
+        next["editReps"] = null;
+        next["editWeight"] = null;
+        next["editField"] = null;
+        next["editEntryIndex"] = null;
+        next["editSetIndex"] = null;
+        next["editSetId"] = null;
+        next["discardPending"] = false;
+        next["finishPending"] = false;
+        next["status"] = "";
+        effects.add({ "type" => "stopTicker" });
+    }
+
+    function beginDemo(next, model) {
+        var workout = model.get("workout");
+        if (workout == null) { return false; }
+        next["previewWorkout"] = workout;
+        next["demo"] = true;
+        next["phase"] = "working";
+        next["queue"] = [];
+        next["entryIndex"] = 0;
+        next["setIndex"] = 0;
+        next["activeEntryIndex"] = 0;
+        next["startedAt"] = null;
+        next["restEnd"] = null;
+        next["lastSet"] = false;
+        next["undo"] = null;
+        next["selectedAction"] = 0;
+        next["status"] = "";
+        normalizeCursor(next);
+        return true;
     }
 
     function setCompletedValue(model, entryIndex, setIndex, reps, weight, remove) {
@@ -125,7 +172,7 @@ class LiftosaurUpdate {
             "entryIndex" => entryIndex, "setIndex" => setIndex
         };
         replaceSet(next, entryIndex, setIndex, completed);
-        appendQueue(next, action);
+        if (model.get("demo") != true) { appendQueue(next, action); }
         next["undo"] = action;
         next["activeEntryIndex"] = entryIndex;
         next["entryIndex"] = entryIndex;
@@ -142,7 +189,7 @@ class LiftosaurUpdate {
         next["editSetIndex"] = null;
         next["editSetId"] = null;
         effects.add({ "type" => "startTicker" });
-        effects.add({ "type" => "flushQueue" });
+        if (model.get("demo") != true) { effects.add({ "type" => "flushQueue" }); }
         return true;
     }
 
@@ -165,7 +212,7 @@ class LiftosaurUpdate {
                 "completed" => completed, "entryIndex" => entryIndex, "setIndex" => setIndex
             };
             replaceSet(next, entryIndex, setIndex, completed);
-            appendQueue(next, action);
+            if (model.get("demo") != true) { appendQueue(next, action); }
             next["entryIndex"] = entryIndex;
             next["setIndex"] = setIndex;
             next["phase"] = "working";
@@ -173,8 +220,8 @@ class LiftosaurUpdate {
             next["editEntryIndex"] = null;
             next["editSetIndex"] = null;
             next["editSetId"] = null;
-            next["status"] = "Saving correction";
-            effects.add({ "type" => "flushQueue" });
+            next["status"] = model.get("demo") == true ? "Demo correction saved" : "Saving correction";
+            if (model.get("demo") != true) { effects.add({ "type" => "flushQueue" }); }
             return true;
         }
         return logSet(next, model, now, effects);
@@ -200,11 +247,39 @@ class LiftosaurUpdate {
         if (target >= positions.size()) { target = 0; }
         next["entryIndex"] = positions[target][0];
         next["setIndex"] = positions[target][1];
-        if (isText(model.get("phase"), "complete") || (direction > 0 && positions[target][0] != model.get("entryIndex"))) {
+        if (isText(model.get("phase"), "complete") ||
+            (!isText(model.get("phase"), "rest") && direction > 0 && positions[target][0] != model.get("entryIndex"))) {
             next["activeEntryIndex"] = positions[target][0];
         }
         if (isText(model.get("phase"), "complete")) { next["phase"] = "working"; }
         var selected = entries[positions[target][0]].get("sets")[positions[target][1]];
+        next["status"] = LiftosaurSet.get(selected, "completed") == null ? "" : "Already logged";
+        return true;
+    }
+
+    function moveExercise(next, model, direction) {
+        var workout = model.get("workout");
+        if (workout == null) { return false; }
+        var entries = workout.get("entries");
+        if (entries.size() == 0) { return false; }
+        var current = model.get("entryIndex");
+        if (current == null || current < 0 || current >= entries.size()) {
+            current = direction > 0 ? entries.size() - 1 : 0;
+        }
+        var target = current + direction;
+        if (target < 0) { target = entries.size() - 1; }
+        if (target >= entries.size()) { target = 0; }
+        var sets = entries[target].get("sets");
+        if (sets.size() == 0) { return false; }
+        var setIndex = direction > 0 ? 0 : sets.size() - 1;
+        next["entryIndex"] = target;
+        next["setIndex"] = setIndex;
+        if (isText(model.get("phase"), "complete") ||
+            (!isText(model.get("phase"), "rest") && direction > 0)) {
+            next["activeEntryIndex"] = target;
+        }
+        if (isText(model.get("phase"), "complete")) { next["phase"] = "working"; }
+        var selected = sets[setIndex];
         next["status"] = LiftosaurSet.get(selected, "completed") == null ? "" : "Already logged";
         return true;
     }
@@ -227,6 +302,10 @@ class LiftosaurUpdate {
 
     function beginFinish(next, model, now, effects) {
         if (model.get("workout") == null) { return false; }
+        if (model.get("demo") == true) {
+            returnFromDemo(next, model, effects);
+            return true;
+        }
         next["phase"] = "finishing";
         next["finishPending"] = true;
         next["endTime"] = now * 1000;
@@ -238,6 +317,10 @@ class LiftosaurUpdate {
 
     function beginDiscard(next, model, message, effects) {
         if (model.get("workout") == null) { return false; }
+        if (model.get("demo") == true) {
+            returnFromDemo(next, model, effects);
+            return true;
+        }
         next["phase"] = "discarding";
         if (message.get("requestBusy") == true) {
             next["discardPending"] = true;
@@ -256,7 +339,9 @@ class LiftosaurUpdate {
         var entryIndex = last.get("entryIndex");
         var setIndex = last.get("setIndex");
         setCompletedValue(next, entryIndex, setIndex, null, null, true);
-        appendQueue(next, { "kind" => "set", "entryId" => last.get("entryId"), "setId" => last.get("setId"), "completed" => null });
+        if (model.get("demo") != true) {
+            appendQueue(next, { "kind" => "set", "entryId" => last.get("entryId"), "setId" => last.get("setId"), "completed" => null });
+        }
         next["entryIndex"] = entryIndex;
         next["setIndex"] = setIndex;
         next["activeEntryIndex"] = entryIndex;
@@ -266,7 +351,7 @@ class LiftosaurUpdate {
         next["undo"] = null;
         next["lastSet"] = false;
         effects.add({ "type" => "stopTicker" });
-        effects.add({ "type" => "flushQueue" });
+        if (model.get("demo") != true) { effects.add({ "type" => "flushQueue" }); }
         return true;
     }
 
@@ -319,10 +404,12 @@ class LiftosaurUpdate {
         if (LiftosaurSet.get(set, "completed") == null) { return false; }
 
         setCompletedValue(next, entryIndex, setIndex, null, null, true);
-        appendQueue(next, {
-            "kind" => "set", "entryId" => entry.get("entryId"), "setId" => LiftosaurSet.get(set, "setId"),
-            "completed" => null, "entryIndex" => entryIndex, "setIndex" => setIndex, "undo" => true
-        });
+        if (model.get("demo") != true) {
+            appendQueue(next, {
+                "kind" => "set", "entryId" => entry.get("entryId"), "setId" => LiftosaurSet.get(set, "setId"),
+                "completed" => null, "entryIndex" => entryIndex, "setIndex" => setIndex, "undo" => true
+            });
+        }
         next["entryIndex"] = entryIndex;
         next["setIndex"] = setIndex;
         next["activeEntryIndex"] = entryIndex;
@@ -335,7 +422,7 @@ class LiftosaurUpdate {
             next["undo"] = null;
         }
         effects.add({ "type" => "stopTicker" });
-        effects.add({ "type" => "flushQueue" });
+        if (model.get("demo") != true) { effects.add({ "type" => "flushQueue" }); }
         return true;
     }
 
@@ -418,7 +505,11 @@ class LiftosaurUpdate {
                 changed = saveEditedSet(next, model, now, effects);
             } else if (isText(phase, "rest")) {
                 var nextSet = currentSet(model);
-                if (nextSet != null && LiftosaurSet.get(nextSet, "isAmrap") == true) {
+                var activeRestSet = nextActiveSet(model);
+                var viewingActiveRestSet = activeRestSet != null &&
+                    activeRestSet.get("entryIndex") == model.get("entryIndex") &&
+                    activeRestSet.get("setIndex") == model.get("setIndex");
+                if (viewingActiveRestSet && nextSet != null && LiftosaurSet.get(nextSet, "isAmrap") == true) {
                     next["restEnd"] = null;
                     next["phase"] = "working";
                     next["status"] = "Rest skipped";
@@ -469,7 +560,9 @@ class LiftosaurUpdate {
                 changed = beginUndoSet(next, model, effects);
             }
         } else if (isText(type, "LONG_START")) {
-            if (isText(phase, "working")) {
+            if (isText(phase, "preview")) {
+                changed = beginDemo(next, model);
+            } else if (isText(phase, "working")) {
                 var editSet = currentSet(model);
                 if (editSet != null) {
                     var editCompleted = LiftosaurSet.get(editSet, "completed") != null;
@@ -482,6 +575,11 @@ class LiftosaurUpdate {
                 }
             } else if (isText(phase, "editing")) {
                 changed = saveEditedSet(next, model, now, effects);
+            }
+        } else if (isText(type, "LONG_NAV")) {
+            var navDirection = message.get("direction");
+            if (isText(phase, "working") || isText(phase, "rest") || isText(phase, "complete")) {
+                changed = moveExercise(next, model, navDirection);
             }
         } else if (isText(type, "BACK")) {
             if (isText(phase, "preview") || isText(phase, "loading") || isText(phase, "error")) {
@@ -503,10 +601,18 @@ class LiftosaurUpdate {
                 next["selectedAction"] = 0;
                 changed = true;
             } else if (isText(phase, "rest")) {
-                next["restEnd"] = null;
-                next["phase"] = model.get("lastSet") == true ? "complete" : "working";
-                next["status"] = "Rest skipped";
-                effects.add({ "type" => "stopTicker" });
+                var restNextSet = nextActiveSet(model);
+                if (restNextSet != null &&
+                    (restNextSet.get("entryIndex") != model.get("entryIndex") || restNextSet.get("setIndex") != model.get("setIndex"))) {
+                    next["entryIndex"] = restNextSet.get("entryIndex");
+                    next["setIndex"] = restNextSet.get("setIndex");
+                    next["status"] = "";
+                } else {
+                    next["restEnd"] = null;
+                    next["phase"] = model.get("lastSet") == true ? "complete" : "working";
+                    next["status"] = "Rest skipped";
+                    effects.add({ "type" => "stopTicker" });
+                }
                 changed = true;
             } else if (isText(phase, "editing")) {
                 next["phase"] = "working";
@@ -553,7 +659,7 @@ class LiftosaurUpdate {
                 if (selectedAction > maxAction) { selectedAction = 0; }
                 next["selectedAction"] = selectedAction;
                 changed = true;
-            } else if (isText(phase, "working") || isText(phase, "complete")) {
+            } else if (isText(phase, "working") || isText(phase, "rest") || isText(phase, "complete")) {
                 changed = moveSet(next, model, direction);
             } else if (isText(phase, "editing")) {
                 if (isText(model.get("editField"), "weight")) {
@@ -758,11 +864,15 @@ class LiftosaurUpdate {
             next["status"] = "Cannot discard: start time is missing";
             changed = true;
         } else if (isText(type, "REST_EXPIRED") && isText(phase, "rest")) {
-            next["restEnd"] = null;
-            next["phase"] = model.get("lastSet") == true ? "complete" : "working";
-            next["status"] = "";
-            effects.add({ "type" => "stopTicker" });
-            effects.add({ "type" => "vibrate" });
+            if (model.get("demo") == true && model.get("lastSet") == true) {
+                returnFromDemo(next, model, effects);
+            } else {
+                next["restEnd"] = null;
+                next["phase"] = model.get("lastSet") == true ? "complete" : "working";
+                next["status"] = "";
+                effects.add({ "type" => "stopTicker" });
+                effects.add({ "type" => "vibrate" });
+            }
             changed = true;
         }
 
