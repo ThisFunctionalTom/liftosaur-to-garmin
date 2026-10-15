@@ -184,9 +184,9 @@ class LiftosaurView extends WatchUi.View {
     }
 
     function drawSetDetails(dc, entry, set, highlight, resting, progressY) {
-        var nameY = 26;
-        var setY = 62;
-        var repsY = 94;
+        var nameY = 22;
+        var setY = 54;
+        var repsY = 84;
         var extraY = 145;
         dc.setColor(highlight ? Graphics.COLOR_BLUE : Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         var setPosition = currentSetNumber(entry, set);
@@ -227,12 +227,12 @@ class LiftosaurView extends WatchUi.View {
             }
             if (completed != null && repsLeft < expectedReps) { repsColor = Graphics.COLOR_RED; }
         }
-        drawRepsAndWeight(dc, y, shownReps, weight, repsColor);
+        drawRepsAndWeight(dc, y, shownReps, weight, repsColor, 145);
     }
 
     function drawSetExtra(dc, y, set, weight, expectedReps, actualReps, mode) {
         var text = "";
-        if (isText(mode, "plates")) {
+        if (mode == null || isText(mode, "plates")) {
             var plates = LiftosaurSet.get(set, "plateSummary");
             text = plates == null ? "NO PLATE DATA" : plates.toString();
         } else {
@@ -273,8 +273,15 @@ class LiftosaurView extends WatchUi.View {
                 text = "e1RM " + wholeText + "." + decimalText + unit;
             }
         }
+        var font = Graphics.FONT_MEDIUM;
+        if (dc.getTextWidthInPixels(text, font) > dc.getWidth() - 40) {
+            font = Graphics.FONT_SMALL;
+        }
+        if (dc.getTextWidthInPixels(text, font) > dc.getWidth() - 40) {
+            font = Graphics.FONT_XTINY;
+        }
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
-        dc.drawText(dc.getWidth() / 2, y, Graphics.FONT_XTINY, text, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(dc.getWidth() / 2, y, font, text, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawEdit(dc, state) {
@@ -385,7 +392,7 @@ class LiftosaurView extends WatchUi.View {
         var shownWeight = completed != null && LiftosaurSet.doneGet(completed, "weight") != null ? LiftosaurSet.doneGet(completed, "weight") : LiftosaurSet.get(set, "weight");
         var plannedReps = LiftosaurSet.get(set, "reps").toString();
         if (LiftosaurSet.get(set, "isAmrap") == true) { plannedReps += "+"; }
-        drawRepsAndWeight(dc, 132, plannedReps, shownWeight, Graphics.COLOR_YELLOW);
+        drawRepsAndWeight(dc, 132, plannedReps, shownWeight, Graphics.COLOR_YELLOW, 178);
         var actualReps = completed == null ? null : LiftosaurSet.doneGet(completed, "reps");
         if (actualReps != null) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
@@ -546,7 +553,7 @@ class LiftosaurView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
 
-    function drawRepsAndWeight(dc, y, reps, weight, color) {
+    function drawRepsAndWeight(dc, y, reps, weight, color, bottomLimit) {
         var weightNumber = "BW";
         var unit = "";
         if (weight != null) {
@@ -564,26 +571,40 @@ class LiftosaurView extends WatchUi.View {
             unit = text.substring(unitStart, chars.size());
         }
 
-        var repsWidth = dc.getTextWidthInPixels(reps, Graphics.FONT_NUMBER_MEDIUM);
-        var weightWidth = dc.getTextWidthInPixels(weightNumber, Graphics.FONT_NUMBER_MEDIUM);
+        var numberFont = Graphics.FONT_NUMBER_HOT;
+        var multiplyFont = Graphics.FONT_MEDIUM;
+        var repsWidth = dc.getTextWidthInPixels(reps, numberFont);
+        var weightWidth = dc.getTextWidthInPixels(weightNumber, numberFont);
         var unitWidth = dc.getTextWidthInPixels(unit, Graphics.FONT_SMALL);
-        var multiplyWidth = dc.getTextWidthInPixels("x", Graphics.FONT_SMALL);
-        var numberHeight = dc.getFontHeight(Graphics.FONT_NUMBER_MEDIUM);
-        var multiplyHeight = dc.getFontHeight(Graphics.FONT_SMALL);
+        var multiplyWidth = dc.getTextWidthInPixels("x", multiplyFont);
+        var numberHeight = dc.getFontHeight(numberFont);
+        var multiplyHeight = dc.getFontHeight(multiplyFont);
         var multiplyY = y + ((numberHeight - multiplyHeight) / 2);
         var gap = 4;
         var unitGap = unit.length() > 0 ? gap : 0;
         var totalWidth = repsWidth + gap + multiplyWidth + gap + weightWidth + unitGap + unitWidth;
+        if (totalWidth > dc.getWidth() - 36 || numberHeight > bottomLimit - y - 4) {
+            numberFont = Graphics.FONT_NUMBER_MEDIUM;
+            multiplyFont = Graphics.FONT_SMALL;
+            repsWidth = dc.getTextWidthInPixels(reps, numberFont);
+            weightWidth = dc.getTextWidthInPixels(weightNumber, numberFont);
+            multiplyWidth = dc.getTextWidthInPixels("x", multiplyFont);
+            numberHeight = dc.getFontHeight(numberFont);
+            multiplyHeight = dc.getFontHeight(multiplyFont);
+            multiplyY = y + ((numberHeight - multiplyHeight) / 2);
+            totalWidth = repsWidth + gap + multiplyWidth + gap + weightWidth + unitGap + unitWidth;
+        }
         var x = (dc.getWidth() - totalWidth) / 2;
         dc.setColor(color, Graphics.COLOR_BLACK);
-        dc.drawText(x, y, Graphics.FONT_NUMBER_MEDIUM, reps, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(x, y, numberFont, reps, Graphics.TEXT_JUSTIFY_LEFT);
         var multiplyX = x + repsWidth + gap;
-        dc.drawText(multiplyX, multiplyY, Graphics.FONT_SMALL, "x", Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(multiplyX, multiplyY, multiplyFont, "x", Graphics.TEXT_JUSTIFY_LEFT);
         var suffixX = multiplyX + multiplyWidth + gap;
-        dc.drawText(suffixX, y, Graphics.FONT_NUMBER_MEDIUM, weightNumber, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(suffixX, y, numberFont, weightNumber, Graphics.TEXT_JUSTIFY_LEFT);
         suffixX += weightWidth + unitGap;
         if (unit.length() > 0) {
-            dc.drawText(suffixX, y + 15, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);
+            var unitY = y + numberHeight - dc.getFontHeight(Graphics.FONT_SMALL);
+            dc.drawText(suffixX, unitY, Graphics.FONT_SMALL, unit, Graphics.TEXT_JUSTIFY_LEFT);
         }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }

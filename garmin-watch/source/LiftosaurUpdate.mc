@@ -286,11 +286,17 @@ class LiftosaurUpdate {
         if (target >= entries.size()) { target = 0; }
         var sets = entries[target].get("sets");
         if (sets.size() == 0) { return false; }
-        var setIndex = direction > 0 ? 0 : sets.size() - 1;
+        var setIndex = -1;
+        for (var i = 0; i < sets.size(); i += 1) {
+            if (LiftosaurSet.get(sets[i], "completed") == null) {
+                setIndex = i;
+                break;
+            }
+        }
+        if (setIndex < 0) { setIndex = sets.size() - 1; }
         next["entryIndex"] = target;
         next["setIndex"] = setIndex;
-        if (isText(model.get("phase"), "complete") ||
-            (!isText(model.get("phase"), "rest") && direction > 0)) {
+        if (!isText(model.get("phase"), "rest")) {
             next["activeEntryIndex"] = target;
         }
         if (isText(model.get("phase"), "complete")) { next["phase"] = "working"; }
@@ -662,7 +668,7 @@ class LiftosaurUpdate {
             }
         } else if (isText(type, "TOGGLE_DETAILS")) {
             if (isText(phase, "working") || isText(phase, "rest")) {
-                next["detailMode"] = isText(model.get("detailMode"), "plates") ? "1rm" : "plates";
+                next["detailMode"] = isText(model.get("detailMode"), "1rm") ? "plates" : "1rm";
                 changed = true;
             }
         } else if (isText(type, "ADJUST")) {

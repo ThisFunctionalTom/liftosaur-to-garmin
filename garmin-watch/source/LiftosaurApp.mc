@@ -48,11 +48,15 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
     var _suppressNextMenu;
     var _suppressNextPage;
     var _suppressPreviousPage;
+    var _navigationClickTimer;
+    var _pendingNavigationDirection;
+    var _pendingNavigationAt;
 
     function initialize(store) {
         BehaviorDelegate.initialize();
         _store = store;
         _holdTimer = new Timer.Timer();
+        _navigationClickTimer = new Timer.Timer();
     }
 
     function onSelect() {
@@ -124,8 +128,6 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
                 _navigationLongHandled = true;
                 if (_navigationKey == WatchUi.KEY_UP) {
                     _store.menu();
-                } else if (_navigationKey == WatchUi.KEY_DOWN) {
-                    _store.dispatchMessage("LONG_NAV", 1, null);
                 }
             } else {
                 _holdTimer.start(method(:onHoldThreshold), 700 - navElapsed, false);
@@ -178,7 +180,7 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
             var direction = key == WatchUi.KEY_UP ? -1 : 1;
             var longHandled = _navigationLongHandled == true;
             if (!longHandled) {
-                _store.adjust(direction);
+                handleNavigationClick(direction);
             }
             _suppressNextPage = key == WatchUi.KEY_DOWN && !_navigationBehaviorSeen;
             _suppressPreviousPage = key == WatchUi.KEY_UP && !_navigationBehaviorSeen;
@@ -203,5 +205,32 @@ class LiftosaurDelegate extends WatchUi.BehaviorDelegate {
         // BehaviorDelegate may report onSelect after this raw release event.
         _suppressNextSelect = !behaviorSeen;
         return true;
+    }
+
+    function handleNavigationClick(direction) {
+        var now = System.getTimer();
+        if (_pendingNavigationDirection != null) {
+            var elapsed = now - _pendingNavigationAt;
+            if (_pendingNavigationDirection == direction && elapsed <= 450) {
+                _navigationClickTimer.stop();
+                _pendingNavigationDirection = null;
+                _pendingNavigationAt = null;
+                _store.dispatchMessage("LONG_NAV", direction, null);
+                return;
+            }
+            _navigationClickTimer.stop();
+            _store.adjust(_pendingNavigationDirection);
+        }
+        _pendingNavigationDirection = direction;
+        _pendingNavigationAt = now;
+        _navigationClickTimer.start(method(:onNavigationClickTimeout), 450, false);
+    }
+
+    function onNavigationClickTimeout() {
+        if (_pendingNavigationDirection == null) { return; }
+        var direction = _pendingNavigationDirection;
+        _pendingNavigationDirection = null;
+        _pendingNavigationAt = null;
+        _store.adjust(direction);
     }
 }
