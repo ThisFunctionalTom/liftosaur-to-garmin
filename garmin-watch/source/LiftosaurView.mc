@@ -35,7 +35,9 @@ class LiftosaurView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
-        if (phase.equals("preview")) {
+        if (_store.isStarting()) {
+            drawAppStarting(dc);
+        } else if (phase.equals("preview")) {
             drawPreview(dc, state);
         } else if (isText(phase, "working")) {
             drawWorking(dc, state);
@@ -71,6 +73,12 @@ class LiftosaurView extends WatchUi.View {
         }
     }
 
+    function drawAppStarting(dc) {
+        var centerY = dc.getHeight() / 2;
+        line(dc, centerY - 18, "LIFTOSAUR", Graphics.FONT_MEDIUM);
+        line(dc, centerY + 18, "STARTING", Graphics.FONT_SMALL);
+    }
+
     function drawPreview(dc, state) {
         if (isText(state.get("status"), "Starting workout")) {
             drawStarting(dc);
@@ -86,7 +94,8 @@ class LiftosaurView extends WatchUi.View {
         for (var i = 0; i < lines.size(); i += 1) {
             line(dc, y + (i * lineHeight), lines[i], font);
         }
-        line(dc, dc.getHeight() - 48, "PRESS START", Graphics.FONT_SMALL);
+        line(dc, dc.getHeight() - 75, "PRESS START", Graphics.FONT_SMALL);
+        line(dc, dc.getHeight() - 47, "HOLD START: DEMO", Graphics.FONT_XTINY);
     }
 
     function drawStarting(dc) {
