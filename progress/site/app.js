@@ -11,7 +11,7 @@ const lifts = [
   { key: 'overhead', name: 'Overhead press' },
 ];
 let progressData;
-let activeRange = 'all';
+let activeRange = '6m';
 
 function element(name, attributes = {}, parent) {
   const node = document.createElementNS(ns, name);
