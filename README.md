@@ -89,6 +89,43 @@ The [Liftosaur API](https://www.liftosaur.com/doc/api) requires Premium.
 
 The app converts workouts fetched from Liftosaur; it has no paste or backup-import area.
 
+## Public training progress page
+
+The `/progress/` page publishes workout counts by week and strength trends
+for squat, bench press, deadlift, and overhead press. A shared toolbar filters the
+strength charts to one month, six months, one year, or all history. Each chart shows the
+heaviest completed set and its Epley estimated 1RM per workout in kilograms. Only those four lift summaries
+are included, along with workout dates and weekly workout counts. The page does not
+publish raw Liftosaur workout text or the API key.
+
+Generate the summary locally after a workout, then preview it before publishing:
+
+```powershell
+$env:LIFTOSAUR_API_KEY = 'your-key'
+dotnet fsi progress/generate.fsx
+npm run progress:dev --prefix web
+```
+
+Open the local URL printed by Vite. The generator fetches all available Liftosaur
+workouts on each run and rebuilds `progress/site/data.json`. The page source under
+`progress/site/` updates live while previewing. The generated JSON contains only
+the summary fields used by the public page; it is committed as public data when
+you decide to publish. Clear the API key from the current PowerShell session with
+`Remove-Item Env:LIFTOSAUR_API_KEY` when finished.
+
+To publish, review the page locally, then commit the page and generated summary
+with Jujutsu and push the `main` bookmark:
+
+```powershell
+jj commit -m "Update training progress"
+jj bookmark set main -r @-
+jj git push --remote origin --bookmark main
+```
+
+The existing Pages workflow copies the progress page into the site build and
+deploys it. Pushes that only change other source files will also deploy the most
+recently committed summary.
+
 For F# edits, rerun `npm run compile --prefix web` (or restart the dev command).
 JavaScript and HTML edits are picked up by Vite automatically.
 
@@ -139,8 +176,8 @@ installed Edge: set `PLAYWRIGHT_CHANNEL=msedge` and run
 
 ## GitHub Pages deployment
 
-The [public repository](https://github.com/ThisFunctionalTom/liftosaur-to-garmin)
-deploys to [liftosaur-to-garmin](https://thisfunctionaltom.github.io/liftosaur-to-garmin/).
+The [public repository](https://github.com/ThisFunctionalTom/toms-workout)
+deploys to [toms-workout](https://thisfunctionaltom.github.io/toms-workout/).
 The full publication history, tracked files, and built website passed a Gitleaks
 scan before publication, plus checks for embedded Liftosaur API keys.
 
@@ -159,7 +196,7 @@ After committing the deployment files with Jujutsu, connect and push the committ
 revision (these commands assume it is the working copy's parent):
 
 ```powershell
-jj git remote add origin https://github.com/ThisFunctionalTom/liftosaur-to-garmin.git
+jj git remote add origin https://github.com/ThisFunctionalTom/toms-workout.git
 jj bookmark create main -r @-
 jj git push --remote origin --bookmark main
 ```

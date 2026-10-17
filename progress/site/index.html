@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#165c48">
+    <title>Training progress</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <main>
+      <header class="page-header">
+        <a class="back-link" href="../">Liftosaur to Garmin</a>
+        <h1>Training progress</h1>
+        <p class="lede">A public summary of workouts and strength trends.</p>
+      </header>
+
+      <p id="status" class="status" role="status">Loading progress…</p>
+
+      <section aria-labelledby="consistency-heading" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Consistency</p>
+            <h2 id="consistency-heading">Workouts by week</h2>
+          </div>
+          <p id="workout-total" class="metric"></p>
+        </div>
+        <div class="chart-scroll" tabindex="0" aria-label="Weekly workout counts chart">
+          <svg id="weekly-chart" role="img" aria-labelledby="weekly-chart-title weekly-chart-desc"></svg>
+        </div>
+      </section>
+
+      <section aria-labelledby="strength-heading" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Strength</p>
+            <h2 id="strength-heading">Main lifts</h2>
+          </div>
+        </div>
+        <p class="chart-note">Heaviest completed working set per workout, in kilograms. Estimated 1RM uses the Epley formula: weight × (1 + reps / 30). Warmup sets are excluded.</p>
+        <div class="chart-legend" aria-label="Chart legend">
+          <span><i class="legend-swatch working-set-swatch" aria-hidden="true"></i>Working set</span>
+          <span><i class="legend-swatch estimated-swatch" aria-hidden="true"></i>Estimated 1RM</span>
+        </div>
+        <div class="range-toolbar" role="group" aria-label="Strength trend time range">
+          <button type="button" data-range="1m" aria-pressed="false">1 month</button>
+          <button type="button" data-range="6m" aria-pressed="false">6 months</button>
+          <button type="button" data-range="1y" aria-pressed="false">1 year</button>
+          <button type="button" data-range="all" aria-pressed="true">All</button>
+        </div>
+        <div class="lift-charts">
+          <section class="lift-chart" aria-labelledby="squat-heading">
+            <h3 id="squat-heading">Squat</h3>
+            <div class="chart-scroll" tabindex="0" aria-label="Squat strength trend chart">
+              <svg id="strength-squat" role="img" aria-labelledby="strength-squat-title strength-squat-desc"></svg>
+            </div>
+            <p id="latest-squat" class="latest-set"></p>
+            <p id="empty-squat" class="empty-chart" hidden>No completed working sets in this range.</p>
+          </section>
+          <section class="lift-chart" aria-labelledby="bench-heading">
+            <h3 id="bench-heading">Bench press</h3>
+            <div class="chart-scroll" tabindex="0" aria-label="Bench press strength trend chart">
+              <svg id="strength-bench" role="img" aria-labelledby="strength-bench-title strength-bench-desc"></svg>
+            </div>
+            <p id="latest-bench" class="latest-set"></p>
+            <p id="empty-bench" class="empty-chart" hidden>No completed working sets in this range.</p>
+          </section>
+          <section class="lift-chart" aria-labelledby="deadlift-heading">
+            <h3 id="deadlift-heading">Deadlift</h3>
+            <div class="chart-scroll" tabindex="0" aria-label="Deadlift strength trend chart">
+              <svg id="strength-deadlift" role="img" aria-labelledby="strength-deadlift-title strength-deadlift-desc"></svg>
+            </div>
+            <p id="latest-deadlift" class="latest-set"></p>
+            <p id="empty-deadlift" class="empty-chart" hidden>No completed working sets in this range.</p>
+          </section>
+          <section class="lift-chart" aria-labelledby="overhead-heading">
+            <h3 id="overhead-heading">Overhead press</h3>
+            <div class="chart-scroll" tabindex="0" aria-label="Overhead press strength trend chart">
+              <svg id="strength-overhead" role="img" aria-labelledby="strength-overhead-title strength-overhead-desc"></svg>
+            </div>
+            <p id="latest-overhead" class="latest-set"></p>
+            <p id="empty-overhead" class="empty-chart" hidden>No completed working sets in this range.</p>
+          </section>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <p id="updated-at"></p>
+        <a href="../">Open the Garmin converter</a>
+      </footer>
+    </main>
+  </body>
+</html>
