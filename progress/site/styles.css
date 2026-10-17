@@ -24,8 +24,8 @@ h1 { margin: .9rem 0 .25rem; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.0
 .section-heading h2 { margin: .1rem 0 0; font-size: 1.35rem; }
 .eyebrow { margin: 0; color: #52685e; font-size: .75rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
 .metric { margin: 0; color: #165c48; font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
-.chart-scroll { overflow-x: auto; overscroll-behavior-inline: contain; border-radius: .4rem; }
-svg { display: block; min-width: 100%; overflow: visible; }
+.chart-scroll { overflow: hidden; border-radius: .4rem; }
+svg { display: block; width: 100%; min-width: 100%; height: auto; overflow: visible; }
 .chart-note { margin: -.25rem 0 .5rem; color: #536760; font-size: .9rem; }
 .calendar-note { margin: -.2rem 0 .65rem; color: #536760; font-size: .88rem; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: .65rem 0 1rem; color: #40564d; font-size: .85rem; }

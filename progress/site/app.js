@@ -25,6 +25,7 @@ function activateTab(tab, focus = false) {
     item.tabIndex = selected ? 0 : -1;
     document.querySelector(`#${item.getAttribute('aria-controls')}`).hidden = !selected;
   }
+  if (tab.id === 'tab-strength') drawStrengthCharts();
   if (focus) tab.focus();
 }
 
@@ -451,7 +452,7 @@ function drawStrengthChart(lift, exercises) {
   }
   empty.hidden = true;
 
-  const width = Math.max(720, points.length * 26 + 60);
+  const width = svg.parentElement.clientWidth || 720;
   const height = 300;
   const left = 54;
   const right = 22;
@@ -524,13 +525,26 @@ function showData(data) {
   volumeCutoffs = volumeQuartiles(data.days ?? []);
   const days = daysInRange(data.days ?? []);
   renderCalendar(days);
-  for (const lift of lifts) drawStrengthChart(lift, data.exercises);
+  drawStrengthCharts();
 
   if (data.generatedAtUtc) {
     updatedAt.textContent = `Generated ${new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.generatedAtUtc))}.`;
   }
   status.textContent = data.totalWorkouts ? '' : 'No workouts found in the generated summary yet.';
 }
+
+function drawStrengthCharts() {
+  if (!progressData) return;
+  for (const lift of lifts) drawStrengthChart(lift, progressData.exercises);
+}
+
+let chartResizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(chartResizeTimer);
+  chartResizeTimer = setTimeout(() => {
+    if (!document.querySelector('#panel-strength').hidden) drawStrengthCharts();
+  }, 100);
+});
 
 document.querySelectorAll('[data-range]').forEach(button => {
   button.addEventListener('click', () => {
