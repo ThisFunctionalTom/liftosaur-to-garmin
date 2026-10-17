@@ -1,5 +1,6 @@
 const status = document.querySelector('#status');
 const weeklyChart = document.querySelector('#weekly-chart');
+const weeklyEmpty = document.querySelector('#empty-weekly');
 const workoutTotal = document.querySelector('#workout-total');
 const updatedAt = document.querySelector('#updated-at');
 const ns = 'http://www.w3.org/2000/svg';
@@ -58,7 +59,14 @@ function formatKg(value) {
   return `${Number(value.toFixed(1))} kg`;
 }
 
+function weeksInRange(weeks) {
+  const start = rangeStart();
+  return weeks.filter(week => inRange(week.weekStart, start));
+}
+
 function drawWeeklyChart(weeks) {
+  weeks = weeksInRange(weeks);
+  weeklyEmpty.hidden = weeks.length > 0;
   if (!weeks.length) {
     weeklyChart.replaceChildren();
     return;
@@ -187,8 +195,10 @@ function drawStrengthChart(lift, exercises) {
 
 function showData(data) {
   progressData = data;
-  workoutTotal.textContent = `${data.totalWorkouts} workout${data.totalWorkouts === 1 ? '' : 's'}`;
-  drawWeeklyChart(data.weeks);
+  const weeks = weeksInRange(data.weeks);
+  const visibleWorkouts = weeks.reduce((total, week) => total + week.workouts, 0);
+  workoutTotal.textContent = `${visibleWorkouts} workout${visibleWorkouts === 1 ? '' : 's'}`;
+  drawWeeklyChart(weeks);
   for (const lift of lifts) drawStrengthChart(lift, data.exercises);
 
   if (data.generatedAtUtc) {
