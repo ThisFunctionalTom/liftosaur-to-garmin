@@ -53,6 +53,7 @@ svg { display: block; min-width: 100%; overflow: visible; }
 .strength-point:hover { fill: #b8e0c5; }
 .estimated-line { fill: none; stroke: #bc6a24; stroke-width: 3; stroke-dasharray: 8 5; stroke-linecap: round; stroke-linejoin: round; }
 .estimated-point { fill: white; stroke: #bc6a24; stroke-width: 2.5; }
+.chart-tooltip { position: fixed; z-index: 10; max-width: 18rem; padding: .45rem .65rem; border-radius: .4rem; color: white; background: #172b29; box-shadow: 0 3px 12px #172b2940; font-size: .82rem; line-height: 1.35; pointer-events: none; }
 
 @media (max-width: 36rem) {
   main { padding-top: 1.3rem; }
