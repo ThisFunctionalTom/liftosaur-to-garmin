@@ -201,6 +201,18 @@ let pendingTooltipTarget;
 let visibleTooltipTarget;
 let pendingTooltipPosition;
 
+function closePointerTooltip(target) {
+  if (target === pendingTooltipTarget) {
+    clearTimeout(tooltipTimer);
+    pendingTooltipTarget = undefined;
+    tooltipTimer = undefined;
+  }
+  if (target === visibleTooltipTarget && document.activeElement !== target) {
+    chartTooltip.hidden = true;
+    visibleTooltipTarget = undefined;
+  }
+}
+
 document.addEventListener('pointerover', event => {
   const target = tooltipTarget(event.target);
   if (!target || target === visibleTooltipTarget || target === pendingTooltipTarget) return;
@@ -228,15 +240,7 @@ document.addEventListener('pointerout', event => {
   const to = tooltipTarget(event.relatedTarget);
   const enteringTooltip = event.relatedTarget === chartTooltip || chartTooltip.contains(event.relatedTarget);
   if (!from || from === to || enteringTooltip) return;
-  if (from === pendingTooltipTarget) {
-    clearTimeout(tooltipTimer);
-    pendingTooltipTarget = undefined;
-    tooltipTimer = undefined;
-  }
-  if (from === visibleTooltipTarget) {
-    chartTooltip.hidden = true;
-    visibleTooltipTarget = undefined;
-  }
+  closePointerTooltip(from);
 });
 
 chartTooltip.addEventListener('pointerleave', () => {
@@ -488,17 +492,19 @@ function drawStrengthChart(lift, exercises) {
   element('polyline', { points: estimatedLine, class: 'estimated-line' }, svg);
   coordinates.forEach(({ point, x, weightY, estimatedY }) => {
     const workingTooltip = `${formatDate(point.date)}: working set ${formatKg(point.weightKg)} × ${point.reps}`;
-    element('circle', {
+    const workingPoint = element('circle', {
       cx: x, cy: weightY, r: 5, class: 'strength-point',
       'data-tooltip': workingTooltip, 'aria-label': workingTooltip, tabindex: 0,
       'data-strength-summary': JSON.stringify({ date: point.date, kind: 'working', weightKg: point.weightKg, reps: point.reps }),
     }, svg);
+    workingPoint.addEventListener('pointerleave', () => closePointerTooltip(workingPoint));
     const estimatedTooltip = `${formatDate(point.date)}: estimated 1RM ${formatKg(estimated1rm(point))} (Epley, from ${formatKg(point.weightKg)} × ${point.reps})`;
-    element('circle', {
+    const estimatedPoint = element('circle', {
       cx: x, cy: estimatedY, r: 4, class: 'estimated-point',
       'data-tooltip': estimatedTooltip, 'aria-label': estimatedTooltip, tabindex: 0,
       'data-strength-summary': JSON.stringify({ date: point.date, kind: 'estimated', estimated1RmKg: estimated1rm(point), weightKg: point.weightKg, reps: point.reps }),
     }, svg);
+    estimatedPoint.addEventListener('pointerleave', () => closePointerTooltip(estimatedPoint));
   });
 
   const latest = points.at(-1);
