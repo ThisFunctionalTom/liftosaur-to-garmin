@@ -8,10 +8,9 @@ commands. Repository guidance for coding agents is in [AGENTS.md](AGENTS.md).
 
 Download Liftosaur workout history and convert it to Garmin FIT activity files:
 
-This repository also contains a personal Connect IQ app for controlling Liftosaur
-workouts from a Garmin fēnix 5. See [garmin-watch](garmin-watch/README.md) for the
-first-version scope and build instructions. The Garmin SDK and personal developer
-key are intentionally not included.
+The personal Connect IQ watch app now lives in the separate `liftosaur-garmin`
+repository. With sibling local checkouts, see [its README](../liftosaur-garmin/README.md)
+for scope and build instructions.
 
 ```powershell
 $env:LIFTOSAUR_API_KEY = 'your-key'

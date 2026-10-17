@@ -1,5 +1,0 @@
-<settings>
-    <setting propertyKey="@Properties.apiKey" title="@Strings.ApiKeyTitle">
-        <settingConfig type="password" />
-    </setting>
-</settings>
