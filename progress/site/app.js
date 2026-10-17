@@ -514,9 +514,11 @@ function drawStrengthChart(lift, exercises) {
 
   const latest = points.at(-1);
   const bestEstimate = points.reduce((best, point) => estimated1rm(point) >= estimated1rm(best) ? point : best, points[0]);
+  const maxWeightSet = points.reduce((best, point) => point.weightKg > best.weightKg ? point : best, points[0]);
   summary.replaceChildren(
     createLiftStat('Latest estimated 1RM', formatKg(estimated1rm(latest)), `${formatDate(latest.date)} | from ${formatKg(latest.weightKg)} x ${latest.reps}`),
     createLiftStat('Best estimated 1RM', formatKg(estimated1rm(bestEstimate)), `${formatDate(bestEstimate.date)} | from ${formatKg(bestEstimate.weightKg)} x ${bestEstimate.reps}`, 'lift-stat-best'),
+    createLiftStat('Max weight lifted', formatKg(maxWeightSet.weightKg), `${formatDate(maxWeightSet.date)} | ${maxWeightSet.reps} reps`),
   );
 }
 

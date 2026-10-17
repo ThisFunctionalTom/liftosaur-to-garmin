@@ -64,7 +64,7 @@ svg { display: block; width: 100%; min-width: 100%; height: auto; overflow: visi
 .calendar-legend [data-level="4"] { border-color: #28734c; }
 .lift-chart { min-width: 0; padding-top: 1rem; border-top: 1px solid #e2e9e4; }
 .lift-chart h3 { margin: 0 0 .25rem; color: #29463b; font-size: 1.05rem; }
-.lift-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: .65rem; }
+.lift-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; margin-top: .65rem; }
 .lift-stat { display: flex; min-width: 0; flex-direction: column; padding: .65rem .75rem; border: 1px solid #e2e9e4; border-radius: .65rem; background: #f7f9f7; font-variant-numeric: tabular-nums; }
 .lift-stat-best { border-color: #efd7bd; background: #fff8f0; }
 .lift-stat-label { color: #536760; font-size: .68rem; font-weight: 750; letter-spacing: .055em; text-transform: uppercase; }
@@ -108,4 +108,5 @@ svg { display: block; width: 100%; min-width: 100%; height: auto; overflow: visi
 @media (max-width: 36rem) {
   main { padding-top: 1.3rem; }
   .section-heading { align-items: start; }
+  .lift-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
