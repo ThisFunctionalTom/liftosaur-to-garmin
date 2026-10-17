@@ -345,7 +345,7 @@ class LiftosaurView extends WatchUi.View {
 
     function drawThickArc(dc, centerX, centerY, radius, startAngle, endAngle) {
         // Dc.drawArc is a one-pixel stroke, so layer nearby radii for a bolder ring.
-        for (var inset = 0; inset < 5; inset += 1) {
+        for (var inset = 0; inset < 6; inset += 1) {
             dc.drawArc(centerX, centerY, radius - inset, Graphics.ARC_CLOCKWISE, startAngle, endAngle);
         }
     }

@@ -754,12 +754,9 @@ class LiftosaurUpdate {
                         effects.add({ "type" => "flushQueue" });
                     }
                 } else if (model.get("finishPending") == true) {
-                    next["phase"] = "loading";
-                    next["workout"] = null;
-                    next["status"] = "Workout saved";
-                    next["queue"] = [];
+                    next = { "phase" => "loading", "queue" => [], "status" => "Workout saved" };
                     effects.add({ "type" => "stopTicker" });
-                    effects.add({ "type" => "loadNext" });
+                    effects.add({ "type" => "exitApp" });
                 } else if (isText(phase, "discarding") || isText(phase, "confirm-discard") || model.get("discardPending") == true) {
                     // A successful current-workout lookup with no workout
                     // confirms that a pending discard already took effect.
@@ -858,10 +855,10 @@ class LiftosaurUpdate {
             changed = true;
         } else if (isText(type, "FINISH_RESULT")) {
             var finishCode = message.get("code");
-            if (finishCode == 200) {
+            if (finishCode >= 200 && finishCode < 300) {
                 next = { "phase" => "loading", "queue" => [], "status" => "Workout saved" };
                 effects.add({ "type" => "stopTicker" });
-                effects.add({ "type" => "loadNext" });
+                effects.add({ "type" => "exitApp" });
             } else {
                 next["phase"] = "finishing";
                 next["status"] = "Offline - finish will sync when connected";

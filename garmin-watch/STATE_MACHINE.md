@@ -72,7 +72,7 @@ stateDiagram-v2
     actions --> complete : Close menu when complete
     confirmFinish --> finishing : START
     confirmFinish --> working : Cancel
-    finishing --> loading : save succeeds
+    finishing --> [*] : save succeeds
     finishing --> finishing : Save fails
     confirmUndo --> working : Confirm undo
     confirmUndo --> actions : Cancel undo
@@ -131,7 +131,7 @@ start, set, finish, or discard request is sent for a demo.
 | Demo complete, Finish confirmation, or Discard confirmation | START | Finish or cancel the demo and return to the original preview. |
 | `actions` | START on Leave / Keep Workout | Save the underlying working/rest/complete phase and exit the app without changing the server workout. |
 | `actions` | BACK | Close the menu and return to the prior working/rest/complete phase as determined by the rest deadline and last-set flag. |
-| `confirm-finish` | START | Wait for queued set writes, then send finish; success loads the next workout. |
+| `confirm-finish` | START | Wait for queued set writes, then send finish; success exits the app. |
 | `confirm-finish` | BACK | Cancel and return to the prior workout phase. |
 | `confirm-undo` | START | Clear the selected completed set, or the most recently completed set if the cursor is on an incomplete set. Send its `POST /workout/set` update with `completed: null`, then return the cursor to that set. |
 | `confirm-undo` | BACK | Cancel and return to the workout menu. |
