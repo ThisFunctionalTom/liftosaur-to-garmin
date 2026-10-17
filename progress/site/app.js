@@ -1,8 +1,8 @@
 const status = document.querySelector('#status');
-const weeklyChart = document.querySelector('#weekly-chart');
-const weeklyEmpty = document.querySelector('#empty-weekly');
+const trainingCalendar = document.querySelector('#training-calendar');
+const calendarEmpty = document.querySelector('#empty-calendar');
 const chartTooltip = document.querySelector('#chart-tooltip');
-const workoutTotal = document.querySelector('#workout-total');
+const activityTotal = document.querySelector('#activity-total');
 const updatedAt = document.querySelector('#updated-at');
 const ns = 'http://www.w3.org/2000/svg';
 const ranges = { '1m': 1, '6m': 6, '1y': 12, all: null };
@@ -14,6 +14,33 @@ const lifts = [
 ];
 let progressData;
 let activeRange = '6m';
+let volumeCutoffs = [];
+
+const viewTabs = [...document.querySelectorAll('[role="tab"]')];
+
+function activateTab(tab, focus = false) {
+  for (const item of viewTabs) {
+    const selected = item === tab;
+    item.setAttribute('aria-selected', String(selected));
+    item.tabIndex = selected ? 0 : -1;
+    document.querySelector(`#${item.getAttribute('aria-controls')}`).hidden = !selected;
+  }
+  if (focus) tab.focus();
+}
+
+viewTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateTab(tab));
+  tab.addEventListener('keydown', event => {
+    let nextIndex;
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % viewTabs.length;
+    else if (event.key === 'ArrowLeft') nextIndex = (index - 1 + viewTabs.length) % viewTabs.length;
+    else if (event.key === 'Home') nextIndex = 0;
+    else if (event.key === 'End') nextIndex = viewTabs.length - 1;
+    else return;
+    event.preventDefault();
+    activateTab(viewTabs[nextIndex], true);
+  });
+});
 
 function element(name, attributes = {}, parent) {
   const node = document.createElementNS(ns, name);
@@ -31,8 +58,9 @@ function makeSvg(svg, { width, height, title, description }) {
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('width', width);
   svg.setAttribute('height', height);
-  element('title', { id: `${svg.id}-title` }, svg).textContent = title;
-  element('desc', { id: `${svg.id}-desc` }, svg).textContent = description;
+  svg.removeAttribute('aria-labelledby');
+  svg.setAttribute('aria-label', title);
+  svg.setAttribute('aria-description', description);
 }
 
 function rangeStart(range = activeRange) {
@@ -60,103 +88,290 @@ function formatKg(value) {
   return `${Number(value.toFixed(1))} kg`;
 }
 
+function workoutVolume(day) {
+  return day.exercises.reduce((total, exercise) => total + exercise.sets.reduce((sum, set) => sum + Math.max(0, set.weightKg) * set.reps, 0), 0);
+}
+
+function volumeQuartiles(days) {
+  const values = days.map(workoutVolume).filter(value => value > 0).sort((a, b) => a - b);
+  if (!values.length) return [];
+  return [.25, .5, .75].map(quantile => values[Math.ceil(values.length * quantile) - 1]);
+}
+
 function showChartTooltip(target, x, y) {
-  chartTooltip.textContent = target.dataset.tooltip;
+  chartTooltip.replaceChildren();
+  chartTooltip.classList.remove('workout-tooltip');
+  chartTooltip.classList.remove('strength-tooltip');
+  chartTooltip.classList.remove('strength-tooltip-estimated');
+  if (target.dataset.workoutSummary) {
+    const day = JSON.parse(target.dataset.workoutSummary);
+    chartTooltip.classList.add('workout-tooltip');
+
+    const heading = document.createElement('strong');
+    heading.className = 'workout-tooltip-date';
+    heading.textContent = formatDate(day.date, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    chartTooltip.append(heading);
+
+    const totals = document.createElement('div');
+    totals.className = 'workout-tooltip-totals';
+    for (const value of [
+      `${day.workouts} workout${day.workouts === 1 ? '' : 's'}`,
+      `${day.sets} sets`,
+      `${day.reps} reps`,
+      `${Math.round(workoutVolume(day)).toLocaleString()} kg·reps`,
+    ]) {
+      const chip = document.createElement('span');
+      chip.textContent = value;
+      totals.append(chip);
+    }
+    chartTooltip.append(totals);
+
+    if (day.exercises.length) {
+      const details = document.createElement('div');
+      details.className = 'workout-tooltip-exercises';
+      for (const exercise of day.exercises) {
+        const section = document.createElement('section');
+        section.className = 'workout-tooltip-exercise';
+        const name = document.createElement('h4');
+        name.textContent = exercise.name;
+        section.append(name);
+
+        const groupedSets = new Map();
+        for (const set of exercise.sets) {
+          const key = `${set.reps}|${set.weightKg}`;
+          groupedSets.set(key, (groupedSets.get(key) ?? 0) + 1);
+        }
+        for (const [key, count] of groupedSets) {
+          const [reps, weight] = key.split('|').map(Number);
+          const row = document.createElement('div');
+          row.className = 'workout-tooltip-set';
+          const prescription = document.createElement('span');
+          prescription.textContent = `${count} ${count === 1 ? 'set' : 'sets'} x ${reps} reps`;
+          const load = document.createElement('span');
+          load.textContent = weight > 0 ? `${formatKg(weight)}` : 'Bodyweight';
+          row.append(prescription, load);
+          section.append(row);
+        }
+        details.append(section);
+      }
+      chartTooltip.append(details);
+    } else {
+      const empty = document.createElement('p');
+      empty.className = 'workout-tooltip-empty';
+      empty.textContent = 'No working sets recorded.';
+      chartTooltip.append(empty);
+    }
+  } else if (target.dataset.strengthSummary) {
+    const point = JSON.parse(target.dataset.strengthSummary);
+    chartTooltip.classList.add('strength-tooltip');
+    if (point.kind === 'estimated') chartTooltip.classList.add('strength-tooltip-estimated');
+
+    const date = document.createElement('span');
+    date.className = 'strength-tooltip-date';
+    date.textContent = formatDate(point.date, { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
+    const label = document.createElement('span');
+    label.className = 'strength-tooltip-label';
+    label.textContent = point.kind === 'estimated' ? 'Estimated 1RM' : 'Working set';
+    const value = document.createElement('strong');
+    value.className = 'strength-tooltip-value';
+    value.textContent = formatKg(point.kind === 'estimated' ? point.estimated1RmKg : point.weightKg);
+    const detail = document.createElement('span');
+    detail.className = 'strength-tooltip-detail';
+    detail.textContent = point.kind === 'estimated'
+      ? `Epley estimate from ${formatKg(point.weightKg)} x ${point.reps} reps`
+      : `${point.reps} reps`;
+    chartTooltip.append(date, label, value, detail);
+  } else {
+    chartTooltip.textContent = target.dataset.tooltip;
+  }
   chartTooltip.hidden = false;
+  positionChartTooltip(x, y);
+}
+
+function positionChartTooltip(x, y) {
   const bounds = chartTooltip.getBoundingClientRect();
   chartTooltip.style.left = `${Math.max(8, Math.min(x + 12, window.innerWidth - bounds.width - 8))}px`;
   chartTooltip.style.top = `${Math.max(8, Math.min(y + 12, window.innerHeight - bounds.height - 8))}px`;
 }
 
+const tooltipTarget = target => target?.closest?.('[data-tooltip], [data-workout-summary], [data-strength-summary]');
+const tooltipDelayMs = 120;
+let tooltipTimer;
+let pendingTooltipTarget;
+let visibleTooltipTarget;
+let pendingTooltipPosition;
+
 document.addEventListener('pointerover', event => {
-  const target = event.target.closest?.('[data-tooltip]');
-  if (target) showChartTooltip(target, event.clientX, event.clientY);
+  const target = tooltipTarget(event.target);
+  if (!target || target === visibleTooltipTarget || target === pendingTooltipTarget) return;
+  clearTimeout(tooltipTimer);
+  pendingTooltipTarget = target;
+  pendingTooltipPosition = { x: event.clientX, y: event.clientY };
+  tooltipTimer = setTimeout(() => {
+    if (pendingTooltipTarget !== target) return;
+    showChartTooltip(target, pendingTooltipPosition.x, pendingTooltipPosition.y);
+    visibleTooltipTarget = target;
+    pendingTooltipTarget = undefined;
+    tooltipTimer = undefined;
+  }, tooltipDelayMs);
 });
 
 document.addEventListener('pointermove', event => {
-  const target = event.target.closest?.('[data-tooltip]');
-  if (target) showChartTooltip(target, event.clientX, event.clientY);
+  const target = tooltipTarget(event.target);
+  if (!target) return;
+  if (target === pendingTooltipTarget) pendingTooltipPosition = { x: event.clientX, y: event.clientY };
+  if (target === visibleTooltipTarget) positionChartTooltip(event.clientX, event.clientY);
 });
 
 document.addEventListener('pointerout', event => {
-  const from = event.target.closest?.('[data-tooltip]');
-  const to = event.relatedTarget?.closest?.('[data-tooltip]');
-  if (from && from !== to) chartTooltip.hidden = true;
+  const from = tooltipTarget(event.target);
+  const to = tooltipTarget(event.relatedTarget);
+  const enteringTooltip = event.relatedTarget === chartTooltip || chartTooltip.contains(event.relatedTarget);
+  if (!from || from === to || enteringTooltip) return;
+  if (from === pendingTooltipTarget) {
+    clearTimeout(tooltipTimer);
+    pendingTooltipTarget = undefined;
+    tooltipTimer = undefined;
+  }
+  if (from === visibleTooltipTarget) {
+    chartTooltip.hidden = true;
+    visibleTooltipTarget = undefined;
+  }
+});
+
+chartTooltip.addEventListener('pointerleave', () => {
+  chartTooltip.hidden = true;
+  visibleTooltipTarget = undefined;
 });
 
 document.addEventListener('focusin', event => {
-  const target = event.target.closest?.('[data-tooltip]');
+  const target = tooltipTarget(event.target);
   if (!target) return;
+  clearTimeout(tooltipTimer);
+  pendingTooltipTarget = undefined;
+  tooltipTimer = undefined;
   const bounds = target.getBoundingClientRect();
   showChartTooltip(target, bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+  visibleTooltipTarget = target;
 });
 
 document.addEventListener('focusout', event => {
-  if (event.target.closest?.('[data-tooltip]')) chartTooltip.hidden = true;
+  if (tooltipTarget(event.target) === visibleTooltipTarget) {
+    chartTooltip.hidden = true;
+    visibleTooltipTarget = undefined;
+  }
 });
 
-function weeksInRange(weeks) {
+function daysInRange(days) {
   const start = rangeStart();
-  return weeks.filter(week => inRange(week.weekStart, start));
+  return days.filter(day => inRange(day.date, start));
 }
 
-function drawWeeklyChart(weeks) {
-  weeks = weeksInRange(weeks);
-  weeklyEmpty.hidden = weeks.length > 0;
-  if (!weeks.length) {
-    weeklyChart.replaceChildren();
-    return;
+function calendarDay(date, daySummary, rangeStartDate, currentDate) {
+  const cell = document.createElement('div');
+  const dayNumber = document.createElement('span');
+  dayNumber.className = 'calendar-day-number';
+  dayNumber.textContent = String(date.getUTCDate());
+  cell.append(dayNumber);
+
+  const key = date.toISOString().slice(0, 10);
+  const summary = daySummary.get(key);
+  if (summary) {
+    const volume = workoutVolume(summary);
+    const level = volumeCutoffs.reduce((current, cutoff) => current + (volume > cutoff ? 1 : 0), 1);
+    const counts = document.createElement('span');
+    counts.className = 'calendar-day-counts';
+    counts.textContent = `${summary.sets}/${summary.reps}`;
+    cell.className = 'calendar-day has-workout';
+    cell.dataset.level = String(level);
+    cell.dataset.workoutSummary = JSON.stringify(summary);
+    cell.setAttribute('role', 'img');
+    cell.setAttribute('aria-label', `${formatDate(key)}: ${summary.workouts} workout${summary.workouts === 1 ? '' : 's'}, ${summary.sets} working sets, ${summary.reps} reps`);
+    cell.tabIndex = 0;
+    cell.append(counts);
+  } else {
+    cell.className = 'calendar-day';
+    cell.dataset.level = '0';
+    cell.setAttribute('aria-hidden', 'true');
   }
+  if (key < rangeStartDate || key > currentDate) cell.classList.add('outside-range');
+  return cell;
+}
 
-  const width = Math.max(760, weeks.length * 13 + 64);
-  const height = 230;
-  const left = 34;
-  const right = 12;
-  const top = 12;
-  const bottom = 34;
-  const chartHeight = height - top - bottom;
-  const chartWidth = width - left - right;
-  const max = Math.max(1, ...weeks.map(week => week.workouts));
-  const step = chartWidth / weeks.length;
-  const barWidth = Math.max(2, step * .62);
-  makeSvg(weeklyChart, {
-    width,
-    height,
-    title: 'Workouts by week',
-    description: `Weekly workout counts across ${weeks.length} weeks, from ${formatDate(weeks[0].weekStart)} to ${formatDate(weeks.at(-1).weekStart)}.`,
-  });
+function renderCalendar(days) {
+  trainingCalendar.replaceChildren();
+  calendarEmpty.hidden = days.length > 0;
+  const sets = days.reduce((total, day) => total + day.sets, 0);
+  const reps = days.reduce((total, day) => total + day.reps, 0);
+  activityTotal.textContent = `${sets} sets / ${reps} reps`;
+  if (!days.length) return;
 
-  const tickCount = Math.min(max, 4);
-  for (let tick = 0; tick <= tickCount; tick += 1) {
-    const value = Math.round(max * tick / tickCount);
-    const y = top + chartHeight - chartHeight * value / max;
-    element('line', { x1: left, x2: width - right, y1: y, y2: y, class: 'axis' }, weeklyChart);
-    const label = element('text', { x: left - 8, y: y + 4, 'text-anchor': 'end', class: 'axis-label' }, weeklyChart);
-    label.textContent = String(value);
+  const daysByDate = new Map(days.map(day => [day.date, day]));
+  const currentDate = new Date().toISOString().slice(0, 10);
+  const startString = rangeStart() ?? days[0].date;
+  const firstWeek = new Date(`${startString}T00:00:00Z`);
+  firstWeek.setUTCDate(firstWeek.getUTCDate() - (firstWeek.getUTCDay() + 6) % 7);
+  const lastWeek = new Date(`${currentDate}T00:00:00Z`);
+  lastWeek.setUTCDate(lastWeek.getUTCDate() - (lastWeek.getUTCDay() + 6) % 7);
+  const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+  const header = document.createElement('div');
+  header.className = 'calendar-header';
+  const labelSpacer = document.createElement('span');
+  labelSpacer.setAttribute('aria-hidden', 'true');
+  header.append(labelSpacer);
+  for (const weekday of ['M', 'T', 'W', 'T', 'F', 'S', 'S']) {
+    const label = document.createElement('span');
+    label.className = 'calendar-weekday';
+    label.setAttribute('aria-hidden', 'true');
+    label.textContent = weekday;
+    header.append(label);
   }
+  trainingCalendar.append(header);
 
-  const labelEvery = Math.max(1, Math.ceil(weeks.length / 6));
-  weeks.forEach((week, index) => {
-    const barHeight = chartHeight * week.workouts / max;
-    const x = left + index * step + (step - barWidth) / 2;
-    const tooltipText = `${formatDate(week.weekStart)}: ${week.workouts} workout${week.workouts === 1 ? '' : 's'}`;
-    const rect = element('rect', {
-      x,
-      y: top + chartHeight - barHeight,
-      width: barWidth,
-      height: Math.max(0, barHeight),
-      rx: Math.min(3, barWidth / 3),
-      class: 'bar',
-      'data-tooltip': tooltipText,
-      'aria-label': tooltipText,
-      tabindex: 0,
-    }, weeklyChart);
-
-    if (index % labelEvery === 0 || index === weeks.length - 1) {
-      const label = element('text', { x: x + barWidth / 2, y: height - 10, 'text-anchor': 'middle', class: 'axis-label' }, weeklyChart);
-      label.textContent = formatDate(week.weekStart, { month: 'short', year: weeks.length > 52 ? '2-digit' : undefined });
+  const monthGroups = [];
+  for (const weekStart = new Date(firstWeek); weekStart <= lastWeek; weekStart.setUTCDate(weekStart.getUTCDate() + 7)) {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+    const monthKey = `${weekEnd.getUTCFullYear()}-${weekEnd.getUTCMonth()}`;
+    let group = monthGroups.at(-1);
+    if (!group || group.key !== monthKey) {
+      group = { key: monthKey, label: monthFormatter.format(weekEnd), weeks: [] };
+      monthGroups.push(group);
     }
-  });
+
+    const week = [];
+    for (let day = 0; day < 7; day += 1) {
+      const date = new Date(weekStart);
+      date.setUTCDate(date.getUTCDate() + day);
+      week.push(calendarDay(date, daysByDate, startString, currentDate));
+    }
+    group.weeks.push(week);
+  }
+
+  monthGroups.reverse();
+  for (const group of monthGroups) {
+    const monthSection = document.createElement('section');
+    monthSection.className = 'calendar-month';
+    monthSection.style.gridTemplateRows = `repeat(${group.weeks.length}, minmax(2.55rem, auto))`;
+    monthSection.setAttribute('aria-label', group.label);
+    const monthLabel = document.createElement('span');
+    monthLabel.className = 'calendar-month-label';
+    monthLabel.style.gridRow = `1 / span ${group.weeks.length}`;
+    monthLabel.textContent = group.label;
+    monthSection.append(monthLabel);
+
+    const weeks = document.createElement('div');
+    weeks.className = 'calendar-weeks';
+    for (const daysInWeek of group.weeks.reverse()) {
+      const row = document.createElement('div');
+      row.className = 'calendar-week';
+      for (const day of daysInWeek) row.append(day);
+      weeks.append(row);
+    }
+    monthSection.append(weeks);
+    trainingCalendar.append(monthSection);
+  }
 }
 
 function drawStrengthDateLabels(svg, { firstTime, lastTime, span, chartWidth, left, height, pointCount }) {
@@ -197,16 +412,32 @@ function drawStrengthDateLabels(svg, { firstTime, lastTime, span, chartWidth, le
   }
 }
 
+function createLiftStat(labelText, valueText, detailText, variant = '') {
+  const card = document.createElement('div');
+  card.className = `lift-stat ${variant}`.trim();
+  const label = document.createElement('span');
+  label.className = 'lift-stat-label';
+  label.textContent = labelText;
+  const value = document.createElement('strong');
+  value.className = 'lift-stat-value';
+  value.textContent = valueText;
+  const detail = document.createElement('span');
+  detail.className = 'lift-stat-detail';
+  detail.textContent = detailText;
+  card.append(label, value, detail);
+  return card;
+}
+
 function drawStrengthChart(lift, exercises) {
   const svg = document.querySelector(`#strength-${lift.key}`);
-  const latestSet = document.querySelector(`#latest-${lift.key}`);
+  const summary = document.querySelector(`#summary-${lift.key}`);
   const empty = document.querySelector(`#empty-${lift.key}`);
   const start = rangeStart();
   const points = (exercises.find(exercise => exercise.name === lift.name)?.points ?? [])
     .filter(point => inRange(point.date, start));
   if (!points.length) {
     svg.replaceChildren();
-    latestSet.textContent = '';
+    summary.replaceChildren();
     empty.hidden = false;
     return;
   }
@@ -260,24 +491,29 @@ function drawStrengthChart(lift, exercises) {
     element('circle', {
       cx: x, cy: weightY, r: 5, class: 'strength-point',
       'data-tooltip': workingTooltip, 'aria-label': workingTooltip, tabindex: 0,
+      'data-strength-summary': JSON.stringify({ date: point.date, kind: 'working', weightKg: point.weightKg, reps: point.reps }),
     }, svg);
     const estimatedTooltip = `${formatDate(point.date)}: estimated 1RM ${formatKg(estimated1rm(point))} (Epley, from ${formatKg(point.weightKg)} × ${point.reps})`;
     element('circle', {
       cx: x, cy: estimatedY, r: 4, class: 'estimated-point',
       'data-tooltip': estimatedTooltip, 'aria-label': estimatedTooltip, tabindex: 0,
+      'data-strength-summary': JSON.stringify({ date: point.date, kind: 'estimated', estimated1RmKg: estimated1rm(point), weightKg: point.weightKg, reps: point.reps }),
     }, svg);
   });
 
   const latest = points.at(-1);
-  latestSet.textContent = `Latest: ${formatDate(latest.date)} | ${formatKg(latest.weightKg)} x ${latest.reps} | estimated 1RM ${formatKg(estimated1rm(latest))}`;
+  const bestEstimate = points.reduce((best, point) => estimated1rm(point) >= estimated1rm(best) ? point : best, points[0]);
+  summary.replaceChildren(
+    createLiftStat('Latest estimated 1RM', formatKg(estimated1rm(latest)), `${formatDate(latest.date)} | from ${formatKg(latest.weightKg)} x ${latest.reps}`),
+    createLiftStat('Best estimated 1RM', formatKg(estimated1rm(bestEstimate)), `${formatDate(bestEstimate.date)} | from ${formatKg(bestEstimate.weightKg)} x ${bestEstimate.reps}`, 'lift-stat-best'),
+  );
 }
 
 function showData(data) {
   progressData = data;
-  const weeks = weeksInRange(data.weeks);
-  const visibleWorkouts = weeks.reduce((total, week) => total + week.workouts, 0);
-  workoutTotal.textContent = `${visibleWorkouts} workout${visibleWorkouts === 1 ? '' : 's'}`;
-  drawWeeklyChart(weeks);
+  volumeCutoffs = volumeQuartiles(data.days ?? []);
+  const days = daysInRange(data.days ?? []);
+  renderCalendar(days);
   for (const lift of lifts) drawStrengthChart(lift, data.exercises);
 
   if (data.generatedAtUtc) {

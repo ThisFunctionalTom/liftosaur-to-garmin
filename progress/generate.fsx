@@ -6,9 +6,20 @@ open System.IO
 open System.Text.Json
 open Liftosaur
 
-type WeekSummary =
-    { WeekStart: string
-      Workouts: int }
+type SetSummary =
+    { WeightKg: float
+      Reps: int }
+
+type ExerciseDaySummary =
+    { Name: string
+      Sets: SetSummary array }
+
+type DaySummary =
+    { Date: string
+      Workouts: int
+      Sets: int
+      Reps: int
+      Exercises: ExerciseDaySummary array }
 
 type StrengthPoint =
     { Date: string
@@ -23,7 +34,7 @@ type ExerciseSummary =
 type ProgressData =
     { GeneratedAtUtc: string
       TotalWorkouts: int
-      Weeks: WeekSummary array
+      Days: DaySummary array
       Exercises: ExerciseSummary array }
 
 let apiKey = Environment.GetEnvironmentVariable("LIFTOSAUR_API_KEY")
@@ -54,10 +65,6 @@ let fetchAllWorkouts (client: System.Net.Http.HttpClient) =
 let dateText (date: DateTime) =
     date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
 
-let weekStart (date: DateTime) =
-    let daysSinceMonday = (int date.DayOfWeek + 6) % 7
-    date.Date.AddDays(-float daysSinceMonday)
-
 let canonicalLift (exercise: string) =
     match exercise.Trim().ToLowerInvariant() with
     | "squat"
@@ -82,23 +89,34 @@ let workouts =
         with error ->
             raise (InvalidDataException($"Could not parse Liftosaur workout {record.Id}.", error)))
 
-let weekCounts =
+let calendarDays =
     workouts
-    |> Seq.groupBy (fun (_, workout) -> weekStart workout.Start.Date)
-    |> Seq.map (fun (week, items) -> week, Seq.length items)
-    |> Map.ofSeq
-
-let weeks =
-    match weekCounts |> Map.toSeq |> Seq.map fst |> Seq.toArray with
-    | [||] -> [||]
-    | dates ->
-        let first = Array.min dates
-        let last = Array.max dates
-        [| for offset in 0 .. int ((last - first).TotalDays / 7.0) do
-               let date = first.AddDays(float (offset * 7))
-               yield
-                   { WeekStart = dateText date
-                     Workouts = weekCounts |> Map.tryFind date |> Option.defaultValue 0 } |]
+    |> Seq.groupBy (fun (_, workout) -> dateText workout.Start.Date)
+    |> Seq.map (fun (date, dailyWorkouts) ->
+        let dailyWorkouts = dailyWorkouts |> Seq.toArray
+        let exercises =
+            dailyWorkouts
+            |> Seq.collect (fun (_, workout) ->
+                workout.Sets
+                |> Seq.filter (fun set -> not set.IsWarmup && set.Reps > 0 && not (String.IsNullOrWhiteSpace(set.Exercise)))
+                |> Seq.map (fun set ->
+                    set.Exercise.Trim(),
+                    { WeightKg = set.WeightKg
+                      Reps = set.Reps }))
+            |> Seq.groupBy fst
+            |> Seq.map (fun (name, exerciseSets) ->
+                { Name = name
+                  Sets = exerciseSets |> Seq.map snd |> Seq.toArray })
+            |> Seq.sortBy (fun exercise -> exercise.Name.ToLowerInvariant())
+            |> Seq.toArray
+        let sets = exercises |> Array.sumBy (fun exercise -> exercise.Sets.Length)
+        { Date = date
+          Workouts = dailyWorkouts.Length
+          Sets = sets
+          Reps = exercises |> Array.sumBy (fun exercise -> exercise.Sets |> Array.sumBy (fun set -> set.Reps))
+          Exercises = exercises })
+    |> Seq.sortBy (fun day -> day.Date)
+    |> Seq.toArray
 
 let exercisePoints =
     workouts
@@ -129,7 +147,7 @@ let exercisePoints =
 let data =
     { GeneratedAtUtc = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)
       TotalWorkouts = workouts.Length
-      Weeks = weeks
+      Days = calendarDays
       Exercises = exercisePoints }
 
 let options = JsonSerializerOptions(WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase)

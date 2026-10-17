@@ -7,7 +7,7 @@
     "dev": "npm run compile && vite --host 127.0.0.1",
     "build": "npm run compile && vite build && node ../progress/copy-to-dist.mjs",
     "preview": "vite preview --host 127.0.0.1",
-    "progress:dev": "vite --root ../progress/site --host 127.0.0.1",
+    "progress:dev": "vite ../progress/site --host 127.0.0.1",
     "audit:mappings": "node scripts/generate-mapping-audit.mjs",
     "test": "npm run compile && dotnet fsi ../tests/generate-reference.fsx && node --test tests/api.test.js tests/conversion.test.js",
     "test:browser": "npm run build && playwright test"

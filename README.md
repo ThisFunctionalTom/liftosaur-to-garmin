@@ -91,12 +91,17 @@ The app converts workouts fetched from Liftosaur; it has no paste or backup-impo
 
 ## Public training progress page
 
-The `/progress/` page publishes workout counts by week and strength trends
-for squat, bench press, deadlift, and overhead press. A shared toolbar filters the
-strength charts to one month, six months, one year, or all history. Each chart shows the
-heaviest completed set and its Epley estimated 1RM per workout in kilograms. Only those four lift summaries
-are included, along with workout dates and weekly workout counts. The page does not
-publish raw Liftosaur workout text or the API key.
+The `/progress/` page publishes a continuous, newest-week-first training calendar
+and strength trends for squat, bench press, deadlift, and overhead press. Month
+labels run vertically beside the calendar rows. Each day shows working sets and
+reps, with cell shading based on weighted volume (load multiplied by reps),
+ranked in quartiles among days with recorded load. A custom tooltip lists exercise
+sets and daily volume. Calendar and strength charts are
+separate tabs, with a shared toolbar to filter either view to one month, six
+months, one year, or all history.
+Each chart shows the heaviest completed set and its Epley estimated 1RM per
+workout in kilograms. The page does not publish raw Liftosaur workout text or
+the API key.
 
 Generate the summary locally after a workout, then preview it before publishing:
 
@@ -107,7 +112,8 @@ npm run progress:dev --prefix web
 ```
 
 Open the local URL printed by Vite. The generator fetches all available Liftosaur
-workouts on each run and rebuilds `progress/site/data.json`. The page source under
+workouts on each run and rebuilds `progress/site/data.json` with daily workout,
+exercise, working-set, and rep summaries. The page source under
 `progress/site/` updates live while previewing. The generated JSON contains only
 the summary fields used by the public page; it is committed as public data when
 you decide to publish. Clear the API key from the current PowerShell session with

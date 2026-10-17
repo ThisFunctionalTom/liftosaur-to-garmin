@@ -27,33 +27,82 @@ h1 { margin: .9rem 0 .25rem; font-size: clamp(2rem, 6vw, 3rem); line-height: 1.0
 .chart-scroll { overflow-x: auto; overscroll-behavior-inline: contain; border-radius: .4rem; }
 svg { display: block; min-width: 100%; overflow: visible; }
 .chart-note { margin: -.25rem 0 .5rem; color: #536760; font-size: .9rem; }
+.calendar-note { margin: -.2rem 0 .65rem; color: #536760; font-size: .88rem; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 1rem; margin: .65rem 0 1rem; color: #40564d; font-size: .85rem; }
 .chart-legend span { display: inline-flex; align-items: center; gap: .45rem; }
 .legend-swatch { display: inline-block; width: 1.5rem; height: 0; border-top: 3px solid; }
 .working-set-swatch { border-color: #165c48; }
 .estimated-swatch { border-color: #bc6a24; border-top-style: dashed; }
-.range-toolbar { display: flex; flex-wrap: wrap; gap: .45rem; margin: 1rem 0 1.25rem; }
+.view-tabs { display: flex; gap: .25rem; margin: 1.1rem 0 .8rem; border-bottom: 1px solid #dce5df; }
+.view-tabs button { padding: .65rem 1rem; border: 0; border-bottom: 3px solid transparent; color: #536760; background: transparent; font: inherit; font-weight: 700; cursor: pointer; }
+.view-tabs button[aria-selected="true"] { border-bottom-color: #165c48; color: #165c48; }
+.view-tabs button:focus-visible { outline: 3px solid #8bc6a2; outline-offset: 2px; }
+.range-toolbar { display: flex; flex-wrap: wrap; gap: .45rem; margin: .75rem 0 1.25rem; }
 .range-toolbar button { padding: .5rem .8rem; border: 1px solid #aabbb1; border-radius: 999px; color: #29463b; background: white; font: inherit; font-size: .88rem; font-weight: 650; cursor: pointer; }
 .range-toolbar button[aria-pressed="true"] { border-color: #165c48; color: white; background: #165c48; }
 .range-toolbar button:focus-visible { outline: 3px solid #8bc6a2; outline-offset: 2px; }
 .lift-charts { display: grid; gap: 1.35rem; }
+.calendar-legend { display: flex; align-items: center; gap: .3rem; margin: 0 0 1rem; color: #536760; font-size: .75rem; }
+.calendar-legend i { width: .8rem; height: .8rem; border: 1px solid #dce5df; border-radius: .2rem; }
+.calendar-months { display: grid; grid-template-columns: 2rem repeat(7, minmax(0, 1fr)); column-gap: .2rem; row-gap: .2rem; }
+.calendar-header { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; gap: .2rem; }
+.calendar-month { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; column-gap: .2rem; row-gap: .15rem; min-width: 0; outline: 1px solid #e2e9e4; outline-offset: -1px; border-radius: .4rem; }
+.calendar-month-label { display: flex; grid-column: 1; align-items: center; justify-content: center; color: #52685e; font-size: .7rem; font-weight: 700; writing-mode: vertical-rl; transform: rotate(180deg); }
+.calendar-weeks, .calendar-week { display: contents; }
+.calendar-weekday { color: #62736b; font-size: .65rem; font-weight: 700; text-align: center; }
+.calendar-day { position: relative; min-width: 0; min-height: 2.55rem; border: 1px solid transparent; border-radius: .3rem; }
+.calendar-day { display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: .22rem; color: #29463b; background: #f1f4f2; font: inherit; font-variant-numeric: tabular-nums; }
+.calendar-day.has-workout:hover, .calendar-day.has-workout:focus-visible { outline: 2px solid #165c48; outline-offset: 1px; }
+.calendar-day.outside-range { opacity: .3; }
+.calendar-day-number { font-size: .66rem; line-height: 1; }
+.calendar-day-counts { align-self: center; max-width: 100%; overflow: hidden; font-size: .55rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+.calendar-legend [data-level="0"], .calendar-day[data-level="0"] { background: #f1f4f2; }
+.calendar-legend [data-level="1"], .calendar-day[data-level="1"] { background: #dcefe2; }
+.calendar-legend [data-level="2"], .calendar-day[data-level="2"] { background: #aed8bd; }
+.calendar-legend [data-level="3"], .calendar-day[data-level="3"] { background: #74b78d; }
+.calendar-legend [data-level="4"], .calendar-day[data-level="4"] { color: white; background: #28734c; }
+.calendar-legend [data-level="4"] { border-color: #28734c; }
 .lift-chart { min-width: 0; padding-top: 1rem; border-top: 1px solid #e2e9e4; }
 .lift-chart h3 { margin: 0 0 .25rem; color: #29463b; font-size: 1.05rem; }
-.latest-set { min-height: 1.4rem; margin: .65rem 0 0; color: #40564d; font-variant-numeric: tabular-nums; }
+.lift-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: .65rem; }
+.lift-stat { display: flex; min-width: 0; flex-direction: column; padding: .65rem .75rem; border: 1px solid #e2e9e4; border-radius: .65rem; background: #f7f9f7; font-variant-numeric: tabular-nums; }
+.lift-stat-best { border-color: #efd7bd; background: #fff8f0; }
+.lift-stat-label { color: #536760; font-size: .68rem; font-weight: 750; letter-spacing: .055em; text-transform: uppercase; }
+.lift-stat-value { margin-top: .2rem; color: #165c48; font-size: clamp(1rem, 2.5vw, 1.25rem); line-height: 1.2; }
+.lift-stat-best .lift-stat-value { color: #93521d; }
+.lift-stat-detail { margin-top: .25rem; color: #536760; font-size: .76rem; line-height: 1.3; }
 .empty-chart { margin: .8rem 0; color: #536760; font-size: .9rem; }
 .page-footer { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; padding: .5rem .15rem; color: #536760; font-size: .85rem; }
 .page-footer p { margin: 0; }
 
 .axis { stroke: #d9e2dc; stroke-width: 1; }
 .axis-label { fill: #62736b; font-size: 11px; }
-.bar { fill: #4c9a75; }
-.bar:hover { fill: #165c48; }
 .strength-line { fill: none; stroke: #165c48; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .strength-point { fill: white; stroke: #165c48; stroke-width: 2.5; }
 .strength-point:hover { fill: #b8e0c5; }
 .estimated-line { fill: none; stroke: #bc6a24; stroke-width: 3; stroke-dasharray: 8 5; stroke-linecap: round; stroke-linejoin: round; }
 .estimated-point { fill: white; stroke: #bc6a24; stroke-width: 2.5; }
 .chart-tooltip { position: fixed; z-index: 10; max-width: 18rem; padding: .45rem .65rem; border-radius: .4rem; color: white; background: #172b29; box-shadow: 0 3px 12px #172b2940; font-size: .82rem; line-height: 1.35; pointer-events: none; }
+.chart-tooltip strong { display: block; margin-bottom: .2rem; color: #ccebd5; }
+.chart-tooltip p { margin: 0 0 .35rem; }
+.chart-tooltip ul { margin: .25rem 0 0; padding-left: 1rem; }
+.chart-tooltip li + li { margin-top: .2rem; }
+.chart-tooltip.strength-tooltip { display: grid; gap: .12rem; width: max-content; max-width: min(20rem, calc(100vw - 1rem)); padding: .7rem .85rem; border-left: 3px solid #74b78d; }
+.chart-tooltip.strength-tooltip-estimated { border-left-color: #e2a15e; }
+.strength-tooltip-date { color: #b9c9c0; font-size: .72rem; }
+.strength-tooltip-label { margin-top: .15rem; color: #ccebd5; font-size: .69rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.strength-tooltip-estimated .strength-tooltip-label { color: #f0c18e; }
+.chart-tooltip .strength-tooltip-value { margin: 0; color: white; font-size: 1.25rem; line-height: 1.2; }
+.strength-tooltip-detail { color: #d5e4da; font-size: .76rem; }
+.chart-tooltip.workout-tooltip { width: max-content; max-width: min(24rem, calc(100vw - 1rem)); max-height: min(70vh, 30rem); overflow: auto; padding: .75rem; pointer-events: auto; }
+.workout-tooltip-date { padding-bottom: .45rem; border-bottom: 1px solid #ffffff30; font-size: .95rem; }
+.workout-tooltip-totals { display: flex; flex-wrap: wrap; gap: .35rem; margin: .55rem 0 .65rem; }
+.workout-tooltip-totals span { padding: .2rem .4rem; border-radius: 999px; color: #e0f3e6; background: #ffffff18; font-size: .72rem; font-weight: 650; }
+.workout-tooltip-exercises { display: grid; gap: .65rem; }
+.workout-tooltip-exercise h4 { margin: 0 0 .2rem; color: #ccebd5; font-size: .8rem; }
+.workout-tooltip-set { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; padding: .12rem 0; font-variant-numeric: tabular-nums; }
+.workout-tooltip-set span:last-child { color: #d5e4da; text-align: right; white-space: nowrap; }
+.workout-tooltip-empty { margin: .5rem 0 0; color: #d5e4da; }
 
 @media (max-width: 36rem) {
   main { padding-top: 1.3rem; }
