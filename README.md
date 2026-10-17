@@ -119,6 +119,17 @@ the summary fields used by the public page; it is committed as public data when
 you decide to publish. Clear the API key from the current PowerShell session with
 `Remove-Item Env:LIFTOSAUR_API_KEY` when finished.
 
+### Refresh from the installed PWA
+
+For phone-based refreshes, add `LIFTOSAUR_API_KEY` as a repository Actions secret
+under **Settings → Secrets and variables → Actions**. Then tap **Refresh workout
+progress** in the PWA, choose the `main` branch, and tap **Run workflow** on
+GitHub. The workflow fetches the latest Liftosaur history, regenerates the public
+summary, builds the site, and deploys it. It also refreshes the summary on pushes
+to `main` once the secret is configured. The API key stays in GitHub Actions and
+is not stored in the PWA. Manual runs fail with a clear message until the secret
+is added.
+
 To publish, review the page locally, then commit the page and generated summary
 with Jujutsu and push the `main` bookmark:
 

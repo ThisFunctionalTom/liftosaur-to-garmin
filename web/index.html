@@ -18,6 +18,7 @@
       button, a { display: inline-block; margin: 1rem .6rem 0 0; padding: .8rem 1rem; border-radius: .5rem; font: inherit; }
       button { border: 0; background: #165c48; color: white; cursor: pointer; }
       a { color: #165c48; }
+      .action-link { color: #172b29; background: #dde8e2; font-weight: 600; text-decoration: none; }
       section { margin-top: 2rem; }
       input[type="password"] { box-sizing: border-box; width: 100%; padding: .8rem; font: inherit; border: 1px solid #9eaaa5; border-radius: .5rem; }
       .choice { display: flex; gap: .7rem; align-items: center; margin: 1rem 0; font-weight: normal; }
@@ -39,6 +40,8 @@
       <h1>Liftosaur to Garmin</h1>
       <p>Choose your Liftosaur workouts and download Garmin FIT activities. Conversion runs on this device.</p>
       <p><a href="./progress/">View public training progress</a></p>
+      <p><a class="action-link" href="https://github.com/ThisFunctionalTom/toms-workout/actions/workflows/pages.yml" target="_blank" rel="noopener noreferrer">Refresh workout progress</a></p>
+      <p class="hint">Opens GitHub Actions. Choose <strong>main</strong>, then tap <strong>Run workflow</strong> to fetch your latest workouts and publish the progress page.</p>
       <button id="install-app" type="button" hidden>Install app</button>
       <button id="update-app" type="button" hidden>Update and reload</button>
       <p id="app-status" class="hint" aria-live="polite"></p>
